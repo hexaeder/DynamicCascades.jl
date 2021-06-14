@@ -34,9 +34,9 @@ function import_system(::Val{:rtsgmlc})
     for (n, busid) in enumerate(bus_data."Bus ID")
         # select attached generators
         generators = gen_data[gen_data."Bus ID".== busid, ["Category", "MW Inj", "MVAR Inj", "Inertia MJ/MW"]]
-        P_inj   = sum(generators."MW Inj") / baseP
-        Q_inj = sum(generators."MVAR Inj") / baseP
-        inertia  = sum(generators."Inertia MJ/MW")
+        P_inj   = isempty(generators) ? 0.0 : sum(generators."MW Inj") / baseP
+        Q_inj   = isempty(generators) ? 0.0 : sum(generators."MVAR Inj") / baseP
+        inertia = isempty(generators) ? 0.0 : sum(generators."Inertia MJ/MW")
         if P_inj!=0.0 || Q_inj!=0.0 || inertia!=0.0
             set_prop!(g, n, :P_inj, P_inj)
             set_prop!(g, n, :Q_inj, Q_inj)

@@ -82,7 +82,7 @@ function set_prop!(g, vertices, prop::Symbol, vals)
 end
 
 """
-    MetaGraphs.set_prop!(g, edges::AbstractEdgeIter, prop::Symbol, vals::Iterable)
+    set_prop!(g, edges::AbstractEdgeIter, prop::Symbol, vals::Iterable)
 
 Set same property `prop` with different values `vals` for different edges in EdgeIter `edges`.
 """
@@ -96,14 +96,16 @@ function set_prop!(g, edges::AbstractEdgeIter, prop::Symbol, vals)
 end
 
 """
-    MetaGraphs.get_prop(g, vertices::Iterable, prop::Symbol)
+    get_prop(g, vertices::Iterable, prop::Symbol)
 
 Get same property `prop` with different values `vals` for differet vertices `vertices`.
 """
-get_prop(g, vertices, prop::Symbol) = [get_prop(g, v, prop) for v in vertices]
+function get_prop(g, vertices, prop::Symbol)
+    [has_prop(g, v, prop) ? get_prop(g, v, prop) : missing for v in vertices]
+end
 
 """
-    MetaGraphs.get_prop(g, edges::AbstractEdgeIterable, prop::Symbol)
+    get_prop(g, edges::AbstractEdgeIterable, prop::Symbol)
 
 Get same property `prop` with different values `vals` for differet vertices `vertices`.
 """
@@ -147,5 +149,6 @@ end
 
 
 include("ND_model.jl")
+include("inspect_solution.jl")
 
 end

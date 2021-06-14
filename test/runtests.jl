@@ -62,16 +62,3 @@ using Missings
     @test wo_idx(e1.X) == wo_idx(e2.X) == wo_idx(e3.X)
     @test wo_idx(e1.rating) == wo_idx(e2.rating) == wo_idx(e3.rating)
 end
-
-using DynamicCascades: calc_coupling!
-g1 = import_system(:rtsgmlc)
-n1 = describe_nodes(g1)
-e1 = describe_edges(g1)
-calc_coupling!(g1)
-describe_edges(g1)
-
-describe_nodes(g1)
-
-set_prop!(g1,:bla,1)
-
-@code_warntype get_prop(g1, 4, :Vm)

@@ -2,7 +2,7 @@ using NetworkDynamics
 using OrdinaryDiffEq
 using DiffEqCallbacks
 
-export nd_model, get_parameters, calculate_apparant_power, plot_apparent_power, initial_fail_cb
+export nd_model, get_parameters, calculate_apparant_power, initial_fail_cb
 
 import NetworkDynamics.network_dynamics
 """
@@ -39,6 +39,7 @@ function swing_equation!(dv, v, edges, (power, inertia, τ), t)
     for e in edges
         dv[2] += e[1]
     end
+    # TODO check inertia units and definition
     dv[2] = dv[2] / inertia
     nothing
 end
@@ -57,7 +58,7 @@ function dynamic_load!(dv, v, edges, (power, inertia, τ), t)
     nothing
 end
 
-function nd_model(network::MetaGraph; losses=false, load_τ=0.1, gen_τ=0.1, slack_τ=0.1)
+function nd_model(network::MetaGraph; load_τ=0.1, gen_τ=0.1, slack_τ=0.1)
     flow_edge = StaticEdge(f! = powerflow!, dim = 1, coupling=:antisymmetric)
     swing_vertex = ODEVertex(f! = swing_equation!, dim = 2, sym=[:θ, :ω])
     load_vertex = ODEVertex(f! = dynamic_load!, dim = 1, sym=[:θ])
@@ -69,24 +70,34 @@ function nd_model(network::MetaGraph; losses=false, load_τ=0.1, gen_τ=0.1, sla
                           flow_edge=flow_edge)
 
     # second we generate the parameter tuple for the simulation
-    p = get_parameters(network; losses, gen_τ, slack_τ, load_τ)
+    p = get_parameters(network; gen_τ, slack_τ, load_τ)
 
     cb_gen = get_callback_generator(network)
 
     return (;nd, p, cb_gen)
 end
 
-function set_coupling!(network::MetaGraph; losses=false)
+function set_admittance!(network::MetaGraph)
+    R::Vector{Float64} = get_prop(network, edges(network), :R)
+    X::Vector{Float64} = get_prop(network, edges(network), :X)
+    Y = 1 ./ (R .+ im .* X)
+    set_prop!(network, edges(network), :_Y, Y)
+end
+
+function set_coupling!(network::MetaGraph)
+    warn = false
     K = Vector{Float64}(undef, ne(network))
     for (i, e) in enumerate(edges(network))
-        v1= get_prop(network, e.src, :Vm)
-        v2 = get_prop(network, e.dst, :Vm)
-        R = losses ? get_prop(network, e, :R) : 0.0
-        X = get_prop(network, e, :X)
-        # TODO: do i really understand this?
-        K[i] = v1 * v2 * imag(1/(R + im*X))
+        v1::Float64 = get_prop(network, e.src, :Vm)
+        v2::Float64 = get_prop(network, e.dst, :Vm)
+        Y::ComplexF64 = get_prop(network, e, :_Y)
+        if !iszero(real(Y))
+            warn = true
+        end
+        K[i] = v1 * v2 * imag(Y)
         set_prop!(network, e, :_K, K[i])
     end
+    warn && @warn "There have been nonzero R values, this is undefined!"
     return K
 end
 
@@ -100,13 +111,14 @@ function set_τ!(network::MetaGraph; load_τ, gen_τ, slack_τ)
     return τs
 end
 
-function get_parameters(network::MetaGraph; losses, load_τ, gen_τ, slack_τ)
-    edge_p = set_coupling!(network; losses)
+function get_parameters(network::MetaGraph; load_τ, gen_τ, slack_τ)
+    set_admittance!(network)
+    edge_p = set_coupling!(network)
     power = get_prop(network, vertices(network), :P)
-    inertia = get_prop(network, vertices(network), :inertia)
+    inertia = Missings.replace(get_prop(network, vertices(network), :inertia), 0.0)
     τ = set_τ!(network; load_τ, gen_τ, slack_τ)
 
-    vertex_p = collect(zip(power, inertia, τ))
+    vertex_p::Vector{NTuple{3, Float64}} = collect(zip(power, inertia, τ))
     return (vertex_p, edge_p)
 end
 
@@ -121,18 +133,20 @@ function calculate_apparant_power!(S, u, p, t, nd::nd_ODE_Static, network::MetaG
         Vs::Float64 = get_prop(network, e.src, :Vm)
         Vd::Float64 = get_prop(network, e.dst, :Vm)
         X::Float64 = get_prop(network, e, :X)
+        R::Float64 = get_prop(network, e, :R)
+        Y = 1/(R + im*X)
 
         θs = get_vertex(gd, e.src)[1]
         θd = get_vertex(gd, e.dst)[1]
         K = p[2][i]
 
         sqr = √(Vs^2 + Vd^2 - 2*abs(Vs)*abs(Vd)*cos(θd-θs))
-        S[i] = abs(max(Vs, Vd)/X * sqr * sign(K))
+        S[i] = abs(max(Vs, Vd) * abs(Y) * sqr * sign(K))
     end
     nothing
 end
 
-function calculate_active_power(u, p, t, nd::nd_ODE_Static, network::MetGraph; gd=nd(u, p, t, GetGD))
+function calculate_active_power(u, p, t, nd::nd_ODE_Static, network::MetaGraph; gd=nd(u, p, t, GetGD))
     P = zeros(ne(network))
     for (i, e) in enumerate(edges(nd.graph))
         P[i] = get_edge(gd, i)[1]

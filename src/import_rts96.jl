@@ -160,7 +160,8 @@ function import_system(::Val{:rts96prepared}; losses=false)
     end
 
     # resistance, reactance & emergency rating
-    set_prop!(g, edges(g), :R, LineData.r)
+    R = losses ? LineData.r : zeros(length(LineData.r))
+    set_prop!(g, edges(g), :R, R)
     set_prop!(g, edges(g), :X, LineData.x)
     set_prop!(g, edges(g), :rating, LineData.u)
 
