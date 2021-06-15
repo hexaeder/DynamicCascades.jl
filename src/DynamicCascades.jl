@@ -67,49 +67,31 @@ include("import_rts96.jl")
 
 import MetaGraphs: set_prop!, get_prop
 
+const KEY_ITER = Union{UnitRange,Vector,AbstractEdgeIter}
 """
-    set_prop!(g, vertices::Iterable, prop::Symbol, vals::Iterable)
+    set_prop!(g, keys::Iterable, prop::Symbol, vals::Iterable)
 
-Set same property `prop` with different values `vals` for differet vertices `vertices`.
+Set same property `prop` with different values `vals` for differet identifiers `keys`.
 """
-function set_prop!(g, vertices, prop::Symbol, vals)
-    length(vertices) == length(vals) || throw(ArgumentError("vertices and vals needs to be of same length!"))
-    for (v, val) in zip(vertices, vals)
+function set_prop!(g, keys::KEY_ITER, prop::Symbol, vals::Vector)
+    length(keys) == length(vals) || throw(ArgumentError("keys and vals needs to be of same length!"))
+    for (k, val) in zip(keys, vals)
         if !ismissing(val)
-            set_prop!(g, v, prop, val)
+            set_prop!(g, k, prop, val)
         end
     end
 end
 
-"""
-    set_prop!(g, edges::AbstractEdgeIter, prop::Symbol, vals::Iterable)
+set_prop!(g, keys::KEY_ITER, p::Symbol, val) = set_prop!(g, keys, p, [val for v in keys])
 
-Set same property `prop` with different values `vals` for different edges in EdgeIter `edges`.
 """
-function set_prop!(g, edges::AbstractEdgeIter, prop::Symbol, vals)
-    length(edges) == length(vals) || throw(ArgumentError("EdgeIter and vals needs to be of same length!"))
-    for (e, val) in zip(edges, vals)
-        if !ismissing(val)
-            set_prop!(g, e, prop, val)
-        end
-    end
+    get_prop(g, keys::Iterable, prop::Symbol)
+
+Get same property `prop` with different values `vals` for differet keys.
+"""
+function get_prop(g, keys::KEY_ITER, prop::Symbol)
+    [has_prop(g, k, prop) ? get_prop(g, k, prop) : missing for k in keys]
 end
-
-"""
-    get_prop(g, vertices::Iterable, prop::Symbol)
-
-Get same property `prop` with different values `vals` for differet vertices `vertices`.
-"""
-function get_prop(g, vertices, prop::Symbol)
-    [has_prop(g, v, prop) ? get_prop(g, v, prop) : missing for v in vertices]
-end
-
-"""
-    get_prop(g, edges::AbstractEdgeIterable, prop::Symbol)
-
-Get same property `prop` with different values `vals` for differet vertices `vertices`.
-"""
-get_prop(g, edges::AbstractEdgeIter, prop::Symbol) = [get_prop(g, e, prop) for e in edges]
 
 """
     describe_nodes(g::MetaGraph; firstcols=Vector{String}())
