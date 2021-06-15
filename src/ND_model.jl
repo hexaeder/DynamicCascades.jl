@@ -26,7 +26,7 @@ function network_dynamics(graph::MetaGraph; load_vertex, generator_vertex, slack
 end
 
 function powerflow!(e, v_s, v_d, K, t)
-    e[1] = K * sin(v_s[1] - v_d[1])
+    e[1] = - K * sin(v_s[1] - v_d[1])
     nothing
 end
 
@@ -132,16 +132,18 @@ function calculate_apparant_power!(S, u, p, t, nd::nd_ODE_Static, network::MetaG
     for (i, e) in enumerate(edges(nd.graph))
         Vs::Float64 = get_prop(network, e.src, :Vm)
         Vd::Float64 = get_prop(network, e.dst, :Vm)
-        X::Float64 = get_prop(network, e, :X)
-        R::Float64 = get_prop(network, e, :R)
-        Y = 1/(R + im*X)
+        Y::ComplexF64 = get_prop(network, e, :_Y)
 
         θs = get_vertex(gd, e.src)[1]
         θd = get_vertex(gd, e.dst)[1]
         K = p[2][i]
 
-        sqr = √(Vs^2 + Vd^2 - 2*abs(Vs)*abs(Vd)*cos(θd-θs))
-        S[i] = abs(max(Vs, Vd) * abs(Y) * sqr * sign(K))
+        if iszero(K)
+            S[i] = 0
+        else
+            sqr = √(Vs^2 + Vd^2 - 2*abs(Vs)*abs(Vd)*cos(θd-θs))
+            S[i] = max(Vs, Vd) * abs(Y) * sqr
+        end
     end
     nothing
 end
@@ -162,8 +164,11 @@ end
     get_callback_generator(network::MetaGraph)
 
 This function returns a constructor for the overload callback with two kw arguments
-  - `load=nothing` : provide `SavedValues` type for load values
+  - `trip_lines=true` : toggle whether the CB should kill lines (set K=0)
+  - `load_S=nothing` : provide `SavedValues` type for S values
+  - `load_P=nothing` : provide `SavedValues` type for P values
   - `failurs=nothing` : provide `SavedValues` type where to save the failed lines
+  - `verbose=true` : toogle verbosity (print on line failures)
 
 This is all a bit hacky. I am creating a SavingCallback for the `load` values. However
 the SavingCallback is missing some values right befor the discontinuity. Those values
@@ -171,7 +176,7 @@ are injected inside the shutdown affect. In order for this to work the affect ne
 bump the `saveiter` counter of the other callback. Very ugly.
 """
 function get_callback_generator(network::MetaGraph)
-    function gen_cb(;load_S=nothing, load_P=nothing, failures=nothing, verbose=true)
+    function gen_cb(;trip_lines=true, load_S=nothing, load_P=nothing, failures=nothing, verbose=true)
 
         save_S_fun = let _network=network
             (u, t, integrator) -> calculate_apparant_power(u, integrator.p, t, integrator.f.f, _network)
@@ -216,10 +221,15 @@ function get_callback_generator(network::MetaGraph)
             end
         end
 
-        vcb = VectorContinuousCallback(condition, affect!, ne(network);
-                                       save_positions=(true,true),
-                                       affect_neg! = nothing, #only trigger on upcrossing -> 0
-                                       abstol=10eps(),reltol=0)
+        if trip_lines
+            vcb = VectorContinuousCallback(condition, affect!, ne(network);
+                                           save_positions=(true,true),
+                                           affect_neg! = nothing, #only trigger on upcrossing -> 0
+                                           abstol=10eps(),reltol=0)
+        else
+            vcb = nothing
+        end
+
         return CallbackSet(vcb, scb_P, scb_S)
     end
     return gen_cb

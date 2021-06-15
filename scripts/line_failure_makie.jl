@@ -2,6 +2,8 @@
 
 using OrdinaryDiffEq
 using DiffEqCallbacks
+using SteadyStateDiffEq
+using DataFrames
 
 using DynamicCascades
 
@@ -15,16 +17,19 @@ network = import_system(:rts96prepared, losses=false)
 (nd, p) = nd_model(network; gen_τ, slack_τ, load_τ);
 
 x0 = zeros(length(nd.syms));
-tspan = (0., 2000.);
-prob = ODEProblem(nd, x0, tspan, p);
-@time solinit = solve(prob, Rosenbrock23(), callback=TerminateSteadyState(), save_everystep=false);
+x_static = solve(SteadyStateProblem(nd, x0, p), SSRootfind())
+# x_static = solve(SteadyStateProblem(nd, x0, p), DynamicSS(AutoTsit5(Rosenbrock23())))
 
-if solinit.t[end] == tspan[2]
-    @warn "Simulation time ended without reaching steady state!"
-else
-    @info "Found steadystate at t = $(solinit.t[end])..."
-end
-x_static = copy(solinit[end]);
+# tspan = (0., 2000.);
+# prob = ODEProblem(nd, x0, tspan, p);
+# @time solinit = solve(prob, Rosenbrock23(), callback=TerminateSteadyState(), save_everystep=false);
+
+# if solinit.t[end] == tspan[2]
+#     @warn "Simulation time ended without reaching steady state!"
+# else
+#     @info "Found steadystate at t = $(solinit.t[end])..."
+# end
+# x_static = copy(solinit[end]);
 
 initial_fail = [27]
 failtime = 1.0
@@ -37,12 +42,8 @@ line_failures = SavedValues(Float64, Int);
 S_values = SavedValues(Float64, Vector{Float64});
 P_values = SavedValues(Float64, Vector{Float64});
 cbs = CallbackSet(initial_fail_cb(initial_fail, failtime),
-                  overload_cb(load_S=S_values, load_P=P_values, failures=line_failures));
+                  overload_cb(trip_lines=true, load_S=S_values, load_P=P_values, failures=line_failures));
 
-@time sol = solve(prob, Rosenbrock23(), callback=cbs);
+@time sol = solve(prob, AutoTsit5(Rosenbrock23()), callback=cbs, progress=true);
 
 inspect_solution(network, nd, sol, S_values, P_values)
-
-
-S_values.saveval[1]
-S_values.saveval[end]

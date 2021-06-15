@@ -23,14 +23,10 @@ function inspect_solution(network, nd, sol, S_values, P_values)
         formats = [x -> "$(round(x, digits = 3)) $s" for s in ["s", "hz"]])
     fig[2, 1:2] = lsgrid.layout
     set_close_to!(lsgrid.sliders[1], 0.0)
-    set_close_to!(lsgrid.sliders[2], 1.0)
+    set_close_to!(lsgrid.sliders[2], 0.5)
 
-    t = Node{Float64}(0.0)
-    Δω = Node{Float64}(1.0)
-    connect!(t, lsgrid.sliders[1].value)
-    connect!(Δω, lsgrid.sliders[2].value)
-    # t = lsgrid.sliders[1].value
-    # Δω = lsgrid.sliders[2].value
+    t = lsgrid.sliders[1].value
+    Δω = lsgrid.sliders[2].value
 
     nw_sublayout = fig[1,1] = GridLayout()
 
@@ -55,7 +51,6 @@ function inspect_solution(network, nd, sol, S_values, P_values)
     markers = Dict(:load => :rect, :gen => :utriangle, :slack => :circle);
     node_marker = [markers[k] for k in get_prop(network, vertices(network), :type)];
 
-    # nodescheme = ColorSchemes.delta
     node_color = @lift begin
         ω = [0.0 for i in 1:nv(network)]
         # hacky way to caclulate ω from θ as finite differnece
@@ -69,7 +64,7 @@ function inspect_solution(network, nd, sol, S_values, P_values)
         end
         ω
     end
-    node_colorscheme = ColorSchemes.delta
+    node_colorscheme = ColorSchemes.diverging_bkr_55_10_c35_n256
     ω_range = @lift (-$Δω, $Δω)
 
     alltime_max_S = maximum(map(load -> maximum(abs.(load)), S_values.saveval))
@@ -181,9 +176,9 @@ function inspect_solution(network, nd, sol, S_values, P_values)
         xlims!(fax, interval)
     end
 
-    function plot_nodes(selected, ωload)
+    plot_nodes = (selected, ωload) -> begin
         empty!(θax); empty!(ωax)
-        colors = copy(fig.scene.palette[:color][])
+        colors = reverse(fig.scene.palette[:color][])
         for idx in selected
             c = pop!(colors)
             θidx = findfirst(sym -> occursin(Regex("θ_$idx\$"), String(sym)), nd.syms)
@@ -198,16 +193,16 @@ function inspect_solution(network, nd, sol, S_values, P_values)
                 lines!(ωax, sol.t[begin:end-1], diff(θs) ./ diff(sol.t), label="ω_$idx", color=c, linewidth=3)
             end
         end
-        vlines!(θax, t, color=:black)
-        vlines!(ωax, t, color=:black)
+        vlines!(θax, lsgrid.sliders[1].value, color=:black)
+        vlines!(ωax, lsgrid.sliders[1].value, color=:black)
     end
 
     plot_nodes([], tg_ωload.active[]) #plot first time
     onany(plot_nodes, sel_nodes, tg_ωload.active)
 
-    function plot_edges(selected)
+    plot_edges = selected -> begin
         empty!(fax)
-        colors = copy(fig.scene.palette[:color][])
+        colors = reverse(fig.scene.palette[:color][])
         for idx in selected
             c = pop!(colors)
             lines!(fax, S_values.t, map(l->abs(l[idx]), S_values.saveval), color=c, linewidth=3)
@@ -215,14 +210,14 @@ function inspect_solution(network, nd, sol, S_values, P_values)
             rating = emergency_rating[idx]
             hlines!(fax, rating, color=c, linewidth=3)
         end
-        vlines!(fax, t, color=:black)
+        vlines!(fax, lsgrid.sliders[1].value, color=:black)
     end
     plot_edges([]) #plot first time
     on(plot_edges, sel_edges)
 
     tslider = lsgrid.sliders[1]
 
-    function set_time_interaction(event::MouseEvent, axis)
+    set_time_interaction = (event::MouseEvent, axis) -> begin
         if event.type === MouseEventTypes.leftclick
             t = mouseposition(axis.scene)[1]
             set_close_to!(tslider, t)
@@ -252,15 +247,19 @@ function inspect_solution(network, nd, sol, S_values, P_values)
 end
 
 function inc_slider(slider)
-    newpos = slider.selected_index[] + 1
-    if newpos ≤ length(slider.range[])
-        slider.selected_index[] = newpos
+    idx = slider.selected_index[]
+    val = slider.range[][idx]
+    while idx < length(slider.range[]) && slider.range[][idx] <= val
+        idx += 1
     end
+    set_close_to!(slider, slider.range[][idx])
 end
 
 function dec_slider(slider)
-    newpos = slider.selected_index[] - 1
-    if newpos ≥ 1
-        slider.selected_index[] = newpos
+    idx = slider.selected_index[]
+    val = slider.range[][idx]
+    while idx > 1 && slider.range[][idx] >= val
+        idx -= 1
     end
+    set_close_to!(slider, slider.range[][idx])
 end
