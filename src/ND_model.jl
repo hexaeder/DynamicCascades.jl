@@ -58,7 +58,7 @@ function dynamic_load!(dv, v, edges, (power, inertia, τ), t)
     nothing
 end
 
-function nd_model(network::MetaGraph; load_τ=0.1, gen_τ=0.1, slack_τ=0.1)
+function nd_model(network::MetaGraph)
     @assert isapprox(sum(describe_nodes(network).P), 0, atol=1e-14) "Power sum not zero!"
     flow_edge = StaticEdge(f! = powerflow!, dim = 1, coupling=:antisymmetric)
     swing_vertex = ODEVertex(f! = swing_equation!, dim = 2, sym=[:θ, :ω])
@@ -71,7 +71,7 @@ function nd_model(network::MetaGraph; load_τ=0.1, gen_τ=0.1, slack_τ=0.1)
                           flow_edge=flow_edge)
 
     # second we generate the parameter tuple for the simulation
-    p = get_parameters(network; gen_τ, slack_τ, load_τ)
+    p = get_parameters(network)
 
     cb_gen = get_callback_generator(network)
 
@@ -102,24 +102,22 @@ function set_coupling!(network::MetaGraph)
     return K
 end
 
-function set_τ!(network::MetaGraph; load_τ, gen_τ, slack_τ)
-    types = get_prop(network, vertices(network), :type)
-    f(::Val{:load}) = load_τ
-    f(::Val{:gen}) = gen_τ
-    f(::Val{:slack}) = slack_τ
-    τs = [f(Val(type)) for type in types]
-    set_prop!(network, vertices(network), :_τ, τs)
-    return τs
-end
-
-function get_parameters(network::MetaGraph; load_τ, gen_τ, slack_τ)
+function get_parameters(network::MetaGraph)
     set_admittance!(network)
     edge_p = set_coupling!(network)
-    power = get_prop(network, vertices(network), :P)
-    inertia = Missings.replace(get_prop(network, vertices(network), :inertia), 0.0)
-    τ = set_τ!(network; load_τ, gen_τ, slack_τ)
 
-    vertex_p::Vector{NTuple{3, Float64}} = collect(zip(power, inertia, τ))
+    vertex_p = Vector{NTuple{3,Float64}}(undef, nv(network))
+    for v in 1:nv(network)
+        P = get_prop(network, v, :P)
+        inertia = has_prop(network, v, :inertia) ? get_prop(network, v, :inertia) : 0.0
+        type = get_prop(network, v, :type)
+        τ = if type === :gen || type === :slack
+            get_prop(network, v, :damping)
+        elseif type === :load
+            get_prop(network, v, :timescale)
+        end
+        vertex_p[v] = (P, inertia, τ)
+    end
     return (vertex_p, edge_p)
 end
 

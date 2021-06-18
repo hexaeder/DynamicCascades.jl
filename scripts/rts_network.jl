@@ -8,13 +8,8 @@ using DataFrames
 using DynamicCascades
 
 @info "Find steady state..."
-gen_τ   = 1.0
-slack_τ = 1.0
-load_τ  = 0.1
-
-# network = import_system(:rtsgmlc)
-network = import_system(:rts96prepared, losses=false)
-(nd, p) = nd_model(network; gen_τ, slack_τ, load_τ);
+network = import_system(:rts96prepared; gen_γ=1.0, slack_γ=1.0, load_τ=0.1, losses=false)
+(nd, p) = nd_model(network);
 
 x0 = zeros(length(nd.syms));
 x_static = solve(SteadyStateProblem(nd, x0, p), SSRootfind())
@@ -35,7 +30,7 @@ is_static_state(nd, x_static, p)
 initial_fail = [27]
 failtime = 1.0
 
-(nd, p, overload_cb) = nd_model(network; gen_τ, slack_τ, load_τ);
+(nd, p, overload_cb) = nd_model(network);
 tspan = (0., 100.)
 prob = ODEProblem(nd, copy(x_static), tspan, p);
 

@@ -42,8 +42,8 @@ Those functions return a `MetaGraph` which has properties attached to the Nodes/
 Graph properties:
 - `Pbase` : Base power for PU
 optional:
-- `NodeProps` : tuple of node property names which show appear first
-- `EdgeProps` : tuple of edge property names which show appear first
+- `NodeProps` : tuple of node property names which should appear first in describe functions
+- `EdgeProps` : tuple of edge property names which should appear first in describe functions
 
 Node properties:
 - `P` : active power in PU
@@ -52,6 +52,8 @@ Node properties:
 - `Vm` : voltage magnitude in PU
 optional:
 - `inertia` : inertia in MJ/MW (see H in Wikipedia page)
+- `damping` : damping factor γ for swing equations
+- `timescale` : time scale factor `D` for dynamic loads
 - `x`, `y` : position of Bus for plotting purposes
 - `Va` : voltage angle in rad
 

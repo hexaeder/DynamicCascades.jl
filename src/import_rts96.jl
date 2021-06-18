@@ -102,7 +102,7 @@ end
 
 Import the RTS96 system from the prepared data as a MetaGraph.
 """
-function import_system(::Val{:rts96prepared}; losses=false)
+function import_system(::Val{:rts96prepared}; gen_γ, slack_γ, load_τ, losses=false)
     @info "Import system RTS-96 (from prepared csv files)"
     # read data from csv files
     data = joinpath(DATA_DIR, "RTS-96")
@@ -153,6 +153,17 @@ function import_system(::Val{:rts96prepared}; losses=false)
     Q = Missings.replace(Q_inj, 0.0) .- joined.Q_Load
     set_prop!(g, 1:N, :P, P)
     set_prop!(g, 1:N, :Q, Q)
+
+    for v in 1:nv(g)
+        type = get_prop(g, v, :type)
+        if type === :gen
+            set_prop!(g, v, :damping, gen_γ)
+        elseif type === :slack
+            set_prop!(g, v, :damping, slack_γ)
+        elseif type === :load
+            set_prop!(g, v, :timescale, load_τ)
+        end
+    end
 
     # add the edge data
     for line in eachrow(LineData)

@@ -7,13 +7,9 @@ using DataFrames
 using DynamicCascades
 
 @info "Find steady state..."
-gen_τ   = 10.0
-slack_τ = 1.0
-load_τ  = 0.1
+network = import_system(:kaiser2020; gen_γ=1.0, load_τ=0.1)
 
-network = import_system(:kaiser2020)
-network2 = import_system(:rts96prepared)
-(nd, p) = nd_model(network; gen_τ, slack_τ, load_τ);
+(nd, p) = nd_model(network);
 
 x0 = zeros(length(nd.syms));
 x_static = solve(SteadyStateProblem(nd, x0, p), SSRootfind())
@@ -29,7 +25,7 @@ x_static = solve(SteadyStateProblem(nd, x0, p), SSRootfind())
 initial_fail = [55]
 failtime = 1.0
 
-(nd, p, overload_cb) = nd_model(network; gen_τ, slack_τ, load_τ);
+(nd, p, overload_cb) = nd_model(network);
 tspan = (0., 100.)
 prob = ODEProblem(nd, copy(x_static), tspan, p);
 
