@@ -9,7 +9,7 @@ using Missings
 export DATA_DIR
 const DATA_DIR = abspath(@__DIR__, "..", "Data")
 
-export import_system, describe_nodes, describe_edges, bustype
+export import_system, describe_nodes, describe_edges, bustype, is_static_state
 
 """
     bustype(i::Int)
@@ -64,10 +64,11 @@ import_system(sym::Symbol; kwargs...) = import_system(Val(sym); kwargs...)
 
 include("import_rtsgmlc.jl")
 include("import_rts96.jl")
+include("import_kaiser2020.jl")
 
 import MetaGraphs: set_prop!, get_prop
 
-const KEY_ITER = Union{UnitRange,Vector,AbstractEdgeIter}
+KEY_ITER = Union{AbstractUnitRange,Vector,AbstractEdgeIter}
 """
     set_prop!(g, keys::Iterable, prop::Symbol, vals::Iterable)
 
@@ -129,6 +130,11 @@ function describe_edges(g::MetaGraph; firstcols=Vector{String}())
     select!(df, firstcols)
 end
 
+function is_static_state(nd, x0, p)
+    dx = similar(x0)
+    nd(dx, x0, p, 0.0)
+    extrema(dx)
+end
 
 include("ND_model.jl")
 include("inspect_solution.jl")

@@ -1,38 +1,32 @@
-#!/usr/bin/env julia
-
 using OrdinaryDiffEq
 using DiffEqCallbacks
 using SteadyStateDiffEq
+using NetworkDynamics
 using DataFrames
 
 using DynamicCascades
 
 @info "Find steady state..."
-gen_τ   = 1.0
+gen_τ   = 10.0
 slack_τ = 1.0
 load_τ  = 0.1
 
-# network = import_system(:rtsgmlc)
-network = import_system(:rts96prepared, losses=false)
+network = import_system(:kaiser2020)
+network2 = import_system(:rts96prepared)
 (nd, p) = nd_model(network; gen_τ, slack_τ, load_τ);
 
 x0 = zeros(length(nd.syms));
 x_static = solve(SteadyStateProblem(nd, x0, p), SSRootfind())
-is_static_state(nd, x_static, p)
-# x_static = solve(SteadyStateProblem(nd, x0, p), DynamicSS(AutoTsit5(Rosenbrock23())))
 
-# tspan = (0., 2000.);
-# prob = ODEProblem(nd, x0, tspan, p);
-# @time solinit = solve(prob, Rosenbrock23(), callback=TerminateSteadyState(), save_everystep=false);
-
-# if solinit.t[end] == tspan[2]
-#     @warn "Simulation time ended without reaching steady state!"
-# else
-#     @info "Found steadystate at t = $(solinit.t[end])..."
+# function project_theta(θ)
+#     n = (θ + π) ÷ 2π
+#     return θ - n * 2π
 # end
-# x_static = copy(solinit[end]);
+# θidx = idx_containing(nd, "θ")
+# x_static[θidx] = project_theta.(x_static[θidx])
+# is_static_state(nd, x_static, p)
 
-initial_fail = [27]
+initial_fail = [55]
 failtime = 1.0
 
 (nd, p, overload_cb) = nd_model(network; gen_τ, slack_τ, load_τ);
@@ -43,7 +37,7 @@ line_failures = SavedValues(Float64, Int);
 S_values = SavedValues(Float64, Vector{Float64});
 P_values = SavedValues(Float64, Vector{Float64});
 cbs = CallbackSet(initial_fail_cb(initial_fail, failtime),
-                  overload_cb(trip_lines=true, load_S=S_values, load_P=P_values, failures=line_failures));
+                  overload_cb(trip_lines=false, load_S=S_values, load_P=P_values, failures=line_failures));
 
 @time sol = solve(prob, AutoTsit5(Rosenbrock23()), callback=cbs, progress=true);
 

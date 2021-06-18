@@ -31,9 +31,15 @@ function inspect_solution(network, nd, sol, S_values, P_values)
     nw_sublayout = fig[1,1] = GridLayout()
 
     tg_ωload = Toggle(fig, active=true)
-    tg_absolute = Toggle(fig)
     tg_activeP = Toggle(fig)
-    toggles = [tg_ωload Label(fig, "calculate ω load") tg_absolute Label(fig, "absolute flow") tg_activeP Label(fig, "Active Power")]
+    edgemenu = Menu(fig, options = [("rel to rating", :relrating),
+                                    ("diff to steady", :abssteady),
+                                    ("absolut", :abs)],
+                    i_selected=1,
+                    selection=:relrating)
+    toggles = reshape([Label(fig, "calculate ω load:"), tg_ωload,
+                       Label(fig, "Active Power:"), tg_activeP,
+                       Label(fig, "Edge colors:"), edgemenu], 1, :)
 
     nw_sublayout[1, 1] = grid!(toggles, tellwidth = false)
 
@@ -69,16 +75,42 @@ function inspect_solution(network, nd, sol, S_values, P_values)
 
     alltime_max_S = maximum(map(load -> maximum(abs.(load)), S_values.saveval))
     alltime_max_P = maximum(map(load -> maximum(abs.(load)), P_values.saveval))
-    edgescheme = reverse(ColorSchemes.autumn1)
+
+    S_steady = S_values.saveval[begin]
+    P_steady = P_values.saveval[begin]
+    alltime_max_S_diff = maximum(map(load -> maximum(abs.(extrema(load-S_steady))), S_values.saveval))
+    alltime_max_P_diff = maximum(map(load -> maximum(abs.(extrema(load-P_steady))), P_values.saveval))
+
+    edgescheme = @lift begin
+        if $(edgemenu.selection) === :abssteady
+            # ColorSchemes.linear_tritanopic_krjcw_5_95_c24_n256
+            ColorScheme([colorant"yellow", colorant"gray", colorant"red"])
+        else
+            # ColorSchemes.linear_wyor_100_45_c55_n256
+            ColorScheme([colorant"yellow", colorant"red"])
+            # reverse(ColorSchemes.autumn1)
+        end
+    end
     emergency_rating = get_prop(network, edges(network), :rating)
     edge_color = @lift begin
         load = $(tg_activeP.active) ? $load_P : $load_S
-        if $(tg_absolute.active)
+
+        mode = $(edgemenu.selection)
+        if mode === :relrating
+            cvals = abs.(load) ./ emergency_rating
+        elseif mode === :abs
             max = $(tg_activeP.active) ? alltime_max_P : alltime_max_S
-            colors = get(edgescheme, abs.(load) ./ max)
-        else
-            colors = get(edgescheme, abs.(load) ./ emergency_rating)
+            cvals = abs.(load) ./ max
+        elseif mode === :abssteady
+            max = $(tg_activeP.active) ? alltime_max_P_diff : alltime_max_S_diff
+            steady = $(tg_activeP.active) ? P_steady : S_steady
+            cvals = (load .- steady)./(2*max) .+ 0.5
+        else # nothing
+            cvals = zeros(length(load))
         end
+
+        colors = get(edgescheme[], cvals)
+
         offline = @view colors[findall(iszero, $load_S)]
         offline .= ColorSchemes.RGB{Float64}(0,0,0)
         colors
@@ -118,7 +150,7 @@ function inspect_solution(network, nd, sol, S_values, P_values)
 
     nwax = nw_sublayout[2,1] = Axis(fig)
     nwax.aspect = AxisAspect(1)
-    hidedecorations!(nwax)
+    hidedecorations!(nwax); hidespines!(nwax)
     nwplot = graphplot!(nwax, network;
                         layout=Spring(),
                         node_marker,
@@ -128,34 +160,67 @@ function inspect_solution(network, nd, sol, S_values, P_values)
                         edge_color,
                         edge_width)
 
+    HOVER_DEFAULT = "Hover node/edge to see info!"
+    description_text = Node{String}(HOVER_DEFAULT)
     nw_sublayout[3, 1] = Colorbar(fig, nwplot.plots[3], height=25, vertical=false, label="Node frequency")
     nw_sublayout[4, 1] = Colorbar(fig, height=25, vertical=false, colormap=edgescheme, label="Line load_S")
+    nw_sublayout[2, 1] = Label(fig, description_text, tellwidth=false, tellheight=false, halign=:left, valign=:top)
 
     # delete other interactions on scene
     deregister_interaction!(nwax, :rectanglezoom)
 
-    edgeclick = EdgeClickHandler() do idx, even, axis
+    edgeclick = EdgeClickHandler() do idx, event, axis
         sel_edges[] = idx ∈ sel_edges[] ? delete!(sel_edges[], idx) : push!(sel_edges[], idx)
-        println("Edge $idx toggled.")
-        # println(" ├ conductance = ", network.conductance[idx])
-        # println(" ├ susceptance = ", network.susceptance[idx])
-        # println(" ├ ap coupling = ", network.active_power_coupling[idx])
-        println(" ├ rating      = ", emergency_rating[idx])
-        println(" ├ load P      = ", load_P[][idx])
-        println(" └ load S      = ", load_S[][idx])
+        # println("Edge $idx toggled.")
+        # # println(" ├ conductance = ", network.conductance[idx])
+        # # println(" ├ susceptance = ", network.susceptance[idx])
+        # # println(" ├ ap coupling = ", network.active_power_coupling[idx])
+        # println(" ├ rating      = ", emergency_rating[idx])
+        # println(" ├ load P      = ", load_P[][idx])
+        # println(" └ load S      = ", load_S[][idx])
     end
     register_interaction!(nwax, :eclick, edgeclick)
 
-    nodeclick = NodeClickHandler() do idx, even, axis
+    nodeclick = NodeClickHandler() do idx, event, axis
         sel_nodes[] = idx ∈ sel_nodes[] ? delete!(sel_nodes[], idx) : push!(sel_nodes[], idx)
-        println("Node $idx toggled:")
-        println(" ├ type = ", get_prop(network, idx, :type), " (1=load, 2=generator, 3=slack)")
-        println(" ├ voltage  = ", get_prop(network, idx, :Vm))
-        println(" ├ interita  = ", has_prop(network, idx, :inertia) ? get_prop(network, idx, :inertia) : "missing")
-        println(" ├ active P = ", get_prop(network, idx, :P))
-        println(" └ reactive Q = ", get_prop(network, idx, :Q))
+        # println("Node $idx toggled:")
+        # println(" ├ type = ", get_prop(network, idx, :type), " (1=load, 2=generator, 3=slack)")
+        # println(" ├ voltage  = ", get_prop(network, idx, :Vm))
+        # println(" ├ interita  = ", has_prop(network, idx, :inertia) ? get_prop(network, idx, :inertia) : "missing")
+        # println(" ├ active P = ", get_prop(network, idx, :P))
+        # println(" └ reactive Q = ", get_prop(network, idx, :Q))
     end
     register_interaction!(nwax, :nclick, nodeclick)
+
+    nodehover = NodeHoverHandler() do state, idx, event, axis
+        if state
+            string = """Node $idx
+                        ├ type = $(get_prop(network, idx, :type))
+                        ├ voltage  = $(get_prop(network, idx, :Vm))
+                        ├ interita  = $(has_prop(network, idx, :inertia) ? get_prop(network, idx, :inertia) : "missing")
+                        ├ active P = $(get_prop(network, idx, :P))
+                        └ reactive Q = $(get_prop(network, idx, :Q))
+                     """
+        else
+            string = HOVER_DEFAULT
+        end
+        description_text[] = string
+    end
+    register_interaction!(nwax, :nhover, nodehover)
+
+    edgehover = EdgeHoverHandler() do state, idx, event, axis
+        if state
+            string = """Edge $idx
+                        ├ rating  = $(emergency_rating[idx])
+                        ├ load P = $(load_P[][idx])
+                        └ load S = $(load_S[][idx])
+                     """
+        else
+            string = HOVER_DEFAULT
+        end
+        description_text[] = string
+    end
+    register_interaction!(nwax, :ehover, edgehover)
 
     sublayout = fig[1,2] = GridLayout()
     θax = sublayout[1,1] = Axis(fig)

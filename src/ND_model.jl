@@ -59,6 +59,7 @@ function dynamic_load!(dv, v, edges, (power, inertia, τ), t)
 end
 
 function nd_model(network::MetaGraph; load_τ=0.1, gen_τ=0.1, slack_τ=0.1)
+    @assert isapprox(sum(describe_nodes(network).P), 0, atol=1e-14) "Power sum not zero!"
     flow_edge = StaticEdge(f! = powerflow!, dim = 1, coupling=:antisymmetric)
     swing_vertex = ODEVertex(f! = swing_equation!, dim = 2, sym=[:θ, :ω])
     load_vertex = ODEVertex(f! = dynamic_load!, dim = 1, sym=[:θ])
