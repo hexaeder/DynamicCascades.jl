@@ -5,9 +5,14 @@ using GraphMakie
 using Colors
 using ColorSchemes
 using NetworkDynamics
-using NetworkLayout: Spring
+using NetworkLayout: spring
 
 export inspect_solution
+
+function inspect_solution(c::SolutionContainer)
+    (nd,) = nd_model(c.network)
+    inspect_solution(c.network, nd, c.sol, c.load_S, c.load_P)
+end
 
 function inspect_solution(network, nd, sol, S_values, P_values)
     fig = Figure(resolution = (2000, 1500))
@@ -152,7 +157,7 @@ function inspect_solution(network, nd, sol, S_values, P_values)
     nwax.aspect = AxisAspect(1)
     hidedecorations!(nwax); hidespines!(nwax)
     nwplot = graphplot!(nwax, network;
-                        layout=Spring(),
+                        layout=read_pos_or_spring,
                         node_marker,
                         node_color,
                         node_size,
@@ -211,6 +216,7 @@ function inspect_solution(network, nd, sol, S_values, P_values)
     edgehover = EdgeHoverHandler() do state, idx, event, axis
         if state
             string = """Edge $idx
+                        ├ coupling = $(get_prop(network, collect(edges(network))[idx], :_K))
                         ├ rating  = $(emergency_rating[idx])
                         ├ load P = $(load_P[][idx])
                         └ load S = $(load_S[][idx])
@@ -327,4 +333,13 @@ function dec_slider(slider)
         idx -= 1
     end
     set_close_to!(slider, slider.range[][idx])
+end
+
+function read_pos_or_spring(g::MetaGraph)
+    pos = get_prop(g, 1:nv(g), :pos)
+    if any(ismissing.(pos))
+        return spring(g)
+    else
+        return pos
+    end
 end

@@ -1,8 +1,11 @@
+using Serialization
 using NetworkDynamics
 using OrdinaryDiffEq
 using DiffEqCallbacks
+using SteadyStateDiffEq
 
 export nd_model, get_parameters, calculate_apparant_power, initial_fail_cb
+export steadystate, simulate, SolutionContainer
 
 import NetworkDynamics.network_dynamics
 """
@@ -24,6 +27,10 @@ function network_dynamics(graph::MetaGraph; load_vertex, generator_vertex, slack
     # edges = [flow_edge for i in 1:graph.num_of_lines]
     nd = network_dynamics(vertex_array, flow_edge, SimpleGraph(graph))
 end
+
+####
+#### Models
+####
 
 function powerflow!(e, v_s, v_d, K, t)
     e[1] = - K * sin(v_s[1] - v_d[1])
@@ -58,6 +65,90 @@ function dynamic_load!(dv, v, edges, (power, inertia, τ), t)
     nothing
 end
 
+struct SolutionContainer{G,T}
+    network::G
+    initial_fail::Vector{Int}
+    failtime::Float64
+    trip_lines::Bool
+    sol::T
+    load_S::SavedValues{Float64,Vector{Float64}}
+    load_P::SavedValues{Float64,Vector{Float64}}
+    failures::SavedValues{Float64,Int}
+end
+
+function project_theta!(nd, x0)
+    θidx = idx_containing(nd, "θ")
+    for (i, θ) in enumerate(θidx)
+        n = (θ + π) ÷ 2π
+        x0[i] = θ - n * 2π
+    end
+end
+
+function steadystate(network; project=false, verbose=false)
+    verbose && println("Find steady state...")
+    (nd, p) = nd_model(network)
+    x0 = zeros(length(nd.syms));
+    x_static = solve(SteadyStateProblem(nd, x0, p), SSRootfind())
+
+    project && project_theta!(nd, x0)
+
+    θidx = idx_containing(nd, "θ")
+    ex = extrema(x_static[θidx])
+    if ex[1] < -π/2 || ex[2] > π/2
+        @warn "Steadystate: θ ∈ $ex, consider using project=true flag!"
+    end
+
+    dx = similar(x_static)
+    nd(dx, x_static, p, 0.0)
+    @assert isapprox(dx, zeros(length(dx)), atol=1e-11) "No steady state found $(maximum(abs.(dx)))"
+
+    return x_static
+end
+
+function simulate(network;
+                  verbose=true,
+                  x_static=steadystate(network; verbose),
+                  initial_fail=Int[],
+                  failtime=1.0,
+                  tspan=(0., 100.),
+                  trip_lines=true,
+                  filename=nothing,
+                  terminate_steady_state=true)
+    (nd, p, overload_cb) = nd_model(network);
+    prob = ODEProblem(nd, copy(x_static), tspan, p);
+
+    failures = SavedValues(Float64, Int);
+    load_S = SavedValues(Float64, Vector{Float64});
+    load_P = SavedValues(Float64, Vector{Float64});
+
+    cbs = CallbackSet(overload_cb(;trip_lines, load_S, load_P, failures, verbose));
+    if !isempty(initial_fail)
+        cbs = CallbackSet(InitialFailCB(initial_fail, failtime), cbs)
+    end
+    if terminate_steady_state
+        tmin = isempty(initial_fail) ? 0.0 : failtime
+        cbs = CallbackSet(cbs, TerminateSteadyStateAfter(tmin))
+    end
+
+    verbose && println("Run simulation for trips on lines $(initial_fail)")
+    sol = solve(prob, AutoTsit5(Rosenbrock23()), callback=cbs, progress=true);
+    container = SolutionContainer(network,
+                                  initial_fail, failtime, trip_lines,
+                                  sol, load_S, load_P, failures)
+
+    if terminate_steady_state && sol.t[end] < tspan[2]
+        verbose && println("Terminated on steady state at $(sol.t[end])")
+    else
+        @warn "Did not reach steady state! (lines $trip_lines)"
+    end
+
+    if filename !== nothing
+        return serialize(filename, container)
+    else
+        return container
+    end
+end
+
 function nd_model(network::MetaGraph)
     @assert isapprox(sum(describe_nodes(network).P), 0, atol=1e-14) "Power sum not zero!"
     flow_edge = StaticEdge(f! = powerflow!, dim = 1, coupling=:antisymmetric)
@@ -76,6 +167,25 @@ function nd_model(network::MetaGraph)
     cb_gen = get_callback_generator(network)
 
     return (;nd, p, cb_gen)
+end
+
+function get_parameters(network::MetaGraph)
+    set_admittance!(network)
+    edge_p = set_coupling!(network)
+
+    vertex_p = Vector{NTuple{3,Float64}}(undef, nv(network))
+    for v in 1:nv(network)
+        P = get_prop(network, v, :P)
+        inertia = has_prop(network, v, :inertia) ? get_prop(network, v, :inertia) : 0.0
+        type = get_prop(network, v, :type)
+        τ = if type === :gen || type === :slack
+            get_prop(network, v, :damping)
+        elseif type === :load
+            get_prop(network, v, :timescale)
+        end
+        vertex_p[v] = (P, inertia, τ)
+    end
+    return (vertex_p, edge_p)
 end
 
 function set_admittance!(network::MetaGraph)
@@ -102,24 +212,6 @@ function set_coupling!(network::MetaGraph)
     return K
 end
 
-function get_parameters(network::MetaGraph)
-    set_admittance!(network)
-    edge_p = set_coupling!(network)
-
-    vertex_p = Vector{NTuple{3,Float64}}(undef, nv(network))
-    for v in 1:nv(network)
-        P = get_prop(network, v, :P)
-        inertia = has_prop(network, v, :inertia) ? get_prop(network, v, :inertia) : 0.0
-        type = get_prop(network, v, :type)
-        τ = if type === :gen || type === :slack
-            get_prop(network, v, :damping)
-        elseif type === :load
-            get_prop(network, v, :timescale)
-        end
-        vertex_p[v] = (P, inertia, τ)
-    end
-    return (vertex_p, edge_p)
-end
 
 function calculate_apparant_power(u, p, t, nd::nd_ODE_Static, network::MetaGraph)
     out = zeros(ne(network))
@@ -176,7 +268,6 @@ bump the `saveiter` counter of the other callback. Very ugly.
 """
 function get_callback_generator(network::MetaGraph)
     function gen_cb(;trip_lines=true, load_S=nothing, load_P=nothing, failures=nothing, verbose=true)
-
         save_S_fun = let _network=network
             (u, t, integrator) -> calculate_apparant_power(u, integrator.p, t, integrator.f.f, _network)
         end
@@ -234,11 +325,13 @@ function get_callback_generator(network::MetaGraph)
     return gen_cb
 end
 
-function initial_fail_cb(idxs, time)
-    function affect!(integrator)
-        for i in idxs
-            integrator.p[2][i] = 0.0
-        end
-    end
-    PresetTimeCallback(time,affect!)
+function InitialFailCB(idxs, time)
+    affect! = (integrator) -> integrator.p[2][idxs] .= 0.0
+    PresetTimeCallback(time, affect!)
+end
+
+function TerminateSteadyStateAfter(tmin)
+    test = (integ, abs, rel) ->
+        integ.t > tmin && DiffEqCallbacks.allDerivPass(integ, abs, rel)
+    TerminateSteadyState(1e-8, 1e-6, test)
 end

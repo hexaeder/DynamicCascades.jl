@@ -6,10 +6,14 @@ using LightGraphs
 using MetaGraphs
 using Missings
 
-export DATA_DIR
-const DATA_DIR = abspath(@__DIR__, "..", "Data")
+export DATA_DIR, RAWRESULTS_DIR, RESULTS_DIR
+const DATA_DIR = abspath(@__DIR__, "..", "data")
+const RAWRESULTS_DIR = abspath("/Users/hw/MAScratch")
+const RESULTS_DIR = abspath(@__DIR__, "..", "result")
 
 export import_system, describe_nodes, describe_edges, bustype, is_static_state
+
+include("utils.jl")
 
 """
     bustype(i::Int)
@@ -68,34 +72,6 @@ include("import_rtsgmlc.jl")
 include("import_rts96.jl")
 include("import_kaiser2020.jl")
 
-import MetaGraphs: set_prop!, get_prop
-
-KEY_ITER = Union{AbstractUnitRange,Vector,AbstractEdgeIter}
-"""
-    set_prop!(g, keys::Iterable, prop::Symbol, vals::Iterable)
-
-Set same property `prop` with different values `vals` for differet identifiers `keys`.
-"""
-function set_prop!(g, keys::KEY_ITER, prop::Symbol, vals::Vector)
-    length(keys) == length(vals) || throw(ArgumentError("keys and vals needs to be of same length!"))
-    for (k, val) in zip(keys, vals)
-        if !ismissing(val)
-            set_prop!(g, k, prop, val)
-        end
-    end
-end
-
-set_prop!(g, keys::KEY_ITER, p::Symbol, val) = set_prop!(g, keys, p, [val for v in keys])
-
-"""
-    get_prop(g, keys::Iterable, prop::Symbol)
-
-Get same property `prop` with different values `vals` for differet keys.
-"""
-function get_prop(g, keys::KEY_ITER, prop::Symbol)
-    [has_prop(g, k, prop) ? get_prop(g, k, prop) : missing for k in keys]
-end
-
 """
     describe_nodes(g::MetaGraph; firstcols=Vector{String}())
 
@@ -132,13 +108,8 @@ function describe_edges(g::MetaGraph; firstcols=Vector{String}())
     select!(df, firstcols)
 end
 
-function is_static_state(nd, x0, p)
-    dx = similar(x0)
-    nd(dx, x0, p, 0.0)
-    extrema(dx)
-end
-
 include("ND_model.jl")
+include("analyse_solution.jl")
 include("inspect_solution.jl")
 
 end

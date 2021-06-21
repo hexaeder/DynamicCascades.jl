@@ -1,14 +1,15 @@
 using NPZ
 using Random
 using LinearAlgebra
+using NetworkLayout
 
 """
     import_system(:kaiser2020)
 
 Imports the Laplacian from the Kaiser2020 paper.
 """
-function import_system(::Val{:kaiser2020}; gen_γ, load_τ)
-    rng = MersenneTwister(1)
+function import_system(::Val{:kaiser2020}; gen_γ, load_τ, seed=1)
+    rng = MersenneTwister(seed)
     file = joinpath(@__DIR__, "..", "data", "Kaiser2020", "Laplacian.npy")
     # file = joinpath(DATA_DIR, "Kaiser2020", "Laplacian.npy")
     L = npzread(file)
@@ -18,11 +19,11 @@ function import_system(::Val{:kaiser2020}; gen_γ, load_τ)
     g = MetaGraph(A)
 
     N = nv(g)
-    Ngen = 10
-    Nload = 30
+    Ngen = 15
+    Nload = 25
     @assert N == Ngen + Nload
 
-    Pgen = 1.0
+    Pgen = 10.0/Ngen
     Pload = Pgen * Ngen / Nload
     # Pgen = rand_with_sum(rng, Ngen, 20)
     # Pload = rand_with_sum(rng, Nload, 20)
@@ -34,6 +35,7 @@ function import_system(::Val{:kaiser2020}; gen_γ, load_τ)
 
     # baseP = 1
     # set_prop!(g, :Pbase, baseP)
+    set_prop!(g, :seed, seed)
     set_prop!(g, :NodeProps, [:n, :type, :P, :Q, :inertia, :Vm])
     set_prop!(g, :EdgeProps, [:src, :dst, :R, :X, :rating])
 
@@ -54,6 +56,21 @@ function import_system(::Val{:kaiser2020}; gen_γ, load_τ)
     set_prop!(g, edges(g), :R, 0.0)
     set_prop!(g, edges(g), :X, 0.01)
     set_prop!(g, edges(g), :rating, 2.0)
+
+    # set the regions
+    set_prop!(g, 1:20, :region, 1)
+    set_prop!(g, 21:40, :region, 2)
+    for e in edges(g)
+        r1 = get_prop(g, e.src, :region)
+        r2 = get_prop(g, e.dst, :region)
+        if r1 == r2
+            set_prop!(g, e, :region, r1)
+        else
+            set_prop!(g, e, :region, 0)
+        end
+    end
+
+    set_prop!(g, 1:nv(g), :pos, spring(g))
 
     return g
 end

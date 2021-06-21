@@ -62,3 +62,38 @@ using Missings
     @test wo_idx(e1.X) == wo_idx(e2.X) == wo_idx(e3.X)
     @test wo_idx(e1.rating) == wo_idx(e2.rating) == wo_idx(e3.rating)
 end
+
+@testset "test max_rel_load" begin
+    sv = SavedValues(Float64, Vector{Float64})
+    push!(sv.t, 0.0)
+    push!(sv.t, 1.0)
+    push!(sv.t, 2.0)
+    push!(sv.saveval, [1.0, 1.0, 1.0])
+    push!(sv.saveval, [1.1, 1.5, 1.0])
+    push!(sv.saveval, [0.9, 2.0, 0.5])
+
+    (relflow, times) = max_rel_load(sv)
+    @test relflow ≈ [0.1, 1.0, 0.0]
+    @test times ≈ [1.0, 2.0, 0.0]
+
+    @test sv(0.0) == sv.saveval[1]
+    @test sv(1.0) == sv.saveval[2]
+    @test sv(2.0) == sv.saveval[3]
+    @test_throws ArgumentError sv(-0.1)
+    @test_throws ArgumentError sv(2.1)
+    @test sv(0.5) == [1.05, 1.25, 1.0]
+    @test sv(1.5) == [1.0, 1.75, 0.75]
+end
+
+@testest "graph distance" begin
+    g = path_graph(7)
+    dist = edge_distance_to(g, 1) do g, v1, v2
+        d = length(a_star(g, v1, v2))
+    end
+    @test dist == [0,1,2,3,4,5]
+
+    dist = edge_distance_to(g, 3) do g, v1, v2
+        d = length(a_star(g, v1, v2))
+    end
+    @test dist == [2,1,0,1,2,3]
+end
