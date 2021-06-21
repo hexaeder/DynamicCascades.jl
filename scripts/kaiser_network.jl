@@ -52,14 +52,6 @@ mkpath(dir_woi)
     end
 end
 
-network = import_system(:kaiser2020; gen_γ=damping, load_τ=loadt)
-rem_edge!(network, 2, 22)
-rem_edge!(network, 1, 21)
-set_prop!(network, 1, 22, :X, 0.005)
-set_prop!(network, 2, 21, :X, 0.005)
-sol = simulate(network, initial_fail=[55])
-inspect_solution(sol)
-
 ####
 #### load data
 ####
@@ -95,30 +87,10 @@ df_woi = DataFrame()
     append!(df_woi, subdf, cols=:union)
 end
 
-
 same_ins = df_ins[df_ins.region .== :same, :]
 other_ins = df_ins[df_ins.region .== :other, :]
 same_woi = df_woi[df_woi.region .== :same, :]
 other_woi = df_woi[df_woi.region .== :other, :]
-
-other_ins[other_ins.fail.==38, :]
-
-fig, ax, p = scatter(other_ins.fail, other_ins.absdiff)
-DataInspector(ax)
-
-
-network = import_system(:kaiser2020; gen_γ=damping, load_τ=loadt)
-sol = simulate(network, initial_fail=[38])
-inspect_solution(sol)
-
-absdiff = max_flow(sol)[4] - abs.(max_flow(sol)[2])
-df = DataFrame(; idx=1:ne(network), absdiff)
-sort(df, :absdiff)
-
-
-findmax(max_flow(sol)[4]-max_flow(sol)[2])
-graphplot(network; elabels=repr.(1:ne(network)))
-using GraphMakie
 
 
 ####
@@ -215,4 +187,24 @@ scatter(same_ins.d, same_ins.t)
 scatter!(other_ins.d, other_ins.t)
 scatter!(other_woi.d, other_woi.t)
 
-violin()
+####
+#### Simulate specific failure
+####
+network = import_system(:kaiser2020; gen_γ=damping, load_τ=loadt, seed)
+sol = simulate(network; tspan=(0.0, 1000.),
+         initial_fail=[38], trip_lines=false);
+
+CairoMakie.activate!()
+t = Observable(0.0)
+fig = Figure()
+fig[1,1] = ax = Axis(fig)
+graphplot!(ax, sol, t; colortype=:abssteady)
+hidedecorations!(ax); hidespines!(ax)
+fig[1,1] = Label(fig, @lift("time = " * lpad(round($t, digits=2), 5) * " s"), halign=:left, valign=:top, tellwidth=false, tellheight=false)
+
+framerate = 25
+time = 10
+t1, t2 = 0.0, 10.0
+record(fig, "animation.mp4", range(t1, t2, length=framerate*time); framerate) do time
+    t[] = time
+end
