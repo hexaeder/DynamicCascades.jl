@@ -3,30 +3,10 @@ using NetworkDynamics
 using OrdinaryDiffEq
 using DiffEqCallbacks
 using SteadyStateDiffEq
+using LinearAlgebra
 
 export nd_model, get_parameters, calculate_apparant_power, initial_fail_cb
-export steadystate, simulate, SolutionContainer
-
-import NetworkDynamics.network_dynamics
-"""
-    network_dynamics(gen_ver, slack_vert, load_vert, flow_edge, network::MetaGraph)
-
-Create a ND-object based on a IEEE_Network struct for the given vertice and edge types.
-"""
-function network_dynamics(graph::MetaGraph; load_vertex, generator_vertex, slack_vertex, flow_edge)
-    vertex_array = Array{ODEVertex}([load_vertex for v in vertices(graph.graph)])
-    for i in 1:nv(graph)
-        bustype = get_prop(graph, i, :type)
-        if bustype == :gen
-            vertex_array[i] = generator_vertex
-        elseif bustype == :slack
-            vertex_array[i] = slack_vertex
-        end
-    end
-    vertex_array = [v for v in vertex_array] # try to narrow type
-    # edges = [flow_edge for i in 1:graph.num_of_lines]
-    nd = network_dynamics(vertex_array, flow_edge, SimpleGraph(graph))
-end
+export steadystate, simulate, SolutionContainer, issteadystate
 
 ####
 #### Models
@@ -98,11 +78,17 @@ function steadystate(network; project=false, verbose=false)
         @warn "Steadystate: θ ∈ $ex, consider using project=true flag!"
     end
 
-    dx = similar(x_static)
-    nd(dx, x_static, p, 0.0)
-    @assert isapprox(dx, zeros(length(dx)), atol=1e-11) "No steady state found $(maximum(abs.(dx)))"
+    residuum = issteadystate(network, x_static; ndp=(nd, p))
+    @assert residuum < 1e-9 "No steady state found $residuum"
 
     return x_static
+end
+
+function issteadystate(network, x_static; ndp=nd_model(network))
+    (nd, p) = ndp
+    dx = similar(x_static)
+    nd(dx, x_static, p, 0.0)
+    return maximum(abs.(dx))
 end
 
 function simulate(network;
@@ -113,7 +99,8 @@ function simulate(network;
                   tspan=(0., 100.),
                   trip_lines=true,
                   filename=nothing,
-                  terminate_steady_state=true)
+                  terminate_steady_state=true,
+                  solverargs=(;))
     (nd, p, overload_cb) = nd_model(network);
     prob = ODEProblem(nd, copy(x_static), tspan, p);
 
@@ -131,15 +118,18 @@ function simulate(network;
     end
 
     verbose && println("Run simulation for trips on lines $(initial_fail)")
-    sol = solve(prob, AutoTsit5(Rosenbrock23()), callback=cbs, progress=true);
+    # sol = solve(prob, AutoTsit5(Rosenbrock23()), callback=cbs, progress=true, solverargs...);
+    sol = solve(prob, AutoTsit5(Rosenbrock23()); callback=cbs, progress=true, solverargs...);
     container = SolutionContainer(network,
                                   initial_fail, failtime, trip_lines,
                                   sol, load_S, load_P, failures)
 
-    if terminate_steady_state && sol.t[end] < tspan[2]
-        verbose && println("Terminated on steady state at $(sol.t[end])")
-    else
-        @warn "Did not reach steady state! (lines $trip_lines)"
+    if terminate_steady_state
+        if sol.t[end] < tspan[2]
+            verbose && println("Terminated on steady state at $(sol.t[end])")
+        else
+            @warn "Did not reach steady state! (lines $trip_lines)"
+        end
     end
 
     if filename !== nothing
@@ -152,14 +142,28 @@ end
 function nd_model(network::MetaGraph)
     @assert isapprox(sum(describe_nodes(network).P), 0, atol=1e-14) "Power sum not zero!"
     flow_edge = StaticEdge(f! = powerflow!, dim = 1, coupling=:antisymmetric)
-    swing_vertex = ODEVertex(f! = swing_equation!, dim = 2, sym=[:θ, :ω])
-    load_vertex = ODEVertex(f! = dynamic_load!, dim = 1, sym=[:θ])
 
-    nd = network_dynamics(network;
-                          load_vertex=load_vertex,
-                          generator_vertex=swing_vertex,
-                          slack_vertex=swing_vertex,
-                          flow_edge=flow_edge)
+    standardmodels = Dict(
+        :gen => :swing,
+        :load => :dynload,
+        :slack => :swing,
+    )
+    for i in 1:nv(network)
+        if !has_prop(network, i, :model)
+            mod = standardmodels[get_prop(network, i, :type)]
+            set_prop!(network, i, :model, mod)
+        end
+    end
+
+    vertexmodels = Dict(
+        :swing => ODEVertex(f! = swing_equation!, dim = 2, sym=[:θ, :ω]),
+        :dynload => ODEVertex(f! = dynamic_load!, dim = 1, sym=[:θ])
+    )
+
+    vertex_array = [vertexmodels[k] for k in get_prop(network, 1:nv(network), :model)]
+    vertex_array = [v for v in vertex_array] # try to narrow type
+
+    nd = network_dynamics(vertex_array, flow_edge, SimpleGraph(network))
 
     # second we generate the parameter tuple for the simulation
     p = get_parameters(network)
@@ -177,10 +181,10 @@ function get_parameters(network::MetaGraph)
     for v in 1:nv(network)
         P = get_prop(network, v, :P)
         inertia = has_prop(network, v, :inertia) ? get_prop(network, v, :inertia) : 0.0
-        type = get_prop(network, v, :type)
-        τ = if type === :gen || type === :slack
+        model = get_prop(network, v, :model)
+        τ = if model === :swing
             get_prop(network, v, :damping)
-        elseif type === :load
+        elseif model === :dynload
             get_prop(network, v, :timescale)
         end
         vertex_p[v] = (P, inertia, τ)
