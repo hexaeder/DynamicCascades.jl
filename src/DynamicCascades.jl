@@ -71,6 +71,7 @@ import_system(sym::Symbol; kwargs...) = import_system(Val(sym); kwargs...)
 include("import_rtsgmlc.jl")
 include("import_rts96.jl")
 include("import_kaiser2020.jl")
+include("import_schaefer2018.jl")
 
 """
     describe_nodes(g::MetaGraph; firstcols=Vector{String}())
