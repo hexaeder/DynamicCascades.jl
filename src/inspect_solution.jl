@@ -49,10 +49,7 @@ function inspect_solution(c::SolutionContainer)
 
     nw_sublayout[1, 1] = grid!(toggles, tellwidth = false)
 
-    load_S = @lift begin
-        println($t)
-        S_values($t)
-    end
+    load_S = @lift S_values($t)
     load_P = @lift P_values($t)
 
     emergency_rating = get_prop(network, edges(network), :rating)
@@ -129,18 +126,29 @@ function inspect_solution(c::SolutionContainer)
     end
     register_interaction!(nwax, :ehover, edgehover)
 
+    ####
+    #### Plot graphs on the right side
+    ####
     sublayout = fig[1,2] = GridLayout()
-    θax = sublayout[1,1] = Axis(fig)
+
+    tg_showP = Toggle(fig, active=false)
+    tg_showRating = Toggle(fig, active=true)
+    righttoggles = reshape([Label(fig, "show P: "), tg_showP,
+                            Label(fig, "show rating: "), tg_showRating,
+                            ], 1, :)
+    sublayout[1,1] = grid!(righttoggles, tellwidth = false)
+
+    θax = sublayout[2,1] = Axis(fig)
     θax.title = "Phase angle θ"
     θax.xzoomlock = true
-    ωax = sublayout[2,1] = Axis(fig)
+    ωax = sublayout[3,1] = Axis(fig)
     ωax.title = "Frequency ω"
     ωax.xzoomlock = true
-    fax = sublayout[3,1] = Axis(fig)
+    fax = sublayout[4,1] = Axis(fig)
     fax.title = "Powerflow"
     fax.xzoomlock = true
 
-    islider = sublayout[4,1] = IntervalSlider(fig, range=range(S_values.t[begin], stop=S_values.t[end], length=500))
+    islider = sublayout[5,1] = IntervalSlider(fig, range=range(S_values.t[begin], stop=S_values.t[end], length=500))
 
     on(islider.interval) do interval
         xlims!(θax, interval)
@@ -154,13 +162,15 @@ function inspect_solution(c::SolutionContainer)
         for idx in selected
             c = pop!(colors)
             θidx = findfirst(sym -> occursin(Regex("θ_$idx\$"), String(sym)), nd.syms)
+            trange = range(sol.t[begin], sol.t[end], length=1000)
             if θidx !== nothing
-                lines!(θax, sol.t, map(u->u[θidx], sol), label="θ_$idx", color=c, linewidth=3)
+                lines!(θax, trange, Float32[sol(t)[θidx] for t in trange], label="θ_$idx", color=c, linewidth=3)
             end
             ωidx = findfirst(sym -> occursin(Regex("ω_$idx\$"), String(sym)), nd.syms)
             if ωidx !== nothing
-                lines!(ωax, sol.t, map(u->u[ωidx], sol), label="ω_$idx", color=c, linewidth=3)
+                lines!(ωax, trange, Float32[sol(t)[ωidx] for t in trange], label="ω_$idx", color=c, linewidth=3)
             elseif θidx !== nothing && ωload
+                # TODO: prob use https://diffeq.sciml.ai/stable/basics/solution/
                 θs = map(u->u[θidx], sol)
                 lines!(ωax, sol.t[begin:end-1], diff(θs) ./ diff(sol.t), label="ω_$idx", color=c, linewidth=3)
             end
@@ -177,10 +187,17 @@ function inspect_solution(c::SolutionContainer)
         colors = reverse(fig.scene.palette[:color][])
         for idx in selected
             c = pop!(colors)
-            lines!(fax, S_values.t, map(l->abs(l[idx]), S_values.saveval), color=c, linewidth=3)
-            lines!(fax, P_values.t, map(l->abs(l[idx]), P_values.saveval), color=c, linewidth=3, linestyle=:dash)
+
+            (tS, S) = timeseriesforidx(S_values, idx)
+            (tP, P) = timeseriesforidx(P_values, idx)
+            lines!(fax, tS, S, color=c, linewidth=3)
+            lines!(fax, tP, P, color=c, linewidth=3, linestyle=:dash, visible=tg_showP.active)
+
+            # lines!(fax, S_values.t, map(l->abs(l[idx]), S_values.saveval), color=c, linewidth=3)
+            # lines!(fax, P_values.t, map(l->abs(l[idx]), P_values.saveval), color=c, linewidth=3,
+            #        linestyle=:dash, visible=tg_showP.active)
             rating = emergency_rating[idx]
-            hlines!(fax, rating, color=c, linewidth=3)
+            hlines!(fax, rating, color=c, linewidth=3, visible=tg_showRating.active)
         end
         vlines!(fax, lsgrid.sliders[1].value, color=:black)
     end

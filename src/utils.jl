@@ -77,3 +77,40 @@ function (sv::SavedValues)(t)
         return @. v1 + (t-t1)/(t2-t1) * (v2-v1)
     end
 end
+
+function timeseriesforidx(sv::SavedValues, idx; dedup=true, cuttail=true, T=Float32)
+    x = Vector{T}(sv.t)
+    y = [T(abs(l[idx])) for l in sv.saveval]
+
+    cuttail && remove_zero_tail!(x, y)
+    dedup && remove_duplicates!(x, y)
+
+    return (x, y)
+end
+
+function remove_zero_tail!(x, y)
+    @assert length(x) == length(y)
+    tail = lastindex(y) + 1
+    while y[tail - 1] ≈ 0
+        tail -= 1
+    end
+    if tail <= length(y)
+        idxs = tail:lastindex(y)
+        deleteat!(x, idxs)
+        deleteat!(y, idxs)
+    end
+    return (x, y)
+end
+
+function remove_duplicates!(x, y)
+    @assert length(x) == length(y)
+    idxs = Int[]
+    for i in 2:length(y)
+        if y[i] ≈ y[i-1] # element seend before
+            push!(idxs, i)
+        end
+    end
+    deleteat!(x, idxs)
+    deleteat!(y, idxs)
+    return (x, y)
+end

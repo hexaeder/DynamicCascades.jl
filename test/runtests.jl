@@ -97,3 +97,15 @@ end
     end
     @test dist == [2,1,0,1,2,3]
 end
+
+@testest "time series stuff" begin
+    using DynamicCascades: remove_zero_tail!
+    x = [1, 2, 3, 4, 5]
+    y = [2, 4, 1, 0, 0]
+    @test remove_zero_tail!(x, y) == (x[1:3], y[1:3])
+
+    using DynamicCascades: remove_duplicates!
+    x = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    y = [2, 2, 3, 1, 1, 1, 1, 0, 2]
+    @test remove_duplicates!(x, y) == ([1,3,4,8,9], [2,3,1,0,2])
+end
