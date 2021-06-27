@@ -269,6 +269,8 @@ function gparguments(c::SolutionContainer, t::Observable;
                      activeP = Observable(false),
                      colortype = Observable(:relrating),
                      offlinecolor = ColorSchemes.RGB{Float64}(0,0,0),
+                     ecolorscaling = Observable(1.0),
+                     offlinewidth = 3.0,
                      load_S = @lift(c.load_S($t)),
                      load_P = @lift(c.load_P($t)),
                      sel_nodes = Node(Set{Int}()),
@@ -324,12 +326,15 @@ function gparguments(c::SolutionContainer, t::Observable;
 
         mode = $(colortype)
         if mode === :relrating
-            cvals = abs.(load) ./ emergency_rating
+            max = emergency_rating .* $ecolorscaling
+            cvals = abs.(load) ./ max
         elseif mode === :abs
             max = $(activeP) ? alltime_max_P : alltime_max_S
+            max = max .* $ecolorscaling
             cvals = abs.(load) ./ max
         elseif mode === :abssteady
             max = $(activeP) ? alltime_max_P_diff : alltime_max_S_diff
+            max = max .* $ecolorscaling
             steady = $(activeP) ? P_steady : S_steady
             cvals = (load .- steady)./(2*max) .+ 0.5
         else # nothing
@@ -343,7 +348,7 @@ function gparguments(c::SolutionContainer, t::Observable;
         colors
     end
 
-    width_src, width_dst = 9.0, 3.0
+    width_src, width_dst = 9.0, 4.0
     widthdata = zeros(2*ne(network))
 
     iscairo = repr(typeof(Makie.current_backend[])) == "CairoMakie.CairoBackend"
@@ -358,6 +363,11 @@ function gparguments(c::SolutionContainer, t::Observable;
             else
                 w1, w2 = width_dst, width_src
             end
+
+            if iszero($load_S[idx])
+                w1 = w2 = offlinewidth
+            end
+
             magnify = idx ∈ $sel_edges ? 2.5 : 1.0
 
             widthdata[2*idx-1] = w1 * magnify
@@ -385,7 +395,7 @@ end
 
 function edge_colorsheme(type)
     if type === :abssteady
-        ColorScheme([colorant"yellow", colorant"gray", colorant"red"])
+        ColorScheme([colorant"green", colorant"gray70", colorant"red"])
     else
         ColorScheme([colorant"yellow", colorant"red"])
     end

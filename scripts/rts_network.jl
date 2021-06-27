@@ -6,40 +6,105 @@ using SteadyStateDiffEq
 using DataFrames
 
 using DynamicCascades
+using NetworkLayout
+using MetaGraphs
+using GLMakie
+using GraphMakie
 
-@info "Find steady state..."
-network = import_system(:rts96prepared; gen_γ=1.0, slack_γ=1.0, load_τ=0.1, losses=false)
-(nd, p) = nd_model(network);
+DIR = "/Users/hw/MA/Forschungsbeleg/figures/"
+set_theme!(theme_minimal(), fontsize=20)
 
-x0 = zeros(length(nd.syms));
-x_static = solve(SteadyStateProblem(nd, x0, p), SSRootfind())
-is_static_state(nd, x_static, p)
-# x_static = solve(SteadyStateProblem(nd, x0, p), DynamicSS(AutoTsit5(Rosenbrock23())))
+network = import_system(:rts96prepared; gen_γ=0.8, slack_γ=0.8, load_τ=0.1, losses=false)
 
-# tspan = (0., 2000.);
-# prob = ODEProblem(nd, x0, tspan, p);
-# @time solinit = solve(prob, Rosenbrock23(), callback=TerminateSteadyState(), save_everystep=false);
+sol = simulate(network;
+               tspan=(0.0,500.0),
+               initial_fail=[27],
+               trip_lines=false);
+# inspect_solution(sol)
 
-# if solinit.t[end] == tspan[2]
-#     @warn "Simulation time ended without reaching steady state!"
-# else
-#     @info "Found steadystate at t = $(solinit.t[end])..."
-# end
-# x_static = copy(solinit[end]);
+x_static = sol.sol[end]
+(nd, p) = nd_model(network)
+p[2][27] = 0.0
+S = calculate_apparent_power(x_static, p, 0.0, nd.f, network)
+margin = describe_edges(network).rating .- S
+@assert minimum(margin) > 0
 
-initial_fail = [27]
-failtime = 1.0
+fig = Figure(resolution=(1000,1000))
+fig[1,1] = ax = Axis(fig)
+hidedecorations!(ax), hidespines!(ax)
+xlims!(-10, 7)
+ylims!(-5, 7)
 
-(nd, p, overload_cb) = nd_model(network);
-tspan = (0., 100.)
-prob = ODEProblem(nd, copy(x_static), tspan, p);
+t = Node(sol.sol.t[end])
+ecolorscaling = Node(0.5)
+gpargs = gparguments(sol, t;
+                     colortype=:abssteady,
+                     offlinewidth=0.0,
+                     ecolorscaling)
+p = graphplot!(ax, network; gpargs...)
 
-line_failures = SavedValues(Float64, Int);
-S_values = SavedValues(Float64, Vector{Float64});
-P_values = SavedValues(Float64, Vector{Float64});
-cbs = CallbackSet(initial_fail_cb(initial_fail, failtime),
-                  overload_cb(trip_lines=true, load_S=S_values, load_P=P_values, failures=line_failures));
+function getline(idx)
+    e = collect(edges(network))[idx]
+    p[:node_positions][][[e.src, e.dst]]
+end
 
-@time sol = solve(prob, AutoTsit5(Rosenbrock23()), callback=cbs, progress=true);
+l27 = lines!(ax, getline(27); largs...)
+save(joinpath(DIR, "rts64_wo_cascade.png"), fig)
 
-inspect_solution(network, nd, sol, S_values, P_values)
+## now for the actual simulation
+sol = simulate(network;
+               tspan=(0.0,500.0),
+               initial_fail=[27],
+               trip_lines=true);
+# inspect_solution(sol)
+
+times = [1.0, sol.failures.t[1:3]..., 50]
+fps = 30
+timeranges = []
+for i in 1:length(times)-1
+    tstart = times[i]
+    tend = times[i+1]
+    r = range(tstart, tend, length=round(Int, (tend-tstart)*fps))
+    push!(timeranges, r)
+end
+
+fig = Figure(resolution=(1000,1000))
+fig[1,1] = ax = Axis(fig)
+hidedecorations!(ax), hidespines!(ax)
+xlims!(-10, 7)
+ylims!(-5, 7)
+
+t = Node(1.0)
+ecolorscaling = Node(0.5)
+gpargs = gparguments(sol, t;
+                     colortype=:abssteady,
+                     offlinewidth=0.0,
+                     ecolorscaling)
+p = graphplot!(ax, network; gpargs...)
+timelabel = @lift "time = " * repr(round($t, digits=2)) * " s"
+fig[1,1] = Label(fig, timelabel, textsize=30,
+                 halign=:left, valign=:top, tellwidth=false, tellheight=false)
+
+largs = (;color=:black, linestyle=:dot, linewidth=3.0)
+
+function recordsegment(fig, timeranges, i; line=false, fps=30)
+    file = "rts_$i"
+    tspan = timeranges[i]
+    save(joinpath(DIR, "../videos", file*".png"), fig)
+    record(fig, joinpath(DIR, "../videos", file*".mp4"), tspan; framerate=fps) do time
+        t[] = time
+        if line isa Int && time == timeranges[i][end]
+            lines!(ax, getline(line); largs...)
+        end
+    end
+end
+l27 = lines!(ax, getline(27); largs...)
+
+recordsegment(fig, timeranges, 1; line=29)
+
+deleteat!(ax.scene.plots, findall(p->p isa Lines, ax.scene.plots))
+division = lines!(ax, [(0,-3.0), (0.5,-5)]; largs...)
+
+recordsegment(fig, timeranges, 2; line=83) # not importand
+recordsegment(fig, timeranges, 3; line=37)
+recordsegment(fig, timeranges, 4; fps=60)

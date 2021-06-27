@@ -5,7 +5,7 @@ using DiffEqCallbacks
 using SteadyStateDiffEq
 using LinearAlgebra
 
-export nd_model, get_parameters, calculate_apparant_power, initial_fail_cb
+export nd_model, get_parameters, calculate_apparent_power
 export steadystate, simulate, SolutionContainer, issteadystate
 
 ####
@@ -225,16 +225,16 @@ end
 
 function calculate_apparent_power(network::MetaGraph, u)
     nd, p = nd_model(network)
-    calculate_apparent_power(u, p, 0.0, nd, network)
+    calculate_apparent_power(u, p, 0.0, nd.f, network)
 end
 
-function calculate_apparant_power(u, p, t, nd::nd_ODE_Static, network::MetaGraph)
+function calculate_apparent_power(u, p, t, nd::nd_ODE_Static, network::MetaGraph)
     out = zeros(ne(network))
-    calculate_apparant_power!(out, u, p, t, nd, network)
+    calculate_apparent_power!(out, u, p, t, nd, network)
     return out
 end
 
-function calculate_apparant_power!(S, u, p, t, nd::nd_ODE_Static, network::MetaGraph; gd=nd(u, p, t, GetGD))
+function calculate_apparent_power!(S, u, p, t, nd::nd_ODE_Static, network::MetaGraph; gd=nd(u, p, t, GetGD))
     for (i, e) in enumerate(edges(nd.graph))
         Vs::Float64 = get_prop(network, e.src, :Vm)
         Vd::Float64 = get_prop(network, e.dst, :Vm)
@@ -289,7 +289,7 @@ bump the `saveiter` counter of the other callback. Very ugly.
 function get_callback_generator(network::MetaGraph)
     function gen_cb(;trip_lines=true, load_S=nothing, load_P=nothing, failures=nothing, verbose=true)
         save_S_fun = let _network=network
-            (u, t, integrator) -> calculate_apparant_power(u, integrator.p, t, integrator.f.f, _network)
+            (u, t, integrator) -> calculate_apparent_power(u, integrator.p, t, integrator.f.f, _network)
         end
         save_P_fun = let _network=network
             (u, t, integrator) -> calculate_active_power(u, integrator.p, t, integrator.f.f, _network)
@@ -301,7 +301,7 @@ function get_callback_generator(network::MetaGraph)
         condition = let _current_load=zeros(ne(network)), _network=network, _rating=get_prop(network,edges(network),:rating)
             (out, u, t, integrator) -> begin
                 # upcrossing through zero triggers condition
-                calculate_apparant_power!(_current_load, u, integrator.p, t, integrator.f.f, _network)
+                calculate_apparent_power!(_current_load, u, integrator.p, t, integrator.f.f, _network)
                 out .= _current_load .- _rating
                 nothing
             end

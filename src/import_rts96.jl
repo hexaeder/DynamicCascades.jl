@@ -1,3 +1,4 @@
+using NetworkLayout: spring
 """
     import_system(:rts96raw)
 
@@ -180,6 +181,34 @@ function import_system(::Val{:rts96prepared}; gen_γ, slack_γ, load_τ, losses=
     lineorder1 = [(e.source, e.dest) for e in eachrow(LineData)]
     lineorder2 = [(e.src, e.dst) for e in edges(g)]
     @assert lineorder1 == lineorder2 "Different order of edges in graph and csv!"
+
+    # set location property based on rts gmlc data
+    data = joinpath(DATA_DIR, "RTS-GMLC")
+    bus_data    = CSV.read(joinpath(data,"bus.csv"), DataFrame)
+    x = bus_data."lng"
+    y = bus_data."lat"
+    xn = 10*(x .- minimum(x))./(maximum(x)-minimum(x)).-5
+    yn = 10*(y .- minimum(y))./(maximum(y)-minimum(y)).-5
+    pos2 = spring(g, initialpos=Point2f0.(zip(xn, yn)))
+
+    # manual tweak som positions
+    # pos2[70] = (-3,3.7)
+    # pos2[53] = (-10,1)
+    # pos2[54] = (-9,1)
+    # pos2[58] = (-9,0.5)
+    # pos2[56] = (-8.5,0.7)
+    # pos2[55] = (-8.6,0.8)
+    # pos2[42] = (4,0.5)
+    # pos2[36] = (2.5,5)
+    # pos2[32] = (4.5,5)
+    # pos2[31] = (4.6,4.9)
+    # pos2[29] = (6,5.5)
+    # pos2[28] = (5.0,4.2)
+    # pos2[30] = (5.0,5)
+    # pos2[26] = (5.5,5)
+    # pos3 = spring(g, initialpos=pos2, initialtemp=0.1)
+
+    set_prop!(g, 1:N, :pos, pos2)
 
     return g
 end
