@@ -55,17 +55,21 @@ function create_animation(sol, tmin, tmax, file; showrating=false)
     fig[1,2] = flowax = Axis(fig, heigth=600, xlabel="Time (s)", ylabel="absolut flow in PU")
 
     t = Node(0.0)
-    gpargs = gparguments(sol, t; colortype=:abssteady)
+    rating = get_prop(network, Edge(1,2), :rating)
+    hlines!(flowax, rating, linewidth=3, color=gray, visible=showrating)
+    gpargs = gparguments(sol, t;
+                         colortype=:abssteady,
+                         offlinecolor=Makie.RGB(1,1,1))
     p = graphplot!(nwax, network; gpargs..., node_size=30, node_color)
     hidedecorations!(nwax); hidespines!(nwax)
     for idx in 1:ne(network)
         (ts, S) = seriesforidx(sol.load_S, idx)
         lines!(flowax, ts, S, linewidth=5)
     end
-    rating = get_prop(network, Edge(1,2), :rating)
     hlines!(flowax, rating, linewidth=5, color=gray, visible=showrating)
     vlines!(flowax, t, linewidth=3, color=gray, visible=@lift($t>tmin))
     xlims!(flowax, tmin, tmax)
+    ylims!(flowax, 0, 1.1)
 
     time, fps = 10, 30
     tspan = range(tmin, tmax, length=fps*time)
@@ -80,7 +84,7 @@ sol = simulate(network;
                trip_lines=false,
                tspan=(0., 1000.),
                solverargs=(;dtmax=0.1));
-create_animation(sol, 0, 15, "schaefer_transient")
+create_animation(sol, 0, 15, "schaefer_transient"; showrating=true)
 
 sol = simulate(network;
                initial_fail=[5],

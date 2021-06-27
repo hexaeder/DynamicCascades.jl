@@ -268,6 +268,7 @@ function gparguments(c::SolutionContainer, t::Observable;
                      Δω = Observable(1.0),
                      activeP = Observable(false),
                      colortype = Observable(:relrating),
+                     offlinecolor = ColorSchemes.RGB{Float64}(0,0,0),
                      load_S = @lift(c.load_S($t)),
                      load_P = @lift(c.load_P($t)),
                      sel_nodes = Node(Set{Int}()),
@@ -338,7 +339,7 @@ function gparguments(c::SolutionContainer, t::Observable;
         colors = get(edgescheme[], cvals)
 
         offline = @view colors[findall(iszero, $load_S)]
-        offline .= ColorSchemes.RGB{Float64}(0,0,0)
+        offline .= offlinecolor
         colors
     end
 
