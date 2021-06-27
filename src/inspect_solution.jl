@@ -188,14 +188,11 @@ function inspect_solution(c::SolutionContainer)
         for idx in selected
             c = pop!(colors)
 
-            (tS, S) = timeseriesforidx(S_values, idx)
-            (tP, P) = timeseriesforidx(P_values, idx)
+            (tS, S) = seriesforidx(S_values, idx)
+            (tP, P) = seriesforidx(P_values, idx)
             lines!(fax, tS, S, color=c, linewidth=3)
             lines!(fax, tP, P, color=c, linewidth=3, linestyle=:dash, visible=tg_showP.active)
 
-            # lines!(fax, S_values.t, map(l->abs(l[idx]), S_values.saveval), color=c, linewidth=3)
-            # lines!(fax, P_values.t, map(l->abs(l[idx]), P_values.saveval), color=c, linewidth=3,
-            #        linestyle=:dash, visible=tg_showP.active)
             rating = emergency_rating[idx]
             hlines!(fax, rating, color=c, linewidth=3, visible=tg_showRating.active)
         end
@@ -347,10 +344,13 @@ function gparguments(c::SolutionContainer, t::Observable;
 
     width_src, width_dst = 9.0, 3.0
     widthdata = zeros(2*ne(network))
+
+    iscairo = repr(typeof(Makie.current_backend[])) == "CairoMakie.CairoBackend"
+
     edge_width = @lift begin
         # line segements need two width arguments for each line segement
         for idx in 1:ne(network)
-            if $load_P[idx] == 0
+            if iscairo || $load_P[idx] == 0
                 w1 = w2 = (width_src + width_dst) / 2
             elseif $load_P[idx] > 0
                 w1, w2 = width_src, width_dst
@@ -364,6 +364,7 @@ function gparguments(c::SolutionContainer, t::Observable;
         end
         widthdata
     end
+
     (node_small, node_big) = (20.0, 40.0)
     node_size = @lift begin
         size = [node_small for i in 1:nv(network)]

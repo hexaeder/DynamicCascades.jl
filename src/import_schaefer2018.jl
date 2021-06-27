@@ -3,7 +3,7 @@
 
 Imports the toy model from the Schaefer 2018 paper.
 """
-function import_system(::Val{:schaefer2018}; seed=1)
+function import_system(::Val{:schaefer2018}; γ=0.1)
     g = MetaGraph(5)
     add_edge!(g, 1,2)
     add_edge!(g, 1,3)
@@ -28,18 +28,18 @@ function import_system(::Val{:schaefer2018}; seed=1)
     set_prop!(g, 1:5, :model, :swing)
     set_prop!(g, 1:5, :Q, 0.0)
     set_prop!(g, 1:5, :inertia, 1.0)
-    set_prop!(g, 1:5, :damping, 0.1)
+    set_prop!(g, 1:5, :damping, γ)
 
     K = 1.63
     set_prop!(g, edges(g), :R, 0.0)
     set_prop!(g, edges(g), :X, 1/K)
     set_prop!(g, edges(g), :rating, 0.6*K)
 
-    positions = Point2f0.([(0, 1),
-                           (1,.05),
-                           (1,.95),
+    positions = Point2f0.([(0, 1.4),
+                           (1,.1),
+                           (1,1.3),
                            (0,0),
-                           (-1,.5)])
+                           (-0.9,.7)])
     set_prop!(g, 1:5, :pos, positions)
     return g
 end

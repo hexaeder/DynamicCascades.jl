@@ -45,6 +45,14 @@ function dynamic_load!(dv, v, edges, (power, inertia, τ), t)
     nothing
 end
 
+function algebraic_load!(dv, v, edges, (power, _, _), t)
+    dv[1] = power
+    for e in edges
+        dv[1] += e[1]
+    end
+    nothing
+end
+
 struct SolutionContainer{G,T}
     network::G
     initial_fail::Vector{Int}
@@ -64,7 +72,7 @@ function project_theta!(nd, x0)
     end
 end
 
-function steadystate(network; project=false, verbose=false)
+function steadystate(network; project=false, verbose=false, tol=1e-9)
     verbose && println("Find steady state...")
     (nd, p) = nd_model(network)
     x0 = zeros(length(nd.syms));
@@ -79,7 +87,7 @@ function steadystate(network; project=false, verbose=false)
     end
 
     residuum = issteadystate(network, x_static; ndp=(nd, p))
-    @assert residuum < 1e-9 "No steady state found $residuum"
+    @assert residuum < tol "No steady state found $residuum"
 
     return x_static
 end
@@ -118,7 +126,6 @@ function simulate(network;
     end
 
     verbose && println("Run simulation for trips on lines $(initial_fail)")
-    # sol = solve(prob, AutoTsit5(Rosenbrock23()), callback=cbs, progress=true, solverargs...);
     sol = solve(prob, AutoTsit5(Rosenbrock23()); callback=cbs, progress=true, solverargs...);
     container = SolutionContainer(network,
                                   initial_fail, failtime, trip_lines,
@@ -216,6 +223,10 @@ function set_coupling!(network::MetaGraph)
     return K
 end
 
+function calculate_apparent_power(network::MetaGraph, u)
+    nd, p = nd_model(network)
+    calculate_apparent_power(u, p, 0.0, nd, network)
+end
 
 function calculate_apparant_power(u, p, t, nd::nd_ODE_Static, network::MetaGraph)
     out = zeros(ne(network))
@@ -241,6 +252,11 @@ function calculate_apparant_power!(S, u, p, t, nd::nd_ODE_Static, network::MetaG
         end
     end
     nothing
+end
+
+function calculate_active_power(network::MetaGraph, u)
+    nd, p = nd_model(network)
+    calculate_active_power(u, p, 0.0, nd, network)
 end
 
 function calculate_active_power(u, p, t, nd::nd_ODE_Static, network::MetaGraph; gd=nd(u, p, t, GetGD))

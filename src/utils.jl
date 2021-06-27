@@ -1,5 +1,8 @@
 using Dates
 using Printf
+using OrdinaryDiffEq
+using Makie
+using Makie.GeometryBasics
 
 export timestamp, pstring
 export edgeidx_by_region, vertexidx_by_region
@@ -78,9 +81,11 @@ function (sv::SavedValues)(t)
     end
 end
 
-function timeseriesforidx(sv::SavedValues, idx; dedup=true, cuttail=true, T=Float32)
+export seriesforidx
+function seriesforidx(sv::Union{SavedValues,ODESolution}, idx; dedup=true, cuttail=true, T=Float32)
     x = Vector{T}(sv.t)
-    y = [T(abs(l[idx])) for l in sv.saveval]
+    ytable = sv isa SavedValues ? sv.saveval : sv.u
+    y = [T(l[idx]) for l in ytable]
 
     cuttail && remove_zero_tail!(x, y)
     dedup && remove_duplicates!(x, y)
@@ -105,12 +110,27 @@ end
 function remove_duplicates!(x, y)
     @assert length(x) == length(y)
     idxs = Int[]
-    for i in 2:length(y)
-        if y[i] ≈ y[i-1] # element seend before
+    for i in 2:length(y)-1 #never remove last element (in case of steady state)
+        if x[i] ≈ x[i-1] && y[i] ≈ y[i-1] # element seen before
             push!(idxs, i)
         end
     end
     deleteat!(x, idxs)
     deleteat!(y, idxs)
     return (x, y)
+end
+
+export thetashape
+function thetashape(θ; loc=(0,0), r=0.5, b=0.05, pin=20, pout=100)
+    points = Vector{Point2f0}(undef, pin+pout)
+    # inner half circle
+    for (i, ϕ) in enumerate(range(π/2 + θ, 3/2*π + θ, length=pin))
+        points[i] = (b*sin(ϕ), b*cos(ϕ)).+loc
+    end
+    # outer half circle
+    α = atan(b, r)
+    for (i, ϕ) in enumerate(range(2π - α + θ, α + θ, length=pout))
+        points[i+pin] = (r*sin(ϕ), r*cos(ϕ)).+loc
+    end
+    points
 end
