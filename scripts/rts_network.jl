@@ -7,6 +7,7 @@ using DataFrames
 
 using DynamicCascades
 using NetworkLayout
+using LightGraphs
 using MetaGraphs
 using GLMakie
 using GraphMakie
@@ -20,7 +21,6 @@ sol = simulate(network;
                tspan=(0.0,500.0),
                initial_fail=[27],
                trip_lines=false);
-# inspect_solution(sol)
 
 x_static = sol.sol[end]
 (nd, p) = nd_model(network)
@@ -35,23 +35,36 @@ hidedecorations!(ax), hidespines!(ax)
 xlims!(-10, 7)
 ylims!(-5, 7)
 
-t = Node(sol.sol.t[end])
+t = Node(1.0)
 ecolorscaling = Node(0.5)
 gpargs = gparguments(sol, t;
                      colortype=:abssteady,
                      offlinewidth=0.0,
                      ecolorscaling)
 p = graphplot!(ax, network; gpargs...)
+timelabel = @lift "time = " * repr(round($t, digits=2)) * " s"
+fig[1,1] = Label(fig, timelabel, textsize=30,
+                 halign=:left, valign=:top, tellwidth=false, tellheight=false)
 
 function getline(idx)
     e = collect(edges(network))[idx]
     p[:node_positions][][[e.src, e.dst]]
 end
 
+largs = (;color=:black, linestyle=:dot, linewidth=3.0)
 l27 = lines!(ax, getline(27); largs...)
-save(joinpath(DIR, "rts64_wo_cascade.png"), fig)
 
-## now for the actual simulation
+file = "rts_wo_fail"
+tspan = range(1.0, 30, length=10*30)
+save(joinpath(DIR, "../videos", file*".png"), fig)
+record(fig, joinpath(DIR, "../videos", file*".mp4"), tspan; framerate=30) do time
+    t[] = time
+end
+save(joinpath(DIR, "../videos", file*"_end"*".png"), fig)
+
+####
+#### now for the actual simulation
+####
 sol = simulate(network;
                tspan=(0.0,500.0),
                initial_fail=[27],
