@@ -6,14 +6,22 @@ using ProgressMeter
 using DataFrames
 using Statistics
 using GLMakie
-set_theme!(resolution=(1600, 1200))
-set_theme!(resolution=(1000, 800))
+
+DIR = "/Users/hw/MA/Forschungsbeleg/figures/"
+orange = Makie.RGB([227, 114, 34]./255...)
+gray = Makie.RGB([142, 144, 143]./255...)
+cyan = Makie.RGB([0, 159, 218]./255...)
+green = Makie.RGB([105, 146, 58]./255...)
+blueish = Makie.RGB([124, 174, 175]./255...)
+
+set_theme!(theme_minimal(), fontsize=20)
+set_theme!(resolution=(800, 600))
 
 ####
 #### create Data
 ####
-dir_ins = joinpath(RAWRESULTS_DIR, timestamp()*"_kaiser_insulator")
-mkpath(dir_ins)
+dir1 = joinpath(RAWRESULTS_DIR, timestamp()*"_kaiser_insulator")
+mkpath(dir1)
 damping = 1.0
 loadt = 0.1
 @showprogress for seed in 1:20
@@ -21,7 +29,7 @@ loadt = 0.1
     x_static = steadystate(network);
 
     Threads.@threads for i in 1:ne(network)
-        filename = joinpath(dir_ins, pstring(;seed=lpad(seed,2,"0"), fail=lpad(i,2,"0"), damping, loadt)*".dat")
+        filename = joinpath(dir1, pstring(;seed=lpad(seed,2,"0"), fail=lpad(i,2,"0"), damping, loadt)*".dat")
         simulate(network;
                  x_static,
                  tspan=(0.0, 1000.),
@@ -31,8 +39,8 @@ loadt = 0.1
     end
 end
 
-dir_woi = joinpath(RAWRESULTS_DIR, timestamp()*"_kaiser_wo_insulator")
-mkpath(dir_woi)
+dir2 = joinpath(RAWRESULTS_DIR, timestamp()*"_kaiser_wo_insulator")
+mkpath(dir2)
 @showprogress for seed in 1:20
     network = import_system(:kaiser2020; gen_γ=damping, load_τ=loadt, seed)
     rem_edge!(network, 2, 22)
@@ -42,7 +50,7 @@ mkpath(dir_woi)
     x_static = steadystate(network);
 
     Threads.@threads for i in 1:ne(network)
-        filename = joinpath(dir_woi, pstring(;seed=lpad(seed,2,"0"), fail=lpad(i,2,"0"), damping, loadt)*".dat")
+        filename = joinpath(dir2, pstring(;seed=lpad(seed,2,"0"), fail=lpad(i,2,"0"), damping, loadt)*".dat")
         simulate(network;
                  x_static,
                  tspan=(0.0, 1000.),
@@ -55,10 +63,10 @@ end
 ####
 #### load data
 ####
-dir_ins = "/Users/hw/MAScratch/2021-06-21_kaiser_insulator"
-df_ins = DataFrame()
-@showprogress for file in readdir(dir_ins)
-    sol = deserialize(joinpath(dir_ins, file))
+dir1 = "/Users/hw/MAScratch/2021-06-21_kaiser_insulator"
+df1 = DataFrame()
+@showprogress for file in readdir(dir1)
+    sol = deserialize(joinpath(dir1, file))
 
     failedge = collect(edges(sol.network))[sol.initial_fail[begin]]
     region = get_prop(sol.network, failedge, :region)
@@ -68,13 +76,13 @@ df_ins = DataFrame()
     subdf[!, :seed] .= get_prop(sol.network, :seed)
     subdf[!, :fail] .= sol.initial_fail[begin]
 
-    append!(df_ins, subdf, cols=:union)
+    append!(df1, subdf, cols=:union)
 end
 
-dir_woi = "/Users/hw/MAScratch/2021-06-21_kaiser_wo_insulator"
-df_woi = DataFrame()
-@showprogress for file in readdir(dir_woi)
-    sol = deserialize(joinpath(dir_woi, file))
+dir2 = "/Users/hw/MAScratch/2021-06-21_kaiser_wo_insulator"
+df2 = DataFrame()
+@showprogress for file in readdir(dir2)
+    sol = deserialize(joinpath(dir2, file))
 
     failedge = collect(edges(sol.network))[sol.initial_fail[begin]]
     region = get_prop(sol.network, failedge, :region)
@@ -84,13 +92,13 @@ df_woi = DataFrame()
     subdf[!, :seed] .= get_prop(sol.network, :seed)
     subdf[!, :fail] .= sol.initial_fail[begin]
 
-    append!(df_woi, subdf, cols=:union)
+    append!(df2, subdf, cols=:union)
 end
 
-same_ins = df_ins[df_ins.region .== :same, :]
-other_ins = df_ins[df_ins.region .== :other, :]
-same_woi = df_woi[df_woi.region .== :same, :]
-other_woi = df_woi[df_woi.region .== :other, :]
+same1 = df1[df1.region .== :same, :]
+other1 = df1[df1.region .== :other, :]
+same2 = df2[df2.region .== :same, :]
+other2 = df2[df2.region .== :other, :]
 
 
 ####
@@ -98,94 +106,140 @@ other_woi = df_woi[df_woi.region .== :other, :]
 ####
 fig = Figure()
 fig[1,1] = ax = Axis(fig)
-for group in groupby(df_ins, :seed)
+for group in groupby(df1, :seed)
     Makie.density!(ax, group.staticA)
 end
 fig = Figure()
 fig[1,1] = ax = Axis(fig)
-for group in groupby(df_woi, :seed)
+for group in groupby(df2, :seed)
     Makie.density!(ax, group.staticA)
 end
-Makie.hist(same_ins.d; bins=[i+0.5 for i in minimum(same_ins.d)-1:maximum(same_ins.d)])
-Makie.hist!(other_ins.d; bins=[i+0.5 for i in minimum(other_ins.d)-1:maximum(other_ins.d)])
+Makie.hist(same1.d; bins=[i+0.5 for i in minimum(same1.d)-1:maximum(same1.d)])
+Makie.hist!(other1.d; bins=[i+0.5 for i in minimum(other1.d)-1:maximum(other1.d)])
 
-Makie.density(same_ins.absdiff)
-Makie.density!(other_ins.absdiff)
+Makie.density(same1.absdiff)
+Makie.density!(other1.absdiff)
 
-Makie.density(same_ins.reldiff)
-Makie.density!(other_ins.reldiff)
+Makie.density(same1.reldiff)
+Makie.density!(other1.reldiff)
 xlims!(0,5)
 
 ####
 #### Plot absolut difference from initial state
 ####
-# CairoMakie.activate!()
+CairoMakie.activate!()
 fig = Figure()
 fig[1,1] = ax = Axis(fig,
-                     limits=(nothing, (0,0.1)),
+                     limits=((0.1, 9.9), (0,0.11)),
                      xlabel="Distance between edges",
-                     ylabel="Max overload (absolut difference to steady state in PU)",
+                     ylabel="Max overload (difference to steady state in PU)",
                      xticks=1:9,
                      title="Mean overload and distribution over distance")
-boundary = (0.0, 0.5)
+# boundary = (0.0, 0.5)
 npoints = 1000
-width=1.4
 col = ax.palette[:color][]
-v1 = violin!(ax, same_ins.d, same_ins.absdiff; side=:left, boundary, npoints, width, show_median=false, color=(col[1], 0.3))
-v2 = violin!(ax, other_ins.d, other_ins.absdiff; side=:right, boundary, npoints, width, show_median=false, color=(col[2], 0.3))
-v3 = violin!(ax, other_woi.d, other_woi.absdiff; side=:right, boundary, npoints, width, show_median=false, color=(col[3], 0.3))
-smean = [Point2f0(g.d[begin], mean(g.absdiff)) for g in groupby(same_ins, :d)]
-omean = [Point2f0(g.d[begin], mean(g.absdiff)) for g in groupby(other_ins, :d)]
-womean = [Point2f0(g.d[begin], mean(g.absdiff)) for g in groupby(other_woi, :d)]
-linewidth=5
-markersize=20
-l1 = lines!(ax, smean; linewidth); # scatter!(ax, smean; markersize)
-l2 = lines!(ax, omean; linewidth); # scatter!(ax, omean; markersize)
-l3 = lines!(ax, womean; linewidth); # scatter!(ax, omean; markersize)
+# v1 = violin!(ax, same1.d, same1.absdiff; side=:left, boundary, npoints, width=1.4, show_median=false, color=(col[1], 0.3),)
+# v2 = violin!(ax, other1.d, other1.absdiff; side=:right, boundary, npoints, width=1.4, show_median=false, color=(col[2], 0.3),)
+# v3 = violin!(ax, other2.d, other2.absdiff; side=:right, boundary, npoints, width=1.4, show_median=false, color=(col[3], 0.3),)
 
-fig[1,1] = Legend(fig,
-                  [[v1,l1], [v2,l2], [v3,l3]],
-                  ["same region",
-                   "other region (insulator)",
-                   "other region (w/o insulator)"],
-                  tellwidth=false,
-                  halign=:right, valign=:top)
-save("over_load_over_dist.pdf", fig)
+v1 = violin!(ax, same1.d, same1.absdiff; side=:left, npoints, width=1.4, show_median=false, color=(col[1], 0.4),)
+v2 = violin!(ax, other1.d, other1.absdiff; side=:right, npoints, width=1.4, show_median=false, color=(col[2], 0.4),)
+# v3 = violin!(ax, other2.d, other2.absdiff; side=:right, npoints, width=1.4, show_median=false, color=(col[3], 0.3),)
+
+g = groupby(same1, :d; sort=true)
+
+s_d =  [g.d[1] for g in groupby(same1, :d; sort=true)]
+o_d =  [g.d[1] for g in groupby(other1, :d; sort=true)]
+wo_d = [g.d[1] for g in groupby(other2, :d; sort=true)]
+
+s_mean =  [mean(g.absdiff) for g in groupby(same1, :d; sort=true)]
+o_mean =  [mean(g.absdiff) for g in groupby(other1, :d; sort=true)]
+wo_mean = [mean(g.absdiff) for g in groupby(other2, :d; sort=true)]
+
+s_median =  [median(g.absdiff) for g in groupby(same1, :d; sort=true)]
+o_median =  [median(g.absdiff) for g in groupby(other1, :d; sort=true)]
+wo_median = [median(g.absdiff) for g in groupby(other2, :d; sort=true)]
+
+# s_std =  [std(g.absdiff) for g in groupby(same1, :d; sort=true)]
+# o_std =  [std(g.absdiff) for g in groupby(other1, :d; sort=true)]
+# wo_std = [std(g.absdiff) for g in groupby(other2, :d; sort=true)]
+
+# band!(ax, s_d, s_mean+s_std, s_mean-s_std)
+# band!(ax, o_d, o_mean+o_std, o_mean-o_std)
+# band!(ax, wo_d, wo_mean+wo_std, wo_mean-wo_std)
+
+linewidth=3
+markersize=15
+l1 = lines!(ax, s_d, s_mean; linewidth, label="same region");
+s1 = scatter!(ax, s_d, s_mean; markersize);
+
+l2 = lines!(ax, o_d,o_mean; linewidth, label="other region");
+s2 = scatter!(ax, o_d, o_mean; markersize);
+axislegend(framevisible=false)
+
+save(joinpath(DIR, "load_over_dist_1.pdf"), fig)
+
+l3 = lines!(ax, wo_d, wo_mean; linewidth, label="other region (w/o insulator)");
+s3 = scatter!(ax, wo_d, wo_mean; markersize);
+
+save(joinpath(DIR, "load_over_dist_2.pdf"), fig)
+
+# fig[1,2] = Legend(fig,
+#                   [[v1,l1, s1], [v2,l2], [v3,l3]],
+#                   ["same region",
+#                    "other region (insulator)",
+#                    "other region (w/o insulator)"],
+#                   tellwidth=false,
+#                   halign=:right, valign=:top)
+# save("over_load_over_dist.pdf", fig)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ####
 #### Plot relative difference from initial state
 ####
-smask = abs.(same_ins.staticA) .> 0.2
-omask = abs.(other_ins.staticA) .> 0.2
-scatter(same_ins.absdiff, same_ins.reldiff; color=same_ins.staticA)
-scatter(same_ins.absdiff[smask], same_ins.reldiff[smask]; color=same_ins.staticA)
+smask = abs.(same1.staticA) .> 0.2
+omask = abs.(other1.staticA) .> 0.2
+scatter(same1.absdiff, same1.reldiff; color=same1.staticA)
+scatter(same1.absdiff[smask], same1.reldiff[smask]; color=same1.staticA)
 boundary = (0.0, 10)
 npoints = 2000
 width = 1.0
-violin(same_ins.d[smask], same_ins.absdiff[smask]; side=:left, boundary, npoints, width, show_median=false)
-violin!(other_ins.d[omask], other_ins.absdiff[omask]; side=:right, boundary, npoints, width, show_median=false)
+violin(same1.d[smask], same1.absdiff[smask]; side=:left, boundary, npoints, width, show_median=false)
+violin!(other1.d[omask], other1.absdiff[omask]; side=:right, boundary, npoints, width, show_median=false)
 ylims!(0,0.5)
-scatterlines!([Point2f0(g.d[begin], mean(g.absdiff)) for g in groupby(same_ins[smask,:], :d)])
-scatterlines!([Point2f0(g.d[begin], mean(g.absdiff)) for g in groupby(other_ins[omask,:], :d)])
+scatterlines!([Point2f0(g.d[begin], mean(g.absdiff)) for g in groupby(same1[smask,:], :d)])
+scatterlines!([Point2f0(g.d[begin], mean(g.absdiff)) for g in groupby(other1[omask,:], :d)])
 
 ####
 #### Plot steady state difference
 ####
-scatter(same_ins.d.-0.05, (same_ins.staticA.-same_ins.staticB))
-scatter!(other_ins.d.+0.05, (other_ins.staticA.-other_ins.staticB))
+scatter(same1.d.-0.05, (same1.staticA.-same1.staticB))
+scatter!(other1.d.+0.05, (other1.staticA.-other1.staticB))
 npoints=1000
-violin!(same_ins.d.-0.1, (same_ins.staticA.-same_ins.staticB); side=:left, width=2.0)
+violin!(same1.d.-0.1, (same1.staticA.-same1.staticB); side=:left, width=2.0)
 
-scatter!(same_woi.d.-0.10, (same_woi.staticA.-same_woi.staticB))
-scatter!(other_woi.d.+0.05, (other_woi.staticA.-other_woi.staticB))
+scatter!(same2.d.-0.10, (same2.staticA.-same2.staticB))
+scatter!(other2.d.+0.05, (other2.staticA.-other2.staticB))
 
 GLMakie.activate!()
 ####
 #### Plot time over distance
 ####
-scatter(same_ins.d, same_ins.t)
-scatter!(other_ins.d, other_ins.t)
-scatter!(other_woi.d, other_woi.t)
+scatter(same1.d, same1.t)
+scatter!(other1.d, other1.t)
+scatter!(other2.d, other2.t)
 
 ####
 #### Simulate specific failure

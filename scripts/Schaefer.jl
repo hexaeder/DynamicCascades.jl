@@ -4,7 +4,7 @@ using MetaGraphs
 using Statistics
 using GLMakie
 using GraphMakie
-# using CairoMakie
+GLMakie.activate!()
 
 DIR = "/Users/hw/MA/Forschungsbeleg/figures/"
 set_theme!(theme_minimal(), fontsize=20)
@@ -57,8 +57,10 @@ function create_animation(sol, tmin, tmax, file; showrating=false)
     t = Node(0.0)
     rating = get_prop(network, Edge(1,2), :rating)
     hlines!(flowax, rating, linewidth=3, color=gray, visible=showrating)
+    ecolorscaling=Observable(0.5)
     gpargs = gparguments(sol, t;
                          colortype=:abssteady,
+                         ecolorscaling,
                          offlinecolor=Makie.RGB(1,1,1))
     p = graphplot!(nwax, network; gpargs..., node_size=30, node_color)
     hidedecorations!(nwax); hidespines!(nwax)

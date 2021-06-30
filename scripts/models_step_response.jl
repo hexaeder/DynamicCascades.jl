@@ -8,6 +8,9 @@ using SteadyStateDiffEq
 using GLMakie
 using GLMakie.GeometryBasics
 
+using CairoMakie
+CairoMakie.activate!()
+
 DIR = "/Users/hw/MA/Forschungsbeleg/figures/"
 
 orange = Makie.RGB([227, 114, 34]./255...)
@@ -78,7 +81,7 @@ text!(ax1, ["generator", "dynamic load", "swing load"]; align=(:center,:center),
 
 t = [0.0, tstart, tstart, 25.0]
 x = [theta0, theta0, theta0+step, theta0+step]
-alg = lines!(ax2,t, x, color=gray, linewidth=5, label="algebraic laod")
+alg = lines!(ax2,t, x, color=gray, linewidth=5, label="algebraic load")
 dyn = lines!(ax2,seriesforidx(sol, 2)...; color=orange, linewidth=5, label="dynamic load")
 swing = lines!(ax2,seriesforidx(sol, 3)...; color=blueish, linewidth=5, label="swing load")
 vlines!(ax2, tnode, color=:gray, linewidth=3, visible=@lift($tnode>0))

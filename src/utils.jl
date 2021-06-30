@@ -1,5 +1,6 @@
 using Dates
 using Printf
+using LightGraphs
 using OrdinaryDiffEq
 using Makie
 using Makie.GeometryBasics
@@ -134,3 +135,17 @@ function thetashape(θ; loc=(0,0), r=0.5, b=0.05, pin=20, pout=100)
     end
     points
 end
+
+export edgeidx
+function edgeidx(g::AbstractGraph, s, d)
+    s, d = min(s, d), max(s, d)
+    for (i, e) in enumerate(edges(g))
+        if e.src==s && e.dst==d
+            return i
+        end
+    end
+    nothing
+end
+
+export getedge
+getedge(g::AbstractGraph, i) = collect(edges(g))[i]
