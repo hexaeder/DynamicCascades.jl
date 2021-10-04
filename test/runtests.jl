@@ -86,6 +86,7 @@ end
 end
 
 @testest "graph distance" begin
+    using Test
     g = path_graph(7)
     dist = edge_distance_to(g, 1) do g, v1, v2
         d = length(a_star(g, v1, v2))
@@ -96,6 +97,17 @@ end
         d = length(a_star(g, v1, v2))
     end
     @test dist == [2,1,0,1,2,3]
+
+    network =  import_system(:kaiser2020, gen_γ=0.8, load_τ=0.1)
+    src = edgeidx(network, 2, 17)
+    src=2
+    d1 = resistance_distances(network, src)
+    d2 = naive_distances(network, src)
+
+    # elabels = ["" for i in 1:ne(network)]
+    # elabels[src] = "src"
+    # graphplot(network; edge_color=d, elabels)
+    # graphplot(network; edge_color=d, elabels)
 end
 
 @testest "time series stuff" begin

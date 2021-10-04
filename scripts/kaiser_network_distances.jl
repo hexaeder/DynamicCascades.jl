@@ -100,7 +100,6 @@ other1 = df1[df1.region .== :other, :]
 same2 = df2[df2.region .== :same, :]
 other2 = df2[df2.region .== :other, :]
 
-
 ####
 #### Plot flow density for different seeds
 ####
@@ -193,7 +192,58 @@ save(joinpath(DIR, "load_over_dist_2.pdf"), fig)
 #                   halign=:right, valign=:top)
 # save("over_load_over_dist.pdf", fig)
 
+####
+#### Plot absolut difference over Reistance differenc
+####
+# CairoMakie.activate!()
+same1.dbin = (d -> round(d*2)/2).(same1.dres)
+other1.dbin = (d -> round(d*2)/2).(other1.dres)
+other2.dbin = (d -> round(d*2)/2).(other2.dres)
 
+fig = Figure()
+fig[1,1] = ax = Axis(fig,
+                     limits=((0.0, 4.0), (0,0.11)),
+                     xlabel="resistance distance between edges",
+                     ylabel="Max overload (difference to steady state in PU)",
+                     xticks=1:9,
+                     title="Mean overload and distribution over distance")
+# boundary = (0.0, 0.5)
+npoints = 1000
+col = ax.palette[:color][]
+v1 = violin!(ax, same1.dbin, same1.absdiff; side=:left, npoints, width=0.4, show_median=false, color=(col[1], 0.4),)
+v2 = violin!(ax, other1.dbin, other1.absdiff; side=:right, npoints, width=0.4, show_median=false, color=(col[2], 0.4),)
+
+s_d =  [g.dbin[1] for g in groupby(same1, :dbin; sort=true)]
+o_d =  [g.dbin[1] for g in groupby(other1, :dbin; sort=true)]
+wo_d = [g.dbin[1] for g in groupby(other2, :dbin; sort=true)]
+
+s_samplesize =  [size(g)[1] for g in groupby(same1, :dbin; sort=true)]
+o_samplesize =  [size(g)[1] for g in groupby(other1, :dbin; sort=true)]
+wo_samplesize = [size(g)[1] for g in groupby(other2, :dbin; sort=true)]
+
+s_mean =  [mean(g.absdiff) for g in groupby(same1, :dbin; sort=true)]
+o_mean =  [mean(g.absdiff) for g in groupby(other1, :dbin; sort=true)]
+wo_mean = [mean(g.absdiff) for g in groupby(other2, :dbin; sort=true)]
+
+s_median =  [median(g.absdiff) for g in groupby(same1, :dbin; sort=true)]
+o_median =  [median(g.absdiff) for g in groupby(other1, :dbin; sort=true)]
+wo_median = [median(g.absdiff) for g in groupby(other2, :dbin; sort=true)]
+
+linewidth=3
+markersize=15
+l1 = lines!(ax, s_d, s_mean; linewidth, label="same region");
+s1 = scatter!(ax, s_d, s_mean; markersize);
+
+l2 = lines!(ax, o_d,o_mean; linewidth, label="other region");
+s2 = scatter!(ax, o_d, o_mean; markersize);
+axislegend(framevisible=false)
+
+# save(joinpath(DIR, "load_over_dist_1.pdf"), fig)
+
+l3 = lines!(ax, wo_d, wo_mean; linewidth, label="other region (w/o insulator)");
+s3 = scatter!(ax, wo_d, wo_mean; markersize);
+
+save(joinpath(DIR, "load_over_dist_2.pdf"), fig)
 
 
 
@@ -219,7 +269,7 @@ width = 1.0
 violin(same1.d[smask], same1.absdiff[smask]; side=:left, boundary, npoints, width, show_median=false)
 violin!(other1.d[omask], other1.absdiff[omask]; side=:right, boundary, npoints, width, show_median=false)
 ylims!(0,0.5)
-scatterlines!([Point2f0(g.d[begin], mean(g.absdiff)) for g in groupby(same1[smask,:], :d)])
+scatterlines!([Point2f0(g.d[begin], median(g.absdiff)) for g in groupby(same1[smask,:], :d)])
 scatterlines!([Point2f0(g.d[begin], mean(g.absdiff)) for g in groupby(other1[omask,:], :d)])
 
 ####
