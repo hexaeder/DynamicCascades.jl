@@ -228,13 +228,13 @@ function calculate_apparent_power(network::MetaGraph, u)
     calculate_apparent_power(u, p, 0.0, nd.f, network)
 end
 
-function calculate_apparent_power(u, p, t, nd::nd_ODE_Static, network::MetaGraph)
+function calculate_apparent_power(u, p, t, nd, network::MetaGraph)
     out = zeros(ne(network))
     calculate_apparent_power!(out, u, p, t, nd, network)
     return out
 end
 
-function calculate_apparent_power!(S, u, p, t, nd::nd_ODE_Static, network::MetaGraph; gd=nd(u, p, t, GetGD))
+function calculate_apparent_power!(S, u, p, t, nd, network::MetaGraph; gd=nd(u, p, t, GetGD))
     for (i, e) in enumerate(edges(nd.graph))
         Vs::Float64 = get_prop(network, e.src, :Vm)
         Vd::Float64 = get_prop(network, e.dst, :Vm)
@@ -259,7 +259,7 @@ function calculate_active_power(network::MetaGraph, u)
     calculate_active_power(u, p, 0.0, nd, network)
 end
 
-function calculate_active_power(u, p, t, nd::nd_ODE_Static, network::MetaGraph; gd=nd(u, p, t, GetGD))
+function calculate_active_power(u, p, t, nd, network::MetaGraph; gd=nd(u, p, t, GetGD))
     P = zeros(ne(network))
     for (i, e) in enumerate(edges(nd.graph))
         P[i] = get_edge(gd, i)[1]

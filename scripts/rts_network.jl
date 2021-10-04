@@ -11,6 +11,7 @@ using LightGraphs
 using MetaGraphs
 using GLMakie
 using GraphMakie
+using GLMakie.Colors
 
 DIR = "/Users/hw/MA/Forschungsbeleg/figures/"
 set_theme!(theme_minimal(), fontsize=20)
@@ -91,7 +92,8 @@ t = Node(1.0)
 ecolorscaling = Node(0.5)
 gpargs = gparguments(sol, t;
                      colortype=:abssteady,
-                     offlinewidth=0.0,
+                     offlinewidth=5,
+                     offlinecolor=colorant"magenta",
                      ecolorscaling)
 p = graphplot!(ax, network; gpargs...)
 timelabel = @lift "time = " * repr(round($t, digits=2)) * " s"
@@ -100,24 +102,31 @@ fig[1,1] = Label(fig, timelabel, textsize=30,
 
 largs = (;color=:black, linestyle=:dot, linewidth=3.0)
 
-function recordsegment(fig, timeranges, i; line=false, fps=30)
-    file = "rts_$i"
-    tspan = timeranges[i]
-    save(joinpath(DIR, "../videos", file*".png"), fig)
-    record(fig, joinpath(DIR, "../videos", file*".mp4"), tspan; framerate=fps) do time
-        t[] = time
-        if line isa Int && time == timeranges[i][end]
-            lines!(ax, getline(line); largs...)
-        end
-    end
+# function recordsegment(fig, timeranges, i; line=false, fps=30)
+#     file = "rts_$i"
+#     tspan = timeranges[i]
+#     save(joinpath(DIR, "../videos", file*".png"), fig)
+#     record(fig, joinpath(DIR, "../videos", file*".mp4"), tspan; framerate=fps) do time
+#         t[] = time
+#         if line isa Int && time == timeranges[i][end]
+#             lines!(ax, getline(line); largs...)
+#         end
+#     end
+# end
+# l27 = lines!(ax, getline(27); largs...)
+
+# recordsegment(fig, timeranges, 1; line=29)
+
+# deleteat!(ax.scene.plots, findall(p->p isa Lines, ax.scene.plots))
+# division = lines!(ax, [(0,-3.0), (0.5,-5)]; largs...)
+
+# recordsegment(fig, timeranges, 2; line=83) # not importand
+# recordsegment(fig, timeranges, 3; line=37)
+# recordsegment(fig, timeranges, 4; fps=60)
+
+# save the full animation
+tspan = range(0, 30, length=10*30)
+save("rts_fail.png", fig)
+record(fig, joinpath("rts_fail.mp4"), tspan; framerate=30) do time
+    t[] = time
 end
-l27 = lines!(ax, getline(27); largs...)
-
-recordsegment(fig, timeranges, 1; line=29)
-
-deleteat!(ax.scene.plots, findall(p->p isa Lines, ax.scene.plots))
-division = lines!(ax, [(0,-3.0), (0.5,-5)]; largs...)
-
-recordsegment(fig, timeranges, 2; line=83) # not importand
-recordsegment(fig, timeranges, 3; line=37)
-recordsegment(fig, timeranges, 4; fps=60)
