@@ -3,7 +3,7 @@ using CSV
 using DataFrames
 using Plots
 using GraphPlot, Cairo, Compose
-using LightGraphs
+using Graphs
 using Random: MersenneTwister
 
 rts96 = load_rts96();

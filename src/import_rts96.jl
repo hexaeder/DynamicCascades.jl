@@ -10,23 +10,23 @@ function import_system(::Val{:rts96raw}; losses=false)
     data = joinpath(DATA_DIR, "RTS-96")
 
     BusData = CSV.read(joinpath(data, "Table-01_BusData.txt"), DataFrame,
-                       datarow=7, delim=' ', ignorerepeated=true, footerskip=9,
+                       skipto=7, delim=' ', ignorerepeated=true, footerskip=9,
                        header=[:id, :name, :type, :MW_load, :MVar_load, :GL, :BL, :sub_area, :base_kV, :zone])
 
     BusLoadData = CSV.read(joinpath(data, "Table-05_BusLoadData.txt"), DataFrame,
-                       datarow=6, delim=' ', ignorerepeated=true, footerskip=2,
+                       skipto=6, delim=' ', ignorerepeated=true, footerskip=2,
                        header=[:bid_1, :bid_2, :bid_3, :sys_load_percentage, :MW, :MVar, :MW_peak, :Mvar_peak])
 
     GeneratorData = CSV.read(joinpath(data, "Table-07_GeneratorData.txt"), DataFrame,
-                       datarow=6, delim=' ', ignorerepeated=true, footerskip=4,
+                       skipto=6, delim=' ', ignorerepeated=true, footerskip=4,
                        header=[:id, :unit, :unit_id, :MW_inj, :MVar_inj, :MVar_max, :MVar_min, :V_pu])
 
     BranchData = CSV.read(joinpath(data, "Table-12_BranchData.txt"), DataFrame,
-                       datarow=18, delim=' ', ignorerepeated=true, footerskip=2,
+                       skipto=18, delim=' ', ignorerepeated=true, footerskip=2,
                        header=[:id, :from, :to, :L, :Lamp, :Dur, :Lamt, :R, :X, :B, :Con, :LTE, :STE, :Tr])
 
     SystemDynamicsData = CSV.read(joinpath(data, "Table-15_SystemDynamicsData.txt"), DataFrame,
-                       datarow=7, delim=' ', ignorerepeated=true, footerskip=6,
+                       skipto=7, delim=' ', ignorerepeated=true, footerskip=6,
                        header=[:group, :size, :type, :MVAbase, :reactance_unit, :reactance_transformer, :inertia, :damping])
 
     # number of components
@@ -103,7 +103,7 @@ end
 
 Import the RTS96 system from the prepared data as a MetaGraph.
 """
-function import_system(::Val{:rts96prepared}; gen_γ, slack_γ, load_τ, losses=false)
+function import_system(::Val{:rts96prepared}; gen_γ=missing, slack_γ=missing, load_τ=missing, losses=false)
     @info "Import system RTS-96 (from prepared csv files)"
     # read data from csv files
     data = joinpath(DATA_DIR, "RTS-96")

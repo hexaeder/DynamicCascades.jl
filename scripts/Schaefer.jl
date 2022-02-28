@@ -1,5 +1,5 @@
 using DynamicCascades
-using LightGraphs
+using Graphs
 using MetaGraphs
 using Statistics
 using GLMakie

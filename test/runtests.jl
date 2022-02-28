@@ -3,6 +3,7 @@ using Test
 using DynamicCascades
 using MetaGraphs
 using Missings
+using Graphs
 
 @testset "comparison between differen rts systems" begin
     g1 = import_system(:rtsgmlc)
@@ -63,30 +64,7 @@ using Missings
     @test wo_idx(e1.rating) == wo_idx(e2.rating) == wo_idx(e3.rating)
 end
 
-@testset "test max_rel_load" begin
-    sv = SavedValues(Float64, Vector{Float64})
-    push!(sv.t, 0.0)
-    push!(sv.t, 1.0)
-    push!(sv.t, 2.0)
-    push!(sv.saveval, [1.0, 1.0, 1.0])
-    push!(sv.saveval, [1.1, 1.5, 1.0])
-    push!(sv.saveval, [0.9, 2.0, 0.5])
-
-    (relflow, times) = max_rel_load(sv)
-    @test relflow ≈ [0.1, 1.0, 0.0]
-    @test times ≈ [1.0, 2.0, 0.0]
-
-    @test sv(0.0) == sv.saveval[1]
-    @test sv(1.0) == sv.saveval[2]
-    @test sv(2.0) == sv.saveval[3]
-    @test_throws ArgumentError sv(-0.1)
-    @test_throws ArgumentError sv(2.1)
-    @test sv(0.5) == [1.05, 1.25, 1.0]
-    @test sv(1.5) == [1.0, 1.75, 0.75]
-end
-
-@testest "graph distance" begin
-    using Test
+@testset "graph distance" begin
     g = path_graph(7)
     dist = edge_distance_to(g, 1) do g, v1, v2
         d = length(a_star(g, v1, v2))
@@ -110,14 +88,14 @@ end
     # graphplot(network; edge_color=d, elabels)
 end
 
-@testest "time series stuff" begin
+@testset "time series stuff" begin
     using DynamicCascades: remove_zero_tail!
     x = [1, 2, 3, 4, 5]
     y = [2, 4, 1, 0, 0]
     @test remove_zero_tail!(x, y) == (x[1:3], y[1:3])
 
     using DynamicCascades: remove_duplicates!
-    x = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    y = [2, 2, 3, 1, 1, 1, 1, 0, 2]
-    @test remove_duplicates!(x, y) == ([1,3,4,8,9], [2,3,1,0,2])
+    x = [1, 1, 2, 3, 4, 5, 6, 7, 7, 8, 9]
+    y = [2, 2, 2, 3, 1, 1, 1, 1, 1, 0, 2]
+    @test remove_duplicates!(x, y)==([1, 2, 3, 4, 5, 6, 7, 8, 9], [2, 2, 3, 1, 1, 1, 1, 0, 2])
 end

@@ -1,5 +1,5 @@
 using DynamicCascades
-using LightGraphs
+using Graphs
 using NetworkDynamics
 using DynamicCascades: swing_equation!, dynamic_load!, powerflow!, algebraic_load!
 using OrdinaryDiffEq

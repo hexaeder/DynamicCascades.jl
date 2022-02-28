@@ -1,6 +1,6 @@
 using Dates
 using Printf
-using LightGraphs
+using Graphs
 using OrdinaryDiffEq
 using Makie
 using Makie.GeometryBasics
@@ -109,6 +109,7 @@ function remove_zero_tail!(x, y)
 end
 
 function remove_duplicates!(x, y)
+    println("rem duplicats possible not necessary anymore!")
     @assert length(x) == length(y)
     idxs = Int[]
     for i in 2:length(y)-1 #never remove last element (in case of steady state)

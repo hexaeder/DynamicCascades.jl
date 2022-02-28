@@ -1,5 +1,5 @@
 using GLMakie
-using LightGraphs
+using Graphs
 using MetaGraphs
 using GraphMakie
 using Colors

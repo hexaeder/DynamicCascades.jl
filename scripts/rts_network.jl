@@ -7,7 +7,7 @@ using DataFrames
 
 using DynamicCascades
 using NetworkLayout
-using LightGraphs
+using Graphs
 using MetaGraphs
 using GLMakie
 using GraphMakie

@@ -1,4 +1,4 @@
-using LightGraphs
+using Graphs
 using DataFrames
 
 export max_flow, edge_distance_to, resistance_distances, naive_distances

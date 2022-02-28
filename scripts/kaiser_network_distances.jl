@@ -1,6 +1,6 @@
 using Serialization
 using DynamicCascades
-using LightGraphs
+using Graphs
 using MetaGraphs
 using ProgressMeter
 using DataFrames

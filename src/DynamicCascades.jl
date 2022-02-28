@@ -2,7 +2,7 @@ module DynamicCascades
 
 using CSV
 using DataFrames
-using LightGraphs
+using Graphs
 using MetaGraphs
 using Missings
 
@@ -28,7 +28,7 @@ Base representation is Symbol:
     :slack == bustype(3) == bustype("Ref") == bustype(:Ref)
 """
 bustype(i::Int) = bustype(Val(i))
-bustype(s::Union{String, Symbol}) = bustype(Val(Symbol(s)))
+bustype(s) = bustype(Val(Symbol(s)))
 bustype(::Union{Val{:PQ},  Val{1}, Val{:load}})  = :load
 bustype(::Union{Val{:PV},  Val{2}, Val{:gen}})   = :gen
 bustype(::Union{Val{:Ref}, Val{3}, Val{:slack}}) = :slack

@@ -1,7 +1,7 @@
 using Serialization
 using DynamicCascades
 using GraphMakie
-using LightGraphs
+using Graphs
 using MetaGraphs
 using ProgressMeter
 using DataFrames
