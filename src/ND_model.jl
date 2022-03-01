@@ -121,8 +121,8 @@ function simulate(network;
         cbs = CallbackSet(InitialFailCB(initial_fail, failtime), cbs)
     end
     if terminate_steady_state
-        tmin = isempty(initial_fail) ? 0.0 : failtime
-        cbs = CallbackSet(cbs, TerminateSteadyStateAfter(tmin))
+        min_t = isempty(initial_fail) ? nothing : failtime+eps(failtime)
+        cbs = CallbackSet(cbs, TerminateSteadyState(1e-8, 1e-6; min_t))
     end
 
     verbose && println("Run simulation for trips on lines $(initial_fail)")
@@ -148,7 +148,7 @@ end
 
 function nd_model(network::MetaGraph)
     @assert isapprox(sum(describe_nodes(network).P), 0, atol=1e-14) "Power sum not zero!"
-    flow_edge = StaticEdge(f! = powerflow!, dim = 1, coupling=:antisymmetric)
+    flow_edge = StaticEdge(f=powerflow!, dim=1, coupling=:antisymmetric)
 
     standardmodels = Dict(
         :gen => :swing,
@@ -163,8 +163,8 @@ function nd_model(network::MetaGraph)
     end
 
     vertexmodels = Dict(
-        :swing => ODEVertex(f! = swing_equation!, dim = 2, sym=[:θ, :ω]),
-        :dynload => ODEVertex(f! = dynamic_load!, dim = 1, sym=[:θ])
+        :swing => ODEVertex(f=swing_equation!, dim=2, sym=[:θ, :ω]),
+        :dynload => ODEVertex(f=dynamic_load!, dim=1, sym=[:θ])
     )
 
     vertex_array = [vertexmodels[k] for k in get_prop(network, 1:nv(network), :model)]
@@ -348,10 +348,4 @@ end
 function InitialFailCB(idxs, time)
     affect! = (integrator) -> integrator.p[2][idxs] .= 0.0
     PresetTimeCallback(time, affect!)
-end
-
-function TerminateSteadyStateAfter(tmin)
-    test = (integ, abs, rel) ->
-        integ.t > tmin && DiffEqCallbacks.allDerivPass(integ, abs, rel)
-    TerminateSteadyState(1e-8, 1e-6, test)
 end

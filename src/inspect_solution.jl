@@ -55,8 +55,8 @@ function inspect_solution(c::SolutionContainer)
     emergency_rating = get_prop(network, edges(network), :rating)
 
     # observables which hold the selected nodes and edges
-    sel_nodes = Node(Set{Int}())
-    sel_edges = Node(Set{Int}())
+    sel_nodes = Observable(Set{Int}())
+    sel_edges = Observable(Set{Int}())
 
     nwax = nw_sublayout[2,1] = Axis(fig)
     nwax.aspect = AxisAspect(1)
@@ -76,11 +76,11 @@ function inspect_solution(c::SolutionContainer)
     nwplot = graphplot!(nwax, network; gpargs...)
 
     HOVER_DEFAULT = "Hover node/edge to see info!"
-    description_text = Node{String}(HOVER_DEFAULT)
+    description_text = Observable{String}(HOVER_DEFAULT)
     nw_sublayout[3, 1] = Colorbar(fig, nwplot.plots[3], height=25, vertical=false, label="Node frequency")
     nw_sublayout[4, 1] = Colorbar(fig, height=25, vertical=false,
                                   colormap=@lift(edge_colorsheme($(edgemenu.selection))), label="Line load_S")
-    nw_sublayout[2, 1] = Label(fig, description_text, tellwidth=false, tellheight=false, halign=:left, valign=:top)
+    nw_sublayout[2, 1] = Label(fig, description_text, tellwidth=false, tellheight=false, justification=:left, halign=:left, valign=:top)
 
     # delete other interactions on scene
     deregister_interaction!(nwax, :rectanglezoom)
@@ -158,7 +158,7 @@ function inspect_solution(c::SolutionContainer)
 
     plot_nodes = (selected, ωload) -> begin
         empty!(θax); empty!(ωax)
-        colors = reverse(fig.scene.palette[:color][])
+        colors = reverse(fig.scene.theme.palette[:color][])
         for idx in selected
             c = pop!(colors)
             θidx = findfirst(sym -> occursin(Regex("θ_$idx\$"), String(sym)), nd.syms)
@@ -184,7 +184,7 @@ function inspect_solution(c::SolutionContainer)
 
     plot_edges = selected -> begin
         empty!(fax)
-        colors = reverse(fig.scene.palette[:color][])
+        colors = reverse(fig.scene.theme.palette[:color][])
         for idx in selected
             c = pop!(colors)
 
@@ -273,8 +273,8 @@ function gparguments(c::SolutionContainer, t::Observable;
                      offlinewidth = 3.0,
                      load_S = @lift(c.load_S($t)),
                      load_P = @lift(c.load_P($t)),
-                     sel_nodes = Node(Set{Int}()),
-                     sel_edges = Node(Set{Int}()),
+                     sel_nodes = Observable(Set{Int}()),
+                     sel_edges = Observable(Set{Int}()),
                      nd=nd_model(c.network)[1],
                      state_idx = idx_containing(nd, "ω"),
                      node_idx = map(s -> parse(Int, String(s)[4:end]), nd.syms[state_idx]),

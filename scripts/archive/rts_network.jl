@@ -36,8 +36,8 @@ hidedecorations!(ax), hidespines!(ax)
 xlims!(-10, 7)
 ylims!(-5, 7)
 
-t = Node(1.0)
-ecolorscaling = Node(0.5)
+t = Observable(1.0)
+ecolorscaling = Observable(0.5)
 gpargs = gparguments(sol, t;
                      colortype=:abssteady,
                      offlinewidth=0.0,
@@ -88,8 +88,8 @@ hidedecorations!(ax), hidespines!(ax)
 xlims!(-10, 7)
 ylims!(-5, 7)
 
-t = Node(1.0)
-ecolorscaling = Node(0.5)
+t = Observable(1.0)
+ecolorscaling = Observable(0.5)
 gpargs = gparguments(sol, t;
                      colortype=:abssteady,
                      offlinewidth=5,

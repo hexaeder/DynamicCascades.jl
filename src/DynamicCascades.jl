@@ -10,6 +10,7 @@ export DATA_DIR, RAWRESULTS_DIR, RESULTS_DIR
 const DATA_DIR = abspath(@__DIR__, "..", "data")
 const RAWRESULTS_DIR = abspath("/Users/hw/MAScratch")
 const RESULTS_DIR = abspath(@__DIR__, "..", "result")
+const PLOT_DIR = abspath(@__DIR__, "..", "..", "thesis", "figures")
 
 export import_system, describe_nodes, describe_edges, bustype, is_static_state
 

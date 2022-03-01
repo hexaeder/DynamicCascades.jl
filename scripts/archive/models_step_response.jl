@@ -27,11 +27,11 @@ function static_node!(dv, _, _, _, _)
     dv[1] = 0.0
 end
 
-fixed = ODEVertex(f! = static_node!, dim = 1, sym = [:θ])
+fixed = ODEVertex(f=static_node!, dim=1, sym = [:θ])
 
-edge = StaticEdge(f! = powerflow!, dim = 1, coupling=:antisymmetric)
-dynload = ODEVertex(f! = dynamic_load!, dim = 1, sym=[:θ])
-swing = ODEVertex(f! = swing_equation!, dim = 2, sym=[:θ, :ω])
+edge = StaticEdge(f=powerflow!, dim=1, coupling=:antisymmetric)
+dynload = ODEVertex(f=dynamic_load!, dim=1, sym=[:θ])
+swing = ODEVertex(f=swing_equation!, dim=2, sym=[:θ, :ω])
 
 nd = network_dynamics([fixed, dynload, swing], edge, g)
 node_p = [(NaN, NaN, NaN),  # static p
@@ -62,7 +62,7 @@ fig[1,1] = ax1 = Axis(fig, aspect=DataAspect())
 fig[1,2] = ax2 = Axis(fig, xlabel="time", ylabel="voltage angel")
 
 θidx = [1,2,1,3]
-tnode = Node(sol.t[begin])
+tnode = Observable(sol.t[begin])
 
 s1 = @lift(thetashape(sol($tnode)[1]; loc=(0,2)))
 s2 = @lift(thetashape(sol($tnode)[2]; loc=(4,2)))

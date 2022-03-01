@@ -83,13 +83,12 @@ function (sv::SavedValues)(t)
 end
 
 export seriesforidx
-function seriesforidx(sv::Union{SavedValues,ODESolution}, idx; dedup=true, cuttail=true, T=Float32)
+function seriesforidx(sv::Union{SavedValues,ODESolution}, idx; cuttail=true, T=Float32)
     x = Vector{T}(sv.t)
     ytable = sv isa SavedValues ? sv.saveval : sv.u
     y = [T(l[idx]) for l in ytable]
 
     cuttail && remove_zero_tail!(x, y)
-    dedup && remove_duplicates!(x, y)
 
     return (x, y)
 end
@@ -105,20 +104,6 @@ function remove_zero_tail!(x, y)
         deleteat!(x, idxs)
         deleteat!(y, idxs)
     end
-    return (x, y)
-end
-
-function remove_duplicates!(x, y)
-    println("rem duplicats possible not necessary anymore!")
-    @assert length(x) == length(y)
-    idxs = Int[]
-    for i in 2:length(y)-1 #never remove last element (in case of steady state)
-        if x[i] ≈ x[i-1] && y[i] ≈ y[i-1] # element seen before
-            push!(idxs, i)
-        end
-    end
-    deleteat!(x, idxs)
-    deleteat!(y, idxs)
     return (x, y)
 end
 
@@ -150,3 +135,11 @@ end
 
 export getedge
 getedge(g::AbstractGraph, i) = collect(edges(g))[i]
+
+# define pik colors
+using Colors
+Colors.color_names["pikorange"] = (227, 114, 34)
+Colors.color_names["pikgray"] = (142, 144, 143)
+Colors.color_names["pikcyan"] = (0, 159, 218)
+Colors.color_names["pikgreen"] = (105, 146, 58)
+Colors.color_names["pikblue"] = (124, 174, 175)
