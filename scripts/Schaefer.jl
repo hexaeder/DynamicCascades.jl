@@ -2,95 +2,83 @@ using DynamicCascades
 using Graphs
 using MetaGraphs
 using Statistics
-using GLMakie
 using GraphMakie
-GLMakie.activate!()
+using Colors
+using DynamicCascades: PLOT_DIR
 
-DIR = "/Users/hw/MA/Forschungsbeleg/figures/"
-set_theme!(theme_minimal(), fontsize=20)
+using CairoMakie
 
-orange = Makie.RGB([227, 114, 34]./255...)
-gray = Makie.RGB([142, 144, 143]./255...)
-cyan = Makie.RGB([0, 159, 218]./255...)
-green = Makie.RGB([105, 146, 58]./255...)
-blueish = Makie.RGB([124, 174, 175]./255...)
+# using GLMakie
+# GLMakie.activate!()
+
+# define pik colors
+using Colors
+Colors.color_names["pikorange"] = (227, 114, 34)
+Colors.color_names["pikgray"] = (142, 144, 143)
+Colors.color_names["pikcyan"] = (0, 159, 218)
+Colors.color_names["pikgreen"] = (105, 146, 58)
+Colors.color_names["pikblue"] = (124, 174, 175)
+
 ####
 #### using two steadystates
 ####
-network = import_system(:schaefer2018; γ=0.8)
-sol = simulate(network;
-               initial_fail=[5],
-               trip_lines=false,
-               tspan=(0., 1000.),
-               solverargs=(;dtmax=0.1));
-# inspect_solution(sol)
+network = import_system(:schaefer2018; γ = 0.8)
+sol1 = simulate(network;
+    initial_fail = [5],
+    failtime = 1.0,
+    trip_lines = false,
+    tspan = (0.0, 40.0),
+    solverargs = (; dtmax = 0.01));
+
+sol2 = simulate(network;
+    initial_fail = [5],
+    failtime = 1.0,
+    trip_lines = true,
+    tspan = (0.0, 40.0),
+    solverargs = (; dtmax = 0.01));
+# inspect_solution(sol1)
 t1 = 0.0
-t2 = sol.sol.t[end]
+t2 = sol1.sol.t[end]
 
-node_size = [40, 50, 40, 40, 50]
-node_color = [blueish, orange, blueish, blueish, orange]
-gpargs = gparguments(sol, t1; colortype=:abssteady)
-fig, ax, p = graphplot(network; gpargs..., node_size, node_color)
+set_theme!(theme_minimal(), fontsize=20, textsize=25)
+fig = Figure(resolution=(1500, 600))
+fig[1,1] = leftpane = GridLayout()
+node_size = [60, 70, 60, 60, 70]
+# node_color = [colorant"pikblue", colorant"pikorange", colorant"pikblue", colorant"pikblue", colorant"pikorange"]
+node_color = :black
+edgecolortype = :relrating
+gpargs = gparguments(sol1, t1; colortype = :relrating)
+leftpane[1,1] = ax = Axis(fig)
+p = graphplot!(ax, network; gpargs..., node_size, node_color,
+               nlabels=repr.(1:5), nlabels_align=(:center, :center), nlabels_color=:white,
+               nlabels_textsize=25)
 ax.aspect = DataAspect()
 p.edge_width[] = 2 .* p.edge_width[]
-hidedecorations!(ax); hidespines!(ax)
-save(joinpath(DIR, "schaefer_1.png"), fig)
+hidedecorations!(ax);
+hidespines!(ax);
+xlims!(ax, -1.05, 1.15)
+ylims!(ax, -0.1, 1.5)
+leftpane[2, 1] = Colorbar(fig, height = 25, vertical = false,
+    colormap = DynamicCascades.edge_colorsheme(edgecolortype), label = "initial load relative to rating")
+pos = GraphMakie.interpolate(get_edge_plot(p).paths[][5], 0.5)
+scatter!(ax, pos, marker = '𐄂', color = :black, markersize = 100)
 
-gpargs = gparguments(sol, t2; colortype=:abssteady)
-fig, ax, p = graphplot(network; gpargs..., node_size, node_color)
-ax.aspect = DataAspect()
-p.edge_width[] = 2 .* p.edge_width[]
-p.edge_color[][5] = Makie.RGB(1,1,1)
-notify(p.edge_color)
-hidedecorations!(ax); hidespines!(ax)
-save(joinpath(DIR, "schaefer_2.png"), fig)
-
-
-####
-#### Transient without failure
-####
-function create_animation(sol, tmin, tmax, file; showrating=false)
-    fig = Figure(resolution=(1600,600))
-    fig[1,1] = nwax = Axis(fig, width=500, tellheigth=false, aspect=DataAspect())
-    fig[1,2] = flowax = Axis(fig, heigth=600, xlabel="Time (s)", ylabel="absolut flow in PU")
-
-    t = Node(0.0)
-    rating = get_prop(network, Edge(1,2), :rating)
-    hlines!(flowax, rating, linewidth=3, color=gray, visible=showrating)
-    ecolorscaling=Observable(0.5)
-    gpargs = gparguments(sol, t;
-                         colortype=:abssteady,
-                         ecolorscaling,
-                         offlinecolor=Makie.RGB(1,1,1))
-    p = graphplot!(nwax, network; gpargs..., node_size=30, node_color)
-    hidedecorations!(nwax); hidespines!(nwax)
-    for idx in 1:ne(network)
+function plot_flows(ax, sol)
+    for (idx,e) in enumerate(edges(sol.network))
         (ts, S) = seriesforidx(sol.load_S, idx)
-        lines!(flowax, ts, S, linewidth=5)
-    end
-    hlines!(flowax, rating, linewidth=5, color=gray, visible=showrating)
-    vlines!(flowax, t, linewidth=3, color=gray, visible=@lift($t>tmin))
-    xlims!(flowax, tmin, tmax)
-    ylims!(flowax, 0, 1.1)
-
-    time, fps = 10, 30
-    tspan = range(tmin, tmax, length=fps*time)
-    save(joinpath(DIR, "../videos", file*".png"), fig)
-    record(fig, joinpath(DIR, "../videos", file*".mp4"), tspan) do time
-        t[] = time
+        S .= S./0.978
+        lines!(ax, ts, S, linewidth = 5, label=repr(e))
+        xlims!(ax, (0, 15))
+        hlines!(ax, 1.0, color=:black)
     end
 end
+fig[1,2] = rightpane = GridLayout()
+rightpane[1,1] = ax1 = Axis(fig, ylabel="relative load")
+rightpane[2,1] = ax2 = Axis(fig, ylabel="relative load", xlabel="time t (s)")
+plot_flows(ax1, sol1)
+plot_flows(ax2, sol2)
+axislegend(ax2, position=:rc)
+ylims!(ax1, 0, 1.1)
+ylims!(ax2, 0, 1.1)
 
-sol = simulate(network;
-               initial_fail=[5],
-               trip_lines=false,
-               tspan=(0., 1000.),
-               solverargs=(;dtmax=0.1));
-create_animation(sol, 0, 15, "schaefer_transient"; showrating=true)
-
-sol = simulate(network;
-               initial_fail=[5],
-               trip_lines=true,
-               tspan=(0., 1000.),
-               solverargs=(;dtmax=0.1));
-create_animation(sol, 0, 7, "schaefer_transient_fail"; showrating=true)
+save(joinpath(PLOT_DIR, "schaefer_network.pdf"), fig)

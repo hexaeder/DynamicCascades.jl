@@ -136,10 +136,3 @@ end
 export getedge
 getedge(g::AbstractGraph, i) = collect(edges(g))[i]
 
-# define pik colors
-using Colors
-Colors.color_names["pikorange"] = (227, 114, 34)
-Colors.color_names["pikgray"] = (142, 144, 143)
-Colors.color_names["pikcyan"] = (0, 159, 218)
-Colors.color_names["pikgreen"] = (105, 146, 58)
-Colors.color_names["pikblue"] = (124, 174, 175)

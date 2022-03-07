@@ -486,9 +486,9 @@ version = "2.68.3+2"
 
 [[deps.GraphMakie]]
 deps = ["GeometryBasics", "Graphs", "LinearAlgebra", "Makie", "NetworkLayout", "StaticArrays"]
-git-tree-sha1 = "7413cb602a7cbe44129016e8cd45981209823404"
+path = "/Users/hw/.julia/dev/GraphMakie"
 uuid = "1ecd5474-83a3-4783-bb4f-06765db800d2"
-version = "0.3.2"
+version = "0.3.3"
 
 [[deps.Graphics]]
 deps = ["Colors", "LinearAlgebra", "NaNMath"]

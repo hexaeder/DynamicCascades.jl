@@ -291,7 +291,7 @@ function gparguments(c::SolutionContainer, t::Observable;
     state = @lift(sol($t))
 
     # load, generator, slack
-    markers = Dict(:load => :rect, :gen => :utriangle, :slack => :circle);
+    markers = Dict(:load => :rect, :gen => :circle, :slack => :utriangle);
     node_marker = [markers[k] for k in get_prop(network, vertices(network), :type)];
 
     node_color = @lift begin
