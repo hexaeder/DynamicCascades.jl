@@ -56,7 +56,7 @@ function inspect_solution(c::SolutionContainer)
 
     # observables which hold the selected nodes and edges
     sel_nodes = Observable(Set{Int}())
-    sel_edges = Observable(Set{Int}())
+    sel_edges = Observable(Set{Int}(c.failures.saveval))
 
     nwax = nw_sublayout[2,1] = Axis(fig)
     nwax.aspect = AxisAspect(1)
@@ -228,6 +228,9 @@ function inspect_solution(c::SolutionContainer)
         end
         return false
     end
+
+    notify(sel_edges)
+    notify(sel_nodes)
 
     return fig
 end

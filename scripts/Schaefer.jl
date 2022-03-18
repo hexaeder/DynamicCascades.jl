@@ -26,14 +26,14 @@ network = import_system(:schaefer2018; γ = 0.8)
 sol1 = simulate(network;
     initial_fail = [5],
     failtime = 1.0,
-    trip_lines = false,
+    trip_lines = :none,
     tspan = (0.0, 40.0),
     solverargs = (; dtmax = 0.01));
 
 sol2 = simulate(network;
     initial_fail = [5],
     failtime = 1.0,
-    trip_lines = true,
+    trip_lines = :dynamic,
     tspan = (0.0, 40.0),
     solverargs = (; dtmax = 0.01));
 # inspect_solution(sol1)

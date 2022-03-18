@@ -8,6 +8,7 @@ using OrdinaryDiffEq.DiffEqBase
 
 export nd_model, get_parameters, calculate_apparent_power
 export steadystate, simulate, SolutionContainer, issteadystate
+export terminated
 
 ####
 #### Models
@@ -58,12 +59,14 @@ struct SolutionContainer{G,T}
     network::G
     initial_fail::Vector{Int}
     failtime::Float64
-    trip_lines::Bool
+    trip_lines::Symbol
     sol::T
     load_S::SavedValues{Float64,Vector{Float64}}
     load_P::SavedValues{Float64,Vector{Float64}}
     failures::SavedValues{Float64,Int}
 end
+
+terminated(sc::SolutionContainer) = sc.sol.t[end] < sc.sol.prob.tspan[end]
 
 function project_theta!(nd, x0)
     θidx = idx_containing(nd, "θ")
@@ -110,9 +113,9 @@ function simulate(network;
                   verbose=true,
                   x_static=steadystate(network; verbose),
                   initial_fail=Int[],
-                  failtime=1.0,
+                  failtime=0.1,
                   tspan=(0., 100.),
-                  trip_lines=true,
+                  trip_lines=:dynamic,
                   filename=nothing,
                   terminate_steady_state=true,
                   solverargs=(;))
@@ -125,12 +128,12 @@ function simulate(network;
 
     cbs = CallbackSet(overload_cb(;trip_lines, load_S, load_P, failures, verbose));
     if !isempty(initial_fail)
-        cbs = CallbackSet(InitialFailCB(initial_fail, failtime), cbs)
+        cbs = CallbackSet(InitialFailCB(initial_fail, failtime; failures, verbose), cbs)
     end
-    if terminate_steady_state
+    if trip_lines !== :static && terminate_steady_state
         min_t = isempty(initial_fail) ? nothing : failtime+eps(failtime)
         # cbs = CallbackSet(cbs, TerminateSteadyState(1e-8, 1e-6; min_t))
-        cbs = CallbackSet(cbs, TerminateSelectiveSteadyState(idx_containing(nd, "ω"); min_t))
+        cbs = CallbackSet(cbs, TerminateSelectiveSteadyState(nd; min_t))
     end
 
     verbose && println("Run simulation for trips on lines $(initial_fail)")
@@ -313,7 +316,7 @@ are injected inside the shutdown affect. In order for this to work the affect ne
 bump the `saveiter` counter of the other callback. Very ugly.
 """
 function get_callback_generator(network::MetaGraph)
-    function gen_cb(;trip_lines=true, load_S=nothing, load_P=nothing, failures=nothing, verbose=true)
+    function gen_cb(;trip_lines=:dynamic, load_S=nothing, load_P=nothing, failures=nothing, verbose=true)
         save_S_fun = let _network=network
             (u, t, integrator) -> calculate_apparent_power(u, integrator.p, t, integrator.f.f, _network)
         end
@@ -324,70 +327,128 @@ function get_callback_generator(network::MetaGraph)
         scb_S = load_S === nothing ? nothing : SavingCallback(save_S_fun, load_S)
         scb_P = load_P === nothing ? nothing : SavingCallback(save_P_fun, load_P)
 
-        condition = let _current_load=zeros(ne(network)), _network=network, _rating=get_prop(network,edges(network),:rating)
-            (out, u, t, integrator) -> begin
-                # upcrossing through zero triggers condition
-                calculate_apparent_power!(_current_load, u, integrator.p, t, integrator.f.f, _network)
-                out .= _current_load .- _rating
-                nothing
+        ## static line condition
+        if trip_lines == :dynamic
+            condition = let _current_load = zeros(ne(network)), _network = network, _rating = get_prop(network, edges(network), :rating)
+                (out, u, t, integrator) -> begin
+                    # upcrossing through zero triggers condition
+                    calculate_apparent_power!(_current_load, u, integrator.p, t, integrator.f.f, _network)
+                    out .= _current_load .- _rating
+                    nothing
+                end
             end
-        end
 
-        affect! = let _failures=failures, _verbose=verbose, _load_S=load_S, _load_P=load_P, _scb_S=scb_S, _scb_P=scb_P
-            (integrator, event_idx) -> begin
-                _verbose && println("Shutdown line $event_idx at t = $(integrator.t)")
+            affect! = let _failures = failures, _verbose = verbose, _load_S = load_S, _load_P = load_P, _scb_S = scb_S, _scb_P = scb_P
+                (integrator, event_idx) -> begin
+                    _verbose && println("Shutdown line $event_idx at t = $(integrator.t)")
 
-                if _failures !== nothing
-                    push!(_failures.t, integrator.t)
-                    push!(_failures.saveval, event_idx)
+                    if _failures !== nothing
+                        push!(_failures.t, integrator.t)
+                        push!(_failures.saveval, event_idx)
+                    end
+                    if _scb_S !== nothing
+                        _scb_S.affect!.saveiter += 1
+                        push!(_load_S.t, integrator.t)
+                        push!(_load_S.saveval, save_S_fun(integrator.u, integrator.t, integrator))
+                    end
+                    if _scb_P !== nothing
+                        _scb_P.affect!.saveiter += 1
+                        push!(_load_P.t, integrator.t)
+                        push!(_load_P.saveval, save_P_fun(integrator.u, integrator.t, integrator))
+                    end
+                    edge_p = integrator.p[2]
+                    edge_p[event_idx] = 0.0
+                    nothing
                 end
-                if _scb_S !== nothing
-                    _scb_S.affect!.saveiter += 1
-                    push!(_load_S.t, integrator.t)
-                    push!(_load_S.saveval, save_S_fun(integrator.u, integrator.t, integrator))
-                end
-                if _scb_P !== nothing
-                    _scb_P.affect!.saveiter += 1
-                    push!(_load_P.t, integrator.t)
-                    push!(_load_P.saveval, save_P_fun(integrator.u, integrator.t, integrator))
-                end
-                edge_p = integrator.p[2]
-                edge_p[event_idx] = 0.0
-                nothing
             end
-        end
 
-        if trip_lines
             vcb = VectorContinuousCallback(condition, affect!, ne(network);
-                                           save_positions=(true,true),
-                                           affect_neg! = nothing, #only trigger on upcrossing -> 0
-                                           abstol=10eps(),reltol=0)
+                save_positions = (true, true),
+                affect_neg! = nothing, #only trigger on upcrossing -> 0
+                abstol = 10eps(), reltol = 0)
+
+        elseif trip_lines == :static
+            ## static line condition
+            nd, = nd_model(network)
+            condition = getSteadyStateCondition(nd)
+            affect! = let _failures = failures, _verbose = verbose, _current_load = zeros(ne(network)), _network = network, _rating = get_prop(network, edges(network), :rating)
+                function (integrator)
+                    u = integrator.u
+                    t = integrator.t
+                    # wait til after the failure which just happend
+                    if isempty(_failures.t) || t <= _failures.t[end]
+                        return
+                    end
+
+                    calculate_apparent_power!(_current_load, u, integrator.p, t, integrator.f.f, _network)
+                    _current_load .-= _rating
+                    triggered = findall(x->x>0, _current_load)
+
+                    if isempty(triggered)
+                        terminate!(integrator)
+                    else
+                        integrator.p[2][triggered] .= 0.0
+                            _verbose && println("Shutdown line ",
+                                length(triggered) == 1 ? only(triggered) : triggered,
+                                " at t = $(integrator.t)")
+                        if !isnothing(failures)
+                            for i in triggered
+                                push!(failures.t, integrator.t)
+                                push!(failures.saveval, i)
+                            end
+                        end
+                    end
+                end
+            end
+            vcb = DiscreteCallback(condition, affect!)
+
         else
             vcb = nothing
         end
+
+        # static line condition
 
         return CallbackSet(vcb, scb_P, scb_S)
     end
     return gen_cb
 end
 
-function InitialFailCB(idxs, time)
-    affect! = (integrator) -> integrator.p[2][idxs] .= 0.0
+function InitialFailCB(idxs, time; failures = nothing, verbose = true)
+    affect! = function (integrator)
+        # set coupling to zero
+        integrator.p[2][idxs] .= 0.0
+        verbose && println("Shutdown line ",
+            length(idxs) == 1 ? only(idxs) : idxs,
+            " at t = $(integrator.t)")
+        if !isnothing(failures)
+            for i in idxs
+                push!(failures.t, integrator.t)
+                push!(failures.saveval, i)
+            end
+        end
+    end
     PresetTimeCallback(time, affect!)
 end
 
-function TerminateSelectiveSteadyState(idxs; min_t = nothing)
-    condition = function (u, t, integrator)
+function getSteadyStateCondition(nd; min_t=nothing)
+    idxs = idx_containing(nd, "ω")
+    function (u, t, integrator)
         if !isnothing(min_t) && t <= min_t
             return false
         end
         testval = first(get_tmp_cache(integrator))
         DiffEqBase.get_du!(testval, integrator)
         for i in idxs
-            testval[i] > 1e-6 && return false
+            if abs(testval[i]) > 1e-6
+                return false
+            end
         end
         return true
     end
+end
+
+function TerminateSelectiveSteadyState(nd; min_t = nothing)
+    condition = getSteadyStateCondition(nd; min_t)
     affect! = (integrator) -> terminate!(integrator)
     DiscreteCallback(condition, affect!; save_positions = (true, false))
 end
