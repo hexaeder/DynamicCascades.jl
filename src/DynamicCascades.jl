@@ -5,14 +5,22 @@ using DataFrames
 using Graphs
 using MetaGraphs
 using Missings
+using Unitful
 
-export DATA_DIR, RAWRESULTS_DIR, RESULTS_DIR
+export DATA_DIR, RAWRESULTS_DIR, RESULTS_DIR, PLOT_DIR
 const DATA_DIR = abspath(@__DIR__, "..", "data")
 const RAWRESULTS_DIR = abspath("/Users/hw/MAScratch")
 const RESULTS_DIR = abspath(@__DIR__, "..", "result")
 const PLOT_DIR = abspath(@__DIR__, "..", "..", "thesis", "figures")
 
 export import_system, describe_nodes, describe_edges, bustype, is_static_state
+
+# define perunit as unit
+@unit pu "p.u." PerUnit 1 false
+Unitful.register(DynamicCascades)
+function __init__()
+    Unitful.register(DynamicCascades)
+end
 
 include("utils.jl")
 
@@ -24,15 +32,15 @@ include("utils.jl")
 Helper to convert the different representations of bus types into eachother.
 Base representation is Symbol:
 
-    :load  == bustype(1) == bustype("PQ") == bustype(:PQ)
-    :gen   == bustype(2) == bustype("PV") == bustype(:PV)
-    :slack == bustype(3) == bustype("Ref") == bustype(:Ref)
+    :load   == bustype(1) == bustype("PQ") == bustype(:PQ)
+    :gen    == bustype(2) == bustype("PV") == bustype(:PV)
+    :syncon == bustype(3) == bustype("Ref") == bustype(:Ref)
 """
 bustype(i::Int) = bustype(Val(i))
 bustype(s) = bustype(Val(Symbol(s)))
-bustype(::Union{Val{:PQ},  Val{1}, Val{:load}})  = :load
-bustype(::Union{Val{:PV},  Val{2}, Val{:gen}})   = :gen
-bustype(::Union{Val{:Ref}, Val{3}, Val{:slack}}) = :slack
+bustype(::Union{Val{:PQ},  Val{1}, Val{:load}})   = :load
+bustype(::Union{Val{:PV},  Val{2}, Val{:gen}})    = :gen
+bustype(::Union{Val{:Ref}, Val{3}, Val{:syncon}}) = :syncon
 
 """
     import_system(sym::Symbol; kwargs...)::MetaGraph
@@ -58,7 +66,7 @@ Node properties:
 optional:
 - `inertia` : inertia in MJ/MW (see H in Wikipedia page)
 - `damping` : damping factor γ for swing equations
-- `timescale` : time scale factor `D` for dynamic loads
+- `timeconstant` : time cosntant `τ` for dynamic loads
 - `x`, `y` : position of Bus for plotting purposes
 - `Va` : voltage angle in rad
 

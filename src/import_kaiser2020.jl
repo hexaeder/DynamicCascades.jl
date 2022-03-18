@@ -51,7 +51,7 @@ function import_system(::Val{:kaiser2020}; gen_γ, load_τ, seed=1)
     set_prop!(g, load_idxs, :P, -Pload)
     set_prop!(g, load_idxs, :Q, 0.0)
     set_prop!(g, load_idxs, :inertia, 1.0)
-    set_prop!(g, load_idxs, :timescale, load_τ)
+    set_prop!(g, load_idxs, :timeconst, load_τ)
 
     set_prop!(g, edges(g), :R, 0.0)
     set_prop!(g, edges(g), :X, 0.01)

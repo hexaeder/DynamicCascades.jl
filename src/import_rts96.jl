@@ -4,7 +4,7 @@ using NetworkLayout: spring
 
 Import the RTS96 system from raw data as a MetaGraph.
 """
-function import_system(::Val{:rts96raw}; losses=false)
+function import_system(::Val{:rts96raw}; losses=false, kwargs...)
     @info "Import system RTS-96 (from raw data)"
     # read data from csv files
     data = joinpath(DATA_DIR, "RTS-96")
@@ -33,15 +33,15 @@ function import_system(::Val{:rts96raw}; losses=false)
     N = nrow(BusData)
     g = MetaGraph(N)
 
-    baseP = 100
+    baseP = 100u"MW"
     set_prop!(g, :Pbase, baseP)
-    set_prop!(g, :NodeProps, [:n, :id, :P, :type, :Q, :inertia, :Vm, :Vbase,
+    set_prop!(g, :NodeProps, [:n, :id, :P, :type, :Q, :H, :Vm, :Vbase,
                               :P_load, :P_inj, :Q_load, :Q_inj])
     set_prop!(g, :EdgeProps, [:src, :dst, :R, :X, :rating, :id])
 
     set_prop!(g, 1:N, :id, BusData.id)
     set_prop!(g, 1:N, :type, bustype.(BusData.type))
-    set_prop!(g, 1:N, :Vbase, BusData.base_kV)
+    set_prop!(g, 1:N, :Vbase, BusData.base_kV*u"kV")
 
     for (n, busid) in enumerate(BusData.id)
         # collect all generators which are attached to bus
@@ -52,49 +52,52 @@ function import_system(::Val{:rts96raw}; losses=false)
         # extract voltage setpoints in PU, make sure alle generators at bus have same setpoint
         vpus = unique(generators.V_pu)
         if length(vpus) == 1
-            set_prop!(g, n, :Vm, vpus[1])
+            set_prop!(g, n, :Vm, vpus[1]*u"pu")
         elseif length(vpus) != 0
             error("There are multiple Vpu at single bus!")
         end
 
         # sum up inertia and P/Q of all attached generators
-        P_inj   = sum(generators.MW_inj) / baseP
-        Q_inj = sum(generators.MVar_inj) / baseP
-        inertia  = sum(generators.inertia)
-        if P_inj!=0.0 || Q_inj!=0.0 || inertia != 0.0 # set only if there are generators
+        P_inj = sum(generators.MW_inj) * u"MW"
+        Q_inj = sum(generators.MVar_inj) * u"MW"
+        inertia = sum(generators.inertia) * u"MJ/MW"
+        if !iszero(P_inj) || !iszero(Q_inj) || !iszero(inertia)
             set_prop!(g, n, :P_inj, P_inj)
             set_prop!(g, n, :Q_inj, Q_inj)
-            set_prop!(g, n, :inertia, inertia)
+            set_prop!(g, n, :H, inertia)
         end
 
         # find right bus in busloaddata
         busload = BusLoadData[busid .∈ zip(BusLoadData.bid_1, BusLoadData.bid_2, BusLoadData.bid_3), :]
         if nrow(busload) == 0
-            P_load = 0.0
-            Q_load = 0.0
+            P_load = 0.0u"MW"
+            Q_load = 0.0u"MW"
         elseif nrow(busload) == 1
-            P_load = busload.MW[1] / baseP
-            Q_load = busload.MVar[1] / baseP
+            P_load = busload.MW[1] * u"MW"
+            Q_load = busload.MVar[1] * u"MW"
             set_prop!(g, n, :P_load, P_load)
             set_prop!(g, n, :Q_load, Q_load)
         else
             error("nrow(busload) = $(nrow(busload)) should be 0 or 1")
         end
 
-        P = P_inj - P_load
-        set_prop!(g, n, :P, P)
-        Q = Q_inj - Q_load
-        set_prop!(g, n, :Q, Q)
+        set_prop!(g, n, :P, (P_inj - P_load)/baseP * u"pu")
+        set_prop!(g, n, :Q, (Q_inj - Q_load)/baseP * u"pu")
     end
 
     for row in eachrow(BranchData)
         src = findfirst(x->x==row.from, BusData.id)
         dst = findfirst(x->x==row.to, BusData.id)
-        propertys = Dict(:R => row.R, :X => row.X,
-                         :rating => row.STE/100,
+        propertys = Dict(:R => row."R"u"pu",
+                         :X => row."X"u"pu",
+                         :rating => row.STE*u"MW"/baseP * u"pu",
                          :id => row.id)
         add_edge!(g, src, dst, propertys)
     end
+
+    losses || lossless!(g)
+    set_missing_props!(g; kwargs...)
+
     return g
 end
 
@@ -103,7 +106,7 @@ end
 
 Import the RTS96 system from the prepared data as a MetaGraph.
 """
-function import_system(::Val{:rts96prepared}; gen_γ=missing, slack_γ=missing, load_τ=missing, losses=false)
+function import_system(::Val{:rts96prepared}; losses=false, kwargs...)
     @info "Import system RTS-96 (from prepared csv files)"
     # read data from csv files
     data = joinpath(DATA_DIR, "RTS-96")
@@ -123,7 +126,7 @@ function import_system(::Val{:rts96prepared}; gen_γ=missing, slack_γ=missing, 
     # set base parameters
     baseP = 100
     set_prop!(g, :Pbase, baseP)
-    set_prop!(g, :NodeProps, [:n, :id, :P, :type, :Q, :inertia, :Vm, :Vbase,
+    set_prop!(g, :NodeProps, [:n, :id, :P, :type, :Q, :H, :Vm, :Vbase,
                               :P_load, :P_inj, :Q_load, :Q_inj])
     set_prop!(g, :EdgeProps, [:src, :dst, :R, :X, :rating])
 
@@ -134,37 +137,24 @@ function import_system(::Val{:rts96prepared}; gen_γ=missing, slack_γ=missing, 
     sort!(joined, :ID)
 
     set_prop!(g, 1:N, :id, joined.ID)
-    set_prop!(g, 1:N, :Vbase, joined.Base_V)
+    set_prop!(g, 1:N, :Vbase, joined.Base_V*u"kV")
     set_prop!(g, 1:N, :type, bustype.(joined.Type))
-    set_prop!(g, 1:N, :Vm, joined.Vm)
-    set_prop!(g, 1:N, :Va, joined.Va)
-    set_prop!(g, 1:N, :inertia, joined.Inertia)
-    set_prop!(g, 1:N, :P_load, joined.P_Load)
-    set_prop!(g, 1:N, :Q_load, joined.Q_Load)
+    set_prop!(g, 1:N, :Vm, joined.Vm*u"pu")
+    set_prop!(g, 1:N, :Va, joined.Va*u"°")
+    set_prop!(g, 1:N, :H, joined.Inertia*u"MJ/MW")
+    set_prop!(g, 1:N, :P_load, joined.P_Load*u"pu")
+    set_prop!(g, 1:N, :Q_load, joined.Q_Load*u"pu")
 
-    # TODO what ist P_corr?
-    P_inj = losses ? joined.P_Gen : joined.P_Corr
-    @warn "Set Q_inj to zero because there is no data!"
+    P_inj = joined.P_Gen * u"pu"
     Q_inj = zeros(length(P_inj))
     set_prop!(g, 1:N, :P_inj, P_inj)
     set_prop!(g, 1:N, :Q_inj, Q_inj)
 
     # calculate total P and Q
-    P = Missings.replace(P_inj, 0.0) .- joined.P_Load
-    Q = Missings.replace(Q_inj, 0.0) .- joined.Q_Load
+    P = (Missings.replace(P_inj, 0.0) .- joined.P_Load) * u"pu"
+    Q = (Missings.replace(Q_inj, 0.0) .- joined.Q_Load) * u"pu"
     set_prop!(g, 1:N, :P, P)
     set_prop!(g, 1:N, :Q, Q)
-
-    for v in 1:nv(g)
-        type = get_prop(g, v, :type)
-        if type === :gen
-            set_prop!(g, v, :damping, gen_γ)
-        elseif type === :slack
-            set_prop!(g, v, :damping, slack_γ)
-        elseif type === :load
-            set_prop!(g, v, :timescale, load_τ)
-        end
-    end
 
     # add the edge data
     for line in eachrow(LineData)
@@ -173,9 +163,9 @@ function import_system(::Val{:rts96prepared}; gen_γ=missing, slack_γ=missing, 
 
     # resistance, reactance & emergency rating
     R = losses ? LineData.r : zeros(length(LineData.r))
-    set_prop!(g, edges(g), :R, R)
-    set_prop!(g, edges(g), :X, LineData.x)
-    set_prop!(g, edges(g), :rating, LineData.u)
+    set_prop!(g, edges(g), :R, R * u"pu")
+    set_prop!(g, edges(g), :X, LineData.x * u"pu")
+    set_prop!(g, edges(g), :rating, LineData.u * u"pu")
 
     # check that the orders if edges in graph equals the order of edges in csv
     lineorder1 = [(e.source, e.dest) for e in eachrow(LineData)]
@@ -209,6 +199,9 @@ function import_system(::Val{:rts96prepared}; gen_γ=missing, slack_γ=missing, 
     # pos3 = spring(g, initialpos=pos2, initialtemp=0.1)
 
     set_prop!(g, 1:N, :pos, pos2)
+
+    losses || lossless!(g)
+    set_missing_props!(g; kwargs...)
 
     return g
 end

@@ -17,17 +17,17 @@ function powerflow!(e, v_s, v_d, K, t)
     nothing
 end
 
-function swing_equation!(dv, v, edges, (power, inertia, τ), t)
+function swing_equation!(dv, v, edges, (power, H, D), t)
     # dθ = ω
     dv[1] = v[2]
-    # dω = (P - γ ω + flowsum)/Inertia
+    # dω = (P - γ ω + flowsum)/H
     # dv[2] = power - 0.1 * v[2]
-    dv[2] = power - τ * v[2]
+    dv[2] = power - D * v[2]
     for e in edges
         dv[2] += e[1]
     end
-    # TODO check inertia units and definition
-    dv[2] = dv[2] / inertia
+    ω0 = 2π * 50
+    dv[2] = dv[2] * 2ω0/H
     nothing
 end
 
@@ -35,7 +35,7 @@ end
 D⋅dϕᵢ/dt = Pᵢ + ∑ⱼ Kᵢⱼ⋅sin(ϕⱼ-ϕᵢ)
 The parameter D defines a time scale for the dynamics. For D → 0 this model approaches
 the behavior of the algebraic load model (⩯ instantanious power balance). =#
-function dynamic_load!(dv, v, edges, (power, inertia, τ), t)
+function dynamic_load!(dv, v, edges, (power, τ, _), t)
     # dynamic_load_time = 0.1
     dv[1] = power
     for e in edges
@@ -72,15 +72,21 @@ function project_theta!(nd, x0)
     end
 end
 
-function steadystate(network; project=false, verbose=false, tol=1e-9)
+function steadystate(network; project=false, verbose=false, tol=1e-9, zeroidx=nothing)
     verbose && println("Find steady state...")
     (nd, p) = nd_model(network)
     x0 = zeros(length(nd.syms));
     x_static = solve(SteadyStateProblem(nd, x0, p), SSRootfind())
 
+    θidx = idx_containing(nd, "θ")
+    if zeroidx !== nothing
+        offset = x_static[θidx[zeroidx]]
+        x_static[θidx] .= x_static[θidx] .- offset
+        @assert iszero(x_static[θidx[zeroidx]])
+    end
+
     project && project_theta!(nd, x0)
 
-    θidx = idx_containing(nd, "θ")
     ex = extrema(x_static[θidx])
     if ex[1] < -π/2 || ex[2] > π/2
         @warn "Steadystate: θ ∈ $ex, consider using project=true flag!"
@@ -153,7 +159,7 @@ function nd_model(network::MetaGraph)
     standardmodels = Dict(
         :gen => :swing,
         :load => :dynload,
-        :slack => :swing,
+        :syncon => :swing,
     )
     for i in 1:nv(network)
         if !has_prop(network, i, :model)
@@ -187,14 +193,15 @@ function get_parameters(network::MetaGraph)
     vertex_p = Vector{NTuple{3,Float64}}(undef, nv(network))
     for v in 1:nv(network)
         P = get_prop(network, v, :P)
-        inertia = has_prop(network, v, :inertia) ? get_prop(network, v, :inertia) : 0.0
         model = get_prop(network, v, :model)
-        τ = if model === :swing
-            get_prop(network, v, :damping)
+        if model === :swing
+            H = ustrip(u"MJ/MW", get_prop(network, v, :H))
+            D = ustrip(u"s", get_prop(network, v, :damping))
+            vertex_p[v] = (P, H, D)
         elseif model === :dynload
-            get_prop(network, v, :timescale)
+            τ = ustrip(u"s", get_prop(network, v, :timeconst))
+            vertex_p[v] = (P, τ, 0.0)
         end
-        vertex_p[v] = (P, inertia, τ)
     end
     return (vertex_p, edge_p)
 end
@@ -221,6 +228,23 @@ function set_coupling!(network::MetaGraph)
     end
     warn && @warn "There have been nonzero R values, this is undefined!"
     return K
+end
+
+function set_coupling_sum!(network)
+    DynamicCascades.set_admittance!(network)
+    DynamicCascades.set_coupling!(network)
+    branches = describe_edges(network)
+    nodes = describe_nodes(network)
+
+    alledges = edges(network)|>collect
+
+    Ksum = Vector{Float64}(undef, length(nodes.n))
+    for n in nodes.n
+        eidx = findall(e->n∈(e.src, e.dst), alledges)
+        Ksum[n] = sum(branches._K[eidx])
+    end
+    Ksum
+    set_prop!(network, nodes.n, :Ksum, Ksum)
 end
 
 function calculate_apparent_power(network::MetaGraph, u)

@@ -7,7 +7,7 @@ using ColorSchemes
 using NetworkDynamics
 using NetworkLayout: spring
 
-export inspect_solution
+export inspect_solution, plot_failing_lines
 
 function inspect_solution(c::SolutionContainer)
     (nd,) = nd_model(c.network)
@@ -100,7 +100,7 @@ function inspect_solution(c::SolutionContainer)
             string = """Node $idx
                         ├ type = $(get_prop(network, idx, :type))
                         ├ voltage  = $(get_prop(network, idx, :Vm))
-                        ├ interita  = $(has_prop(network, idx, :inertia) ? get_prop(network, idx, :inertia) : "missing")
+                        ├ interita  = $(has_prop(network, idx, :H) ? get_prop(network, idx, :H) : "missing")
                         ├ active P = $(get_prop(network, idx, :P))
                         └ reactive Q = $(get_prop(network, idx, :Q))
                      """
@@ -291,7 +291,7 @@ function gparguments(c::SolutionContainer, t::Observable;
     state = @lift(sol($t))
 
     # load, generator, slack
-    markers = Dict(:load => :rect, :gen => :circle, :slack => :utriangle);
+    markers = Dict(:load => :rect, :gen => :circle, :syncon => :utriangle);
     node_marker = [markers[k] for k in get_prop(network, vertices(network), :type)];
 
     node_color = @lift begin
@@ -320,7 +320,7 @@ function gparguments(c::SolutionContainer, t::Observable;
     alltime_max_P_diff = maximum(map(load -> maximum(abs.(extrema(load-P_steady))), P_values.saveval))
 
     edgescheme = @lift edge_colorsheme($colortype)
-    emergency_rating = get_prop(network, edges(network), :rating)
+    emergency_rating = ustrip.(u"pu", get_prop(network, edges(network), :rating))
     edge_color = @lift begin
         load = $(activeP) ? $load_P : $load_S
 
@@ -407,4 +407,24 @@ end
 
 function GraphMakie.graphplot!(ax, c::SolutionContainer, t; kwargs...)
     graphplot!(ax, c.network; gparguments(c, t; kwargs...)...)
+end
+
+function plot_failing_lines(c::SolutionContainer)
+    maxt = maximum(c.failures.t)
+    ln = c.failures.saveval
+    f = Figure()
+    f[1, 1] = ax = Axis(f)
+    emergency_rating = ustrip.(u"pu", get_prop(c.network, edges(c.network), :rating))
+    for idx in ln
+        (tS, S) = seriesforidx(c.load_S, idx)
+        p = lines!(ax, tS, S, linewidth = 3, label = "Edge $idx")
+
+        rating = emergency_rating[idx]
+        hlines!(ax, rating, color = p.color, linewidth = 3)
+    end
+
+    axislegend(ax; position = :rc)
+    xlims!(0, 1.2 * maxt)
+    display(f)
+    return f, ax
 end

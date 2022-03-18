@@ -83,14 +83,14 @@ function (sv::SavedValues)(t)
 end
 
 export seriesforidx
-function seriesforidx(sv::Union{SavedValues,ODESolution}, idx; cuttail=true, T=Float32)
+function seriesforidx(sv::Union{SavedValues,ODESolution}, idx; cuttail = true, T = Float32, f = identity)
     x = Vector{T}(sv.t)
     ytable = sv isa SavedValues ? sv.saveval : sv.u
     y = [T(l[idx]) for l in ytable]
 
     cuttail && remove_zero_tail!(x, y)
 
-    return (x, y)
+    return (x, f.(y))
 end
 
 function remove_zero_tail!(x, y)
@@ -135,4 +135,3 @@ end
 
 export getedge
 getedge(g::AbstractGraph, i) = collect(edges(g))[i]
-
