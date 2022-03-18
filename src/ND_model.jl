@@ -4,6 +4,7 @@ using OrdinaryDiffEq
 using DiffEqCallbacks
 using SteadyStateDiffEq
 using LinearAlgebra
+using OrdinaryDiffEq.DiffEqBase
 
 export nd_model, get_parameters, calculate_apparent_power
 export steadystate, simulate, SolutionContainer, issteadystate
@@ -128,7 +129,8 @@ function simulate(network;
     end
     if terminate_steady_state
         min_t = isempty(initial_fail) ? nothing : failtime+eps(failtime)
-        cbs = CallbackSet(cbs, TerminateSteadyState(1e-8, 1e-6; min_t))
+        # cbs = CallbackSet(cbs, TerminateSteadyState(1e-8, 1e-6; min_t))
+        cbs = CallbackSet(cbs, TerminateSelectiveSteadyState(idx_containing(nd, "ω"); min_t))
     end
 
     verbose && println("Run simulation for trips on lines $(initial_fail)")
@@ -372,4 +374,20 @@ end
 function InitialFailCB(idxs, time)
     affect! = (integrator) -> integrator.p[2][idxs] .= 0.0
     PresetTimeCallback(time, affect!)
+end
+
+function TerminateSelectiveSteadyState(idxs; min_t = nothing)
+    condition = function (u, t, integrator)
+        if !isnothing(min_t) && t <= min_t
+            return false
+        end
+        testval = first(get_tmp_cache(integrator))
+        DiffEqBase.get_du!(testval, integrator)
+        for i in idxs
+            testval[i] > 1e-6 && return false
+        end
+        return true
+    end
+    affect! = (integrator) -> terminate!(integrator)
+    DiscreteCallback(condition, affect!; save_positions = (true, false))
 end
