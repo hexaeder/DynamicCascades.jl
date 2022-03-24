@@ -19,7 +19,7 @@ function powerflow!(e, v_s, v_d, K, t)
     nothing
 end
 
-function swing_equation!(dv, v, edges, (power, H, D), t)
+function swing_equation!(dv, v, edges, (power, M, D), t)
     # dθ = ω
     dv[1] = v[2]
     # dω = (P - γ ω + flowsum)/H
@@ -28,8 +28,9 @@ function swing_equation!(dv, v, edges, (power, H, D), t)
     for e in edges
         dv[2] += e[1]
     end
-    ω0 = 2π * 50
-    dv[2] = dv[2] * 2ω0/H
+    # ω0 = 2π * 50
+    # dv[2] = dv[2] * 2ω0/H
+    dv[2] = dv[2]/M
     nothing
 end
 
@@ -76,7 +77,7 @@ function project_theta!(nd, x0)
     end
 end
 
-function steadystate(network; project=false, verbose=false, tol=1e-9, zeroidx=nothing)
+function steadystate(network; project=false, verbose=false, tol=1e-7, zeroidx=nothing)
     verbose && println("Find steady state...")
     (nd, p) = nd_model(network)
     x0 = zeros(length(nd.syms));
@@ -192,7 +193,7 @@ function nd_model(network::MetaGraph)
 end
 
 function get_parameters(network::MetaGraph)
-    set_admittance!(network)
+    set_inertia!(network)
     edge_p = set_coupling!(network)
 
     vertex_p = Vector{NTuple{3,Float64}}(undef, nv(network))
@@ -200,15 +201,28 @@ function get_parameters(network::MetaGraph)
         P = get_prop(network, v, :P)
         model = get_prop(network, v, :model)
         if model === :swing
-            H = ustrip(u"MJ/MW", get_prop(network, v, :H))
+            M = ustrip(u"s^2", get_prop(network, v, :_M))
             D = ustrip(u"s", get_prop(network, v, :damping))
-            vertex_p[v] = (P, H, D)
+            vertex_p[v] = (P, M, D)
         elseif model === :dynload
             τ = ustrip(u"s", get_prop(network, v, :timeconst))
             vertex_p[v] = (P, τ, 0.0)
         end
     end
     return (vertex_p, edge_p)
+end
+
+function set_inertia!(network::MetaGraph)
+    for v in vertices(network)
+        if has_prop(network, v, :_M)
+            continue
+        elseif has_prop(network, v, :H)
+            ω0 = 2π * 50u"1/s"
+            H = get_prop(network, v, :H)
+            M = upreferred(H/(2ω0))
+            set_prop!(network, v, :_M, M)
+        end
+    end
 end
 
 function set_admittance!(network::MetaGraph)
@@ -219,6 +233,14 @@ function set_admittance!(network::MetaGraph)
 end
 
 function set_coupling!(network::MetaGraph)
+    if has_prop(network, edges(network), :_K)
+        return get_prop(network, edges(network), :_K)
+    end
+
+    if !has_prop(network, edges(network), :_Y)
+        set_admittance!(network)
+    end
+
     warn = false
     K = Vector{Float64}(undef, ne(network))
     for (i, e) in enumerate(edges(network))

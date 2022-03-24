@@ -81,6 +81,7 @@ include("import_rtsgmlc.jl")
 include("import_rts96.jl")
 include("import_kaiser2020.jl")
 include("import_schaefer2018.jl")
+include("import_square.jl")
 
 """
     describe_nodes(g::MetaGraph; firstcols=Vector{String}())

@@ -18,34 +18,45 @@ function inspect_solution(c::SolutionContainer)
 
     fig = Figure(resolution = (2000, 1500))
 
+    # find max ω
     state_idx = idx_containing(nd, "ω");
     node_idx = map(s -> parse(Int, String(s)[4:end]), nd.syms[state_idx]);
     Δωmax = maximum(map(x -> max(abs.(extrema(x[state_idx]))...), sol))
 
+    Δθmax = 0.10
+
     lsgrid = labelslidergrid!(
         fig,
-        ["Time", "Δω scaling"],
-        [S_values.t, range(0, stop=Δωmax, length=100)];
-        formats = [x -> "$(round(x, digits = 3)) $s" for s in ["s", "hz"]])
+        ["Time", "Δω scaling", "Δθ scaling"],
+        [S_values.t, range(0, stop=Δωmax, length=100), range(0, stop=Δθmax, length=100)];
+        formats = [x -> "$(round(x, digits = 3)) $s" for s in ["s", "hz", "rad"]])
     fig[2, 1:2] = lsgrid.layout
     set_close_to!(lsgrid.sliders[1], 0.0)
     set_close_to!(lsgrid.sliders[2], 0.5)
+    set_close_to!(lsgrid.sliders[3], 1.0)
 
     t = lsgrid.sliders[1].value
     Δω = lsgrid.sliders[2].value
+    Δθ = lsgrid.sliders[3].value
 
     nw_sublayout = fig[1,1] = GridLayout()
 
-    tg_ωload = Toggle(fig, active=true)
     tg_activeP = Toggle(fig)
     edgemenu = Menu(fig, options = [("rel to rating", :relrating),
                                     ("diff to steady", :abssteady),
+                                    ("diff to steady (both dir)", :abssteadyboth),
                                     ("absolut", :abs)],
                     i_selected=1,
                     selection=:relrating)
-    toggles = reshape([Label(fig, "calculate ω load:"), tg_ωload,
-                       Label(fig, "Active Power:"), tg_activeP,
-                       Label(fig, "Edge colors:"), edgemenu], 1, :)
+    nodemenu = Menu(fig, options = [("ω (with loads)", :ωall),
+                                    ("ω", :ω),
+                                    ("θ diff to steady", :θdiff)],
+                    i_selected=1,
+                    selection=:ωall)
+    toggles = reshape([Label(fig, "Active Power:"), tg_activeP,
+                       Label(fig, "Edge colors:"), edgemenu,
+                       Label(fig, "Node colors:"), nodemenu,
+                       ], 1, :)
 
     nw_sublayout[1, 1] = grid!(toggles, tellwidth = false)
 
@@ -56,16 +67,19 @@ function inspect_solution(c::SolutionContainer)
 
     # observables which hold the selected nodes and edges
     sel_nodes = Observable(Set{Int}())
+    # sel_edges = Observable(Set{Int}())
     sel_edges = Observable(Set{Int}(c.failures.saveval))
 
     nwax = nw_sublayout[2,1] = Axis(fig)
-    nwax.aspect = AxisAspect(1)
+    # nwax.aspect = AxisAspect(1)
+    nwax.aspect = DataAspect()
     hidedecorations!(nwax); hidespines!(nwax)
     gpargs = gparguments(c, t;
-                         ωload=tg_ωload.active,
+                         ncolortype=nodemenu.selection,
                          Δω,
+                         Δθ,
                          activeP=tg_activeP.active,
-                         colortype=edgemenu.selection,
+                         ecolortype=edgemenu.selection,
                          load_S,
                          load_P,
                          sel_nodes,
@@ -74,6 +88,15 @@ function inspect_solution(c::SolutionContainer)
                          state_idx,
                          node_idx)
     nwplot = graphplot!(nwax, network; gpargs...)
+
+    rect = nwax.finallimits[]
+    xw = rect.widths[1]
+    yw = rect.widths[2]
+    xo = rect.origin[1]
+    yo = rect.origin[2]
+    xexp = 0.0 * xw
+    yexp = 0.1 * yw
+    nwax.limits = ((xo - xexp, xo + xw + xexp), (yo - yexp, yo + yw + yexp))
 
     HOVER_DEFAULT = "Hover node/edge to see info!"
     description_text = Observable{String}(HOVER_DEFAULT)
@@ -131,9 +154,11 @@ function inspect_solution(c::SolutionContainer)
     ####
     sublayout = fig[1,2] = GridLayout()
 
+    tg_ωload = Toggle(fig, active=true)
     tg_showP = Toggle(fig, active=false)
     tg_showRating = Toggle(fig, active=true)
-    righttoggles = reshape([Label(fig, "show P: "), tg_showP,
+    righttoggles = reshape([Label(fig, "calc ω load: "), tg_ωload,
+                            Label(fig, "show P: "), tg_showP,
                             Label(fig, "show rating: "), tg_showRating,
                             ], 1, :)
     sublayout[1,1] = grid!(righttoggles, tellwidth = false)
@@ -186,7 +211,7 @@ function inspect_solution(c::SolutionContainer)
         empty!(fax)
         colors = reverse(fig.scene.theme.palette[:color][])
         for idx in selected
-            c = pop!(colors)
+            c = isempty(colors) ? rand(RGB) : pop!(colors)
 
             (tS, S) = seriesforidx(S_values, idx)
             (tP, P) = seriesforidx(P_values, idx)
@@ -267,12 +292,15 @@ export gparguments
 gparguments(c::SolutionContainer, t::Number; kwargs...) = gparguments(c, Observable(t); kwargs...)
 
 function gparguments(c::SolutionContainer, t::Observable;
-                     ωload = Observable(true),
+                     ncolortype = Observable(:ωall),
                      Δω = Observable(1.0),
+                     Δθ = Observable(π),
+                     node_colorscheme = ColorSchemes.diverging_bkr_55_10_c35_n256,
                      activeP = Observable(false),
-                     colortype = Observable(:relrating),
+                     ecolortype = Observable(:relrating),
                      offlinecolor = ColorSchemes.RGB{Float64}(0,0,0),
-                     ecolorscaling = Observable(1.0),
+                     ecolorscaling = Observable(0.1),
+                     edgescheme = @lift(edge_colorsheme($ecolortype)),
                      offlinewidth = 3.0,
                      load_S = @lift(c.load_S($t)),
                      load_P = @lift(c.load_P($t)),
@@ -287,8 +315,8 @@ function gparguments(c::SolutionContainer, t::Observable;
     S_values = c.load_S
     P_values = c.load_P
 
-    if colortype isa Symbol
-        colortype = Observable(colortype)
+    if ecolortype isa Symbol
+        ecolortype = Observable(ecolortype)
     end
 
     state = @lift(sol($t))
@@ -298,36 +326,50 @@ function gparguments(c::SolutionContainer, t::Observable;
     node_marker = [markers[k] for k in get_prop(network, vertices(network), :type)];
 
     node_color = @lift begin
-        ω = [0.0 for i in 1:nv(network)]
-        # hacky way to caclulate ω from θ as finite differnece
-        if $ωload
+        if $ncolortype ∈ (:ωall, :ω)
+            ω = [0.0 for i in 1:nv(network)]
+            # hacky way to caclulate ω from θ as finite differnece
+            if $ncolortype == :ωall
+                idx = idx_containing(nd, "θ")
+                ω = (sol($t+0.1)[idx] - sol($t-0.1)[idx]) ./ 0.2
+            end
+            # overwrite with ω where there are "true" values in state
+            for (n, s) in zip(node_idx, state_idx)
+                ω[n] = ($state)[s]
+            end
+            ω
+        elseif $ncolortype == :θdiff
             idx = idx_containing(nd, "θ")
-            ω = (sol($t+0.1)[idx] - sol($t-0.1)[idx]) ./ 0.2
+            sol($t)[idx] .- sol[begin][idx]
+        else
+            error("don't know nodecolortype $ncolortype")
+            [0.0 for i in 1:nv(network)]
         end
-        # overwrite with ω where there are "true" values in state
-        for (n, s) in zip(node_idx, state_idx)
-            ω[n] = ($state)[s]
-        end
-        ω
     end
-    node_colorscheme = ColorSchemes.diverging_bkr_55_10_c35_n256
 
-    ω_range = @lift (-$Δω, $Δω)
+    nc_range = @lift begin
+        if $ncolortype ∈ (:ωall, :ω)
+            (-$Δω, $Δω)
+        elseif $ncolortype == :θdiff
+            (-$Δθ, $Δθ)
+        else
+            error("don't know nodecolortype $ncolortype")
+        end
+    end
 
     alltime_max_S = maximum(map(load -> maximum(abs.(load)), S_values.saveval))
     alltime_max_P = maximum(map(load -> maximum(abs.(load)), P_values.saveval))
 
     S_steady = S_values.saveval[begin]
     P_steady = P_values.saveval[begin]
-    alltime_max_S_diff = maximum(map(load -> maximum(abs.(extrema(load-S_steady))), S_values.saveval))
-    alltime_max_P_diff = maximum(map(load -> maximum(abs.(extrema(load-P_steady))), P_values.saveval))
+    alltime_max_S_diff = maximum(map(load -> maximum(abs.(load)-abs.(S_steady)), S_values.saveval))
+    alltime_max_P_diff = maximum(map(load -> maximum(abs.(load)-abs.(P_steady)), P_values.saveval))
 
-    edgescheme = @lift edge_colorsheme($colortype)
     emergency_rating = ustrip.(u"pu", get_prop(network, edges(network), :rating))
     edge_color = @lift begin
         load = $(activeP) ? $load_P : $load_S
 
-        mode = $(colortype)
+        mode = $(ecolortype)
         if mode === :relrating
             max = emergency_rating .* $ecolorscaling
             cvals = abs.(load) ./ max
@@ -339,7 +381,13 @@ function gparguments(c::SolutionContainer, t::Observable;
             max = $(activeP) ? alltime_max_P_diff : alltime_max_S_diff
             max = max .* $ecolorscaling
             steady = $(activeP) ? P_steady : S_steady
-            cvals = (load .- steady)./(2*max) .+ 0.5
+            # cvals = (load .- steady)./(2*max) .+ 0.5
+            cvals = abs.(abs.(load) .- abs.(steady))/(max)
+        elseif mode === :abssteadyboth
+            max = $(activeP) ? alltime_max_P_diff : alltime_max_S_diff
+            max = max .* $ecolorscaling
+            steady = $(activeP) ? P_steady : S_steady
+            cvals = (abs.(load) .- abs.(steady))./(2*max) .+ 0.5
         else # nothing
             cvals = zeros(length(load))
         end
@@ -391,14 +439,19 @@ function gparguments(c::SolutionContainer, t::Observable;
             node_marker,
             node_color,
             node_size,
-            node_attr=(colorrange=ω_range, colormap=node_colorscheme),
+            node_attr=(colorrange=nc_range, colormap=node_colorscheme),
             edge_color,
             edge_width, kwargs...)
 end
 
 function edge_colorsheme(type)
-    if type === :abssteady
+    if type === :abssteadyboth
         ColorScheme([colorant"green", colorant"gray70", colorant"red"])
+        # ColorScheme(ColorSchemes.diverging_bwr_40_95_c42_n256[129:end])
+
+        # ColorSchemes.linear_wyor_100_45_c55_n256
+    elseif type === :abssteady
+        ColorScheme([colorant"gray70", colorant"red"])
     else
         ColorScheme([colorant"yellow", colorant"red"])
     end

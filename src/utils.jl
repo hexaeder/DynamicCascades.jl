@@ -39,7 +39,7 @@ function vertexidx_by_region(g, region)
     return (1:nv(g))[mask]
 end
 
-import MetaGraphs: set_prop!, get_prop
+import MetaGraphs: set_prop!, get_prop, has_prop
 
 KEY_ITER = Union{AbstractUnitRange,Vector,AbstractEdgeIter}
 """
@@ -67,6 +67,8 @@ function get_prop(g, keys::KEY_ITER, prop::Symbol)
     [has_prop(g, k, prop) ? get_prop(g, k, prop) : missing for k in keys]
 end
 
+has_prop(g, keys::KEY_ITER, prop::Symbol) = all(k -> has_prop(g, k, prop), keys)
+
 import DiffEqCallbacks: SavedValues
 function (sv::SavedValues)(t)
     if t < sv.t[begin] || t > sv.t[end]
@@ -83,7 +85,7 @@ function (sv::SavedValues)(t)
 end
 
 export seriesforidx
-function seriesforidx(sv::Union{SavedValues,ODESolution}, idx; cuttail = true, T = Float32, f = identity)
+function seriesforidx(sv::Union{SavedValues,SciMLBase.AbstractODESolution}, idx; cuttail = true, T = Float32, f = identity)
     x = Vector{T}(sv.t)
     ytable = sv isa SavedValues ? sv.saveval : sv.u
     y = [T(l[idx]) for l in ytable]

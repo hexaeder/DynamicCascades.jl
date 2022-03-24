@@ -140,5 +140,11 @@ function set_gmlc_pos_relaxed!(g)
     yn = 10*(y .- minimum(y))./(maximum(y)-minimum(y)).-5
     pos2 = spring(g, initialpos=Point2f0.(zip(xn, yn)))
 
+    pos2[21] += Point2(-.3,.25)
+    pos2[15] += Point2(-.5,.0)
+    pos2[17] += Point2(-.3,-.3)
+    pos2[24] += Point2(-.3,-.3)
+    pos2[18] += Point2(-.2,-.0)
+
     set_prop!(g, 1:nv(g), :pos, pos2)
 end
