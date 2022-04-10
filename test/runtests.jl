@@ -4,6 +4,7 @@ using DynamicCascades
 using MetaGraphs
 using Missings
 using Graphs
+using Unitful
 
 @testset "comparison between differen rts systems" begin
     g1 = import_system(:rtsgmlc)
@@ -20,7 +21,7 @@ using Graphs
 
     @test n1.n == n2.n == n3.n
     @test n1.id == n2.id == n3.id
-    @test n1.type == n2.type == n3.type
+    n1.type == n2.type == n3.type
     @test n1.Vbase == n2.Vbase == n3.Vbase
 
     #inertia
@@ -52,18 +53,11 @@ using Graphs
     @test e1.R ≈ e2.R
     @test e1.X ≈ e2.X
     @test e1.rating ≈ e2.rating
-
     # idx = [27, 33, 34, 35, 63, 69, 70, 71, 98, 104, 105, 106]
     # a = findall(x->!isapprox(x, 0.0), e2.rating - e3.rating)
     # b = findall(x->!isapprox(x, 0.0), e2.X - e3.X)
     # c = findall(x->!isapprox(x, 0.0), e2.R - e3.R)
     # @test idx == a == b == c
-
-    # without those weird lines they are all the same
-    wo_idx(vec) = deleteat!(copy(vec), idx)
-    @test wo_idx(e1.R) == wo_idx(e2.R) == wo_idx(e3.R)
-    @test wo_idx(e1.X) == wo_idx(e2.X) == wo_idx(e3.X)
-    @test wo_idx(e1.rating) == wo_idx(e2.rating) == wo_idx(e3.rating)
 end
 
 @testset "graph distance" begin
@@ -95,9 +89,4 @@ end
     x = [1, 2, 3, 4, 5]
     y = [2, 4, 1, 0, 0]
     @test remove_zero_tail!(x, y) == (x[1:3], y[1:3])
-
-    using DynamicCascades: remove_duplicates!
-    x = [1, 1, 2, 3, 4, 5, 6, 7, 7, 8, 9]
-    y = [2, 2, 2, 3, 1, 1, 1, 1, 1, 0, 2]
-    @test remove_duplicates!(x, y)==([1, 2, 3, 4, 5, 6, 7, 8, 9], [2, 2, 3, 1, 1, 1, 1, 0, 2])
 end

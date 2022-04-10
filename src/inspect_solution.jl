@@ -1,4 +1,3 @@
-using GLMakie
 using Graphs
 using MetaGraphs
 using GraphMakie
