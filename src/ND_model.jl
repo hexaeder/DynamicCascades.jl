@@ -119,7 +119,8 @@ function simulate(network;
                   trip_lines=:dynamic,
                   filename=nothing,
                   terminate_steady_state=true,
-                  solverargs=(;))
+                  solverargs=(;),
+                  warn=true)
     (nd, p, overload_cb) = nd_model(network);
     prob = ODEProblem(nd, copy(x_static), tspan, p);
 
@@ -147,7 +148,7 @@ function simulate(network;
         if sol.t[end] < tspan[2]
             verbose && println("Terminated on steady state at $(sol.t[end])")
         else
-            @warn "Did not reach steady state! (lines $trip_lines)"
+            warn && @warn "Did not reach steady state! (lines $trip_lines)"
         end
     end
 

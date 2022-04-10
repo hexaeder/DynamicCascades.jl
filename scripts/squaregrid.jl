@@ -1,3 +1,9 @@
+#=
+# Disturbance in Square Grid
+
+![animation](square_grid.mp4)
+=#
+# load necessary packages
 using DynamicCascades
 using Graphs
 using MetaGraphs
@@ -8,16 +14,13 @@ using ColorSchemes
 using DynamicCascades: PLOT_DIR
 using Unitful
 using NetworkDynamics
+using CairoMakie
 
-# using CairoMakie
-
-using GLMakie
-GLMakie.activate!()
+using GLMakie #jl
+GLMakie.activate!() #jl
 set_theme!(theme_minimal(), fontsize = 20)
 
-# 20 => 370
-# 30 => 855
-
+# define the grid size and models
 size = 30
 x = 30
 y = 30
@@ -29,10 +32,10 @@ sol = simulate(network;
                trip_lines = :none,
                tspan = (0.0, 50.0),
                solverargs = (; dtmax = 0.01));
-inspect_solution(sol)
+inspect_solution(sol)#jl
+nothing #hide
 
-#0.4 first max
-
+# plot the solution for thesis
 function graphplot_axis(fig, t::Observable, Δω; title)
     ax = Axis(fig)
     edge_color = [:white for i in 1:ne(network)]
@@ -48,14 +51,7 @@ function graphplot_axis(fig, t::Observable, Δω; title)
     return ax
 end
 
-# using CairoMakie
-# CairoMakie.activate!()
-# GLMakie.activate!()
 fig = Figure(resolution=(1500, 1800))
-# t1 = Observable(0.57)
-# t2 = Observable(1.0)
-# t3 = Observable(1.5)
-# t4 = Observable(3.0)
 t1 = Observable(0.5)
 t2 = Observable(1.5)
 t3 = Observable(3.0)
@@ -66,7 +62,6 @@ fig[2,2] = graphplot_axis(fig, t2, Δω; title="Frequencies at t₂ = $(t2[])")
 fig[2,3] = graphplot_axis(fig, t3, Δω; title="Frequencies at t₃ = $(t3[])")
 fig[2,4] = graphplot_axis(fig, t4, Δω; title="Frequencies at t₄ = $(t4[])")
 fig[1,:] = Colorbar(fig, get_node_plot(nwax.scene.plots[2]), height=25,width=1300, vertical=false, label="Node frequency in rad/s",)
-# nwax.height[] = 500
 
 fig[3,:] = ax2 = Axis(fig,
                       title ="Frequency of selected nodes right of incidence",
@@ -76,7 +71,6 @@ fig[3,:] = ax2 = Axis(fig,
 ax2.xticksvisible[]=true
 ax2.yticksvisible[]=true
 
-# ax2.height[] = 500
 nd, = nd_model(network);
 ωidx = idx_containing(nd, "ω");
 selnodes = [436, 438, 440]
@@ -90,17 +84,14 @@ for (n, l) in zip(selnodes, labels)
 end
 axislegend(ax2, position=:rt)
 xlims!(ax2, 0, 5)
-# vlines!(ax2, t1, color=:black, linewidth=2)
-# vlines!(ax2, t2, color=:black, linewidth=2)
-# vlines!(ax2, t3, color=:black, linewidth=2)
 
 function graphplot_axis_edges(fig, t::Observable, scaling; title)
     ax = Axis(fig)
     gpargs = gparguments(sol, t;
-                         ecolortype = :abssteady,
+                         ecolortype = Observable(:abssteady),
                          activeP=true,
                          ecolorscaling=scaling,
-                         ecolorscheme = Observable(ColorScheme(ColorSchemes.diverging_bwr_40_95_c42_n256[129:end]))
+                         ## ecolorscheme = Observable(ColorScheme(ColorSchemes.diverging_bwr_40_95_c42_n256[129:end]))
                          )
     p = graphplot!(ax, network; gpargs...,
                    node_size=0,
@@ -116,12 +107,26 @@ fig[4,1] = nwax2 = graphplot_axis_edges(fig, t1, scaling; title="Load difference
 fig[4,2] = graphplot_axis_edges(fig, t2, scaling; title="Load difference at t₂ = $(t2[])")
 fig[4,3] = graphplot_axis_edges(fig, t3, scaling; title="Load difference at t₃ = $(t3[])")
 fig[4,4] = graphplot_axis_edges(fig, t4, scaling; title="Load difference at t₄ = $(t4[])")
-# fig[5,:] =
-#     Colorbar(fig,
-#              ColorScheme(ColorSchemes.diverging_bwr_40_95_c42_n256[128:end]),
-#              height=25,width=1300, vertical=false, label="Node frequency in rad/s",)
-# ep = get_edge_plot(nwax2.scene.plots[2])
 
-save(joinpath(PLOT_DIR, "failure_propagation.pdf"), fig)
-GLMakie.activate!()
-CairoMakie.activate!()
+save(joinpath(PLOT_DIR, "failure_propagation.pdf"), fig) #jl
+fig
+
+# create the video
+
+fig = Figure(resolution=(1000, 600))
+t = Observable(3.0)
+Δω = Observable(0.12)
+fig[2,1] = nwax = graphplot_axis(fig, t, Δω, title="node frequencies")
+
+scaling = Observable(0.22)
+fig[2,2] = nwax2 = graphplot_axis_edges(fig, t, scaling, title="line loads")
+
+fig[1,:] = Label(fig, @lift("t = "*lpad(round($t,digits=1), 4)*" s"), tellwidth=false)
+
+T = 20
+tmax = 10
+fps = 30
+trange = range(0.0, tmax, length=Int(T * fps))
+record(fig, "square_grid.mp4", trange; framerate=30) do time
+    t[] = time
+end

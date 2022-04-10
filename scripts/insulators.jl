@@ -1,3 +1,8 @@
+#=
+# Dynamic disturbances and topological insulators
+![animation](insulator.mp4)
+=#
+# load used packages
 using DynamicCascades
 using Graphs
 using MetaGraphs
@@ -9,17 +14,13 @@ using DynamicCascades: PLOT_DIR
 using Unitful
 using NetworkDynamics
 using DataFrames
+using CairoMakie
 
-# using CairoMakie
-
-using GLMakie
-GLMakie.activate!()
+using GLMakie #jl
+GLMakie.activate!() #jl
 set_theme!(theme_minimal(), fontsize = 20)
-# set_theme!(theme_light())
 
-# 20 => 370
-# 30 => 855
-
+# set up the grid
 x = 20
 y = 3
 add_e = [(10, 31),
@@ -41,7 +42,11 @@ edgetype = map(edges(network)) do e
         0
     end
 end
+nothing #hide
 
+#=
+Simulate failure of all lines, analyise solution and save maximum pertubation on lines
+=#
 function max_flowdiff(sol::SolutionContainer)
     init_region = edgetype[sol.initial_fail[]]
     other_region = init_region == 1 ? 2 : 1
@@ -61,37 +66,43 @@ end
 df = DataFrame(; edge = Int[], direction=Symbol[], thismax=Float64[], othermax=Float64[],
                endthis=Float64[], endother=Float64[])
 for (i, edge) in enumerate(edges(network))
-    @info "Simulate for edge $i"
+    @info "Simulate for edge $i" #jl
     edgetype[i] == 0 && continue
     direction = edge.dst == edge.src+1 ? :h : :v
     sol = simulate(network;
                    initial_fail = [i],
                    failtime = 0.1,
                    trip_lines = :none,
-                   tspan = (0.0, 100.0),);
+                   tspan = (0.0, 100.0),warn=false,verbose=false);
     (t, this, other) = max_flowdiff(sol)
     push!(df, (; edge=i, direction, thismax=maximum(this), othermax=maximum(other), endthis=this[end], endother=other[end]))
 end
 
-sort(df, :endother)
+sort(df, :endother) #jl
+sort(df[df.direction.==:v, :], :othermax) #jl
+sort(df[df.direction.==:h, :], :othermax) #jl
+nothing #hide
 
-sort(df[df.direction.==:v, :], :othermax)
-sort(df[df.direction.==:h, :], :othermax)
-
+# maximum disturbane in *other* region after vertical fail
 extrema(df[df.direction.==:v, :othermax])
+# maximum disturbane in *same* region after vertical fail
 extrema(df[df.direction.==:v, :thismax])
 
+# maximum disturbane in *other* region after horizontal fail
 extrema(df[df.direction.==:h, :othermax])
+# maximum disturbane in *same* region after horizontal fail
 extrema(df[df.direction.==:h, :thismax])
 
-
+#=
+Create plot for thesis
+=#
 sol1 = simulate(network;
                initial_fail = [60],
                failtime = 0.1,
                trip_lines = :none,
                tspan = (0.0, 50.0),
                solverargs = (; dtmax = 0.01));
-inspect_solution(sol1)
+inspect_solution(sol1) #jl
 
 sol2 = simulate(network;
                initial_fail = [18],
@@ -99,7 +110,7 @@ sol2 = simulate(network;
                trip_lines = :none,
                tspan = (0.0, 50.0),
                solverargs = (; dtmax = 0.01));
-inspect_solution(sol2)
+inspect_solution(sol2) #jl
 
 fig = Figure(resolution=(1500, 600))
 ts = [Observable(0.25),
@@ -130,5 +141,25 @@ end
 fig[0, 2] = Label(fig, "horizontal failure", tellwidth=false)
 fig[1, 3] = Label(fig, "vertical failure", tellwidth=false)
 
-# CairoMakie.activate!()
-save(joinpath(PLOT_DIR, "insulator.pdf"), fig)
+save(joinpath(PLOT_DIR, "insulator.pdf"), fig) #jl
+fig
+
+# create the video
+fig = Figure(resolution=(1000, 400))
+scaling = Observable(0.5)
+t = Observable(0.0)
+fig[1,1] = Label(fig, @lift("t = "*repr(round($t,digits=2))*" s"), tellwidth=false)
+fig[2,1] = graphplot_axis_edges(fig, sol1, t, scaling)
+fig[3,1] = graphplot_axis_edges(fig, sol2, t, scaling)
+fig[2, 0] = Label(fig, "horizontal failure", tellheight=false)
+fig[3, 1] = Label(fig, "vertical failure", tellheight=false)
+
+
+T = 10
+tmax = 3
+fps = 30
+trange = range(0.0, tmax, length=Int(T * fps))
+
+record(fig, "insulator.mp4", trange; framerate=30) do time
+    t[] = time
+end

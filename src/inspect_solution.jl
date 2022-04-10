@@ -446,12 +446,12 @@ end
 
 function edge_colorsheme(type)
     if type === :abssteadyboth
-        ColorScheme([colorant"green", colorant"gray70", colorant"red"])
+        ColorScheme([colorant"green", colorant"gray90", colorant"red"])
         # ColorScheme(ColorSchemes.diverging_bwr_40_95_c42_n256[129:end])
 
         # ColorSchemes.linear_wyor_100_45_c55_n256
     elseif type === :abssteady
-        ColorScheme([colorant"gray70", colorant"red"])
+        ColorScheme([colorant"gray90", colorant"red"])
     else
         ColorScheme([colorant"yellow", colorant"red"])
     end

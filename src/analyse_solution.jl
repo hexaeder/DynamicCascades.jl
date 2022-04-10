@@ -78,6 +78,3 @@ function maxload_dist_time(c::SolutionContainer)
     reldiff = max./staticA .- 1
     return DataFrame(; idx, region, d, dres, t, staticA, staticB, max, absdiff, reldiff)
 end
-
-export max_flowdiff_other_region
-

@@ -485,10 +485,10 @@ uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
 version = "2.68.3+2"
 
 [[deps.GraphMakie]]
-deps = ["GeometryBasics", "Graphs", "LinearAlgebra", "Makie", "NetworkLayout", "Random", "StaticArrays"]
-path = "/Users/hw/.julia/dev/GraphMakie"
+deps = ["GeometryBasics", "Graphs", "LinearAlgebra", "Makie", "NetworkLayout", "StaticArrays"]
+git-tree-sha1 = "61174d2468581911ce394e948ff26ca820e285ba"
 uuid = "1ecd5474-83a3-4783-bb4f-06765db800d2"
-version = "0.3.3"
+version = "0.3.4"
 
 [[deps.Graphics]]
 deps = ["Colors", "LinearAlgebra", "NaNMath"]
