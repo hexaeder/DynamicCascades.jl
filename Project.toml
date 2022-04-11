@@ -35,6 +35,7 @@ GraphMakie = "0.3"
 Graphs = "1"
 MetaGraphs = "0.7"
 NetworkDynamics = "0.7"
+NetworkLayout = "0.4"
 OrdinaryDiffEq = "6"
 
 [extras]
