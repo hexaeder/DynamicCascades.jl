@@ -11,6 +11,7 @@ using Unitful: @u_str
 using DataFrames
 using CSV
 using LinearAlgebra
+using GairoMakie
 
 # using CairoMakie
 
@@ -144,6 +145,7 @@ hist(dyns[dyns.D .== 0.01, :ntriggered])
 hist!(dyns[dyns.D .== 0.03, :ntriggered])
 hist!(dyns[dyns.D .== 0.1, :ntriggered])
 hist!(dyns[dyns.D .== 0.3, :ntriggered])
+
 hist!(dyns[dyns.D .== 0.3, :ntriggered])
 
 
@@ -199,9 +201,10 @@ function plotnetwork(fig, sol, t; line=nothing, offset=nothing, text=nothing, ap
 end
 
 CairoMakie.activate!()
+set_theme!(theme_minimal(), fontsize = 20)
 fig = Figure(resolution=(1500,1500))
 
-fig[1,1] = plotnetwork(fig, sol, times[1])
+fig[1,1] = nwax = plotnetwork(fig, sol, times[1]; line=11, offset=(-4,-.5), text="(3)")
 fig[1,1] = Label(fig, "(a) t = $(round(times[1],digits=2)) s", tellwidth=false, tellheight=false, halign=:left, valign=:top)
 
 fig[1,2] = plotnetwork(fig, sol, times[2]; line=27, offset=(0.75,2.5), text="(1)")
@@ -233,9 +236,12 @@ for (i, l) in pairs(sol.failures.saveval)
 end
 axislegend(ax; position=:lt)
 
+p = nwax.scene.plots[2]
+@assert p isa GraphPlot
+
 fig[0,:] = Colorbar(fig, get_node_plot(p), height=25, vertical=false, label="node frequency deviation in hz")
 
 fig[0, :] = Colorbar(fig, height=25, vertical=false,
-                     colormap=ColorScheme([colorant"yellow", colorant"red"]), label="line load relative to rating")
+                     colormap=Makie.ColorScheme([colorant"yellow", colorant"red"]), label="line load relative to rating")
 
 save(joinpath(PLOT_DIR, "rts_cascade.pdf"), fig)
