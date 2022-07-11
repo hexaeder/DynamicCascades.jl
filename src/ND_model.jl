@@ -159,6 +159,51 @@ function simulate(network;
     end
 end
 
+function simulate_pdis(network;
+                       verbose=true,
+                       x_static=steadystate(network; verbose),
+                       node=1,
+                       disturbance=1u"pu",
+                       failtime=0.1,
+                       tspan=(0., 100.),
+                       terminate_steady_state=true,
+                       solverargs=(;),
+                       warn=true)
+    (nd, p, overload_cb) = nd_model(network);
+
+    # find the fault parameters
+    fault = deepcopy(network)
+    set_prop!(fault, node, :P, get_prop(fault, node, :P) + disturbance)
+    pfault = get_parameters(fault);
+
+    prob = ODEProblem(nd, copy(x_static), tspan, p);
+
+    failures = SavedValues(Float64, Int);
+    load_S = SavedValues(Float64, Vector{Float64});
+    load_P = SavedValues(Float64, Vector{Float64});
+
+    cbs = CallbackSet(overload_cb(;trip_lines=Int[], load_S, load_P, failures, verbose));
+    cbs = CallbackSet(cbs, TerminateSelectiveSteadyState(nd; min_t=failtime+eps(failtime)))
+    affect! = (integrator) -> integrator.p = pfault
+    cbs = CallbackSet(PresetTimeCallback(failtime, affect!), cbs)
+
+    verbose && println("Run simulation for pertubation $disturbance on lines $(node)")
+    sol = solve(prob, AutoTsit5(Rosenbrock23()); callback=cbs, progress=true, solverargs...);
+    container = SolutionContainer(network,
+                                  [node,], failtime, :none,
+                                  sol, load_S, load_P, failures)
+
+    if terminate_steady_state
+        if sol.t[end] < tspan[2]
+            verbose && println("Terminated on steady state at $(sol.t[end])")
+        else
+            warn && @warn "Did not reach steady state!"
+        end
+    end
+
+    return container
+end
+
 function nd_model(network::MetaGraph)
     @assert isapprox(sum(describe_nodes(network).P), 0, atol=1e-14) "Power sum not zero!"
     flow_edge = StaticEdge(f=powerflow!, dim=1, coupling=:antisymmetric)
@@ -451,6 +496,9 @@ function InitialFailCB(idxs, time; failures = nothing, verbose = true)
         end
     end
     PresetTimeCallback(time, affect!)
+end
+
+function ChangePCB(fualtp, time)
 end
 
 function getSteadyStateCondition(nd; min_t=nothing)
