@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Disturbance in Grid · DynamicCascades.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link rel="canonical" href="https://wuerfel.io/DynamicCascades.jl/generated/squaregrid/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">DynamicCascades.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../rtsgmlc_plot/">RTS-GMLC</a></li><li class="is-active"><a class="tocitem" href>Disturbance in Grid</a></li><li><a class="tocitem" href="../insulators/">Topological insulator</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Disturbance in Grid</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Disturbance in Grid</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/hexaeder/DynamicCascades.jl/blob/main/scripts/squaregrid.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Disturbance-in-Square-Grid"><a class="docs-heading-anchor" href="#Disturbance-in-Square-Grid">Disturbance in Square Grid</a><a id="Disturbance-in-Square-Grid-1"></a><a class="docs-heading-anchor-permalink" href="#Disturbance-in-Square-Grid" title="Permalink"></a></h1><p><video src="square_grid.mp4" controls="true" title="animation"><a href="square_grid.mp4">animation</a></video> load necessary packages</p><pre><code class="language-julia hljs">using DynamicCascades
+using Graphs
+using MetaGraphs
+using Statistics
+using GraphMakie
+using Colors
+using ColorSchemes
+using DynamicCascades: PLOT_DIR
+using Unitful
+using NetworkDynamics
+using CairoMakie
+
+set_theme!(theme_minimal(), fontsize = 20)</code></pre><p>define the grid size and models</p><pre><code class="language-julia hljs">size = 30
+x = 30
+y = 30
+network = import_system(:square; x, y, M=0.5u&quot;s^2&quot;, D=0.1u&quot;s&quot;, K=-10u&quot;pu&quot;, seed=2)
+
+sol = simulate(network;
+               initial_fail = [855],
+               failtime = 0.1,
+               trip_lines = :none,
+               tspan = (0.0, 50.0),
+               solverargs = (; dtmax = 0.01));</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Find steady state...
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/cPBiF/src/solve.jl:4
+Run simulation for trips on lines [855]
+Shutdown line 855 at t = 0.1
+┌ Warning: Did not reach steady state! (lines none)
+└ @ DynamicCascades ~/work/DynamicCascades.jl/DynamicCascades.jl/src/ND_model.jl:151</code></pre><p>plot the solution for thesis</p><pre><code class="language- hljs">function graphplot_axis(fig, t::Observable, Δω; title)
+    ax = Axis(fig)
+    edge_color = [:white for i in 1:ne(network)]
+    edge_color[sol.initial_fail] .= :black
+    gpargs = gparguments(sol, t;
+                         Δω,
+                         node_colorscheme = ColorSchemes.diverging_bwr_40_95_c42_n256)
+    graphplot!(ax, network; gpargs...,
+                           edge_color, node_size=12)
+    ax.aspect = DataAspect()
+    ax.title = title
+    hidedecorations!(ax); hidespines!(ax)
+    return ax
+end
+
+fig = Figure(resolution=(1500, 1800))
+t1 = Observable(0.5)
+t2 = Observable(1.5)
+t3 = Observable(3.0)
+t4 = Observable(50.0)
+Δω = Observable(0.12)
+fig[2,1] = nwax = graphplot_axis(fig, t1, Δω; title=&quot;Frequencies at t₁ = $(t1[])&quot;)
+fig[2,2] = graphplot_axis(fig, t2, Δω; title=&quot;Frequencies at t₂ = $(t2[])&quot;)
+fig[2,3] = graphplot_axis(fig, t3, Δω; title=&quot;Frequencies at t₃ = $(t3[])&quot;)
+fig[2,4] = graphplot_axis(fig, t4, Δω; title=&quot;Frequencies at t₄ = $(t4[])&quot;)
+fig[1,:] = Colorbar(fig, get_node_plot(nwax.scene.plots[2]), height=25,width=1300, vertical=false, label=&quot;Node frequency in rad/s&quot;,)
+
+fig[3,:] = ax2 = Axis(fig,
+                      title =&quot;Frequency of selected nodes right of incidence&quot;,
+                      xlabel=&quot;time t in s&quot;, ylabel=&quot;frequency ω in rad/s&quot;,
+                      xticks = @lift(([0,4,5, $t1, $t2, $t3, $t4],
+                                      [&quot;0&quot;, &quot;4&quot;,&quot;5&quot;, &quot;t₁ = $(t1[])&quot;,&quot;t₂ = $(t2[])&quot;, &quot;t₃ = $(t3[])&quot;, &quot;t₄ = $(t4[])&quot;])))
+ax2.xticksvisible[]=true
+ax2.yticksvisible[]=true
+
+nd, = nd_model(network);
+ωidx = idx_containing(nd, &quot;ω&quot;);
+selnodes = [436, 438, 440]
+labels = [&quot;node 1 to the right of incidence&quot;,
+          &quot;node 3 to the right of incidence&quot;,
+          &quot;node 5 to the right of incidence&quot;,]
+for (n, l) in zip(selnodes, labels)
+    idx = ωidx[n]
+    series = seriesforidx(sol.sol, idx)
+    lines!(ax2, series...; linewidth=5, label=l)
+end
+axislegend(ax2, position=:rt)
+xlims!(ax2, 0, 5)
+
+function graphplot_axis_edges(fig, t::Observable, scaling; title)
+    ax = Axis(fig)
+    gpargs = gparguments(sol, t;
+                         ecolortype = Observable(:abssteady),
+                         activeP=true,
+                         ecolorscaling=scaling,
+                         # ecolorscheme = Observable(ColorScheme(ColorSchemes.diverging_bwr_40_95_c42_n256[129:end]))
+                         )
+    p = graphplot!(ax, network; gpargs...,
+                   node_size=0,
+                   edge_width=5)
+
+    ax.aspect = DataAspect()
+    ax.title = title
+    hidedecorations!(ax); hidespines!(ax)
+    return ax
+end
+scaling = Observable(0.22)
+fig[4,1] = nwax2 = graphplot_axis_edges(fig, t1, scaling; title=&quot;Load difference at t₁ = $(t1[])&quot;)
+fig[4,2] = graphplot_axis_edges(fig, t2, scaling; title=&quot;Load difference at t₂ = $(t2[])&quot;)
+fig[4,3] = graphplot_axis_edges(fig, t3, scaling; title=&quot;Load difference at t₃ = $(t3[])&quot;)
+fig[4,4] = graphplot_axis_edges(fig, t4, scaling; title=&quot;Load difference at t₄ = $(t4[])&quot;)
+
+fig</code></pre><p>create the video</p><pre><code class="language- hljs">fig = Figure(resolution=(1000, 600))
+t = Observable(3.0)
+Δω = Observable(0.12)
+fig[2,1] = nwax = graphplot_axis(fig, t, Δω, title=&quot;node frequencies&quot;)
+
+scaling = Observable(0.22)
+fig[2,2] = nwax2 = graphplot_axis_edges(fig, t, scaling, title=&quot;line loads&quot;)
+
+fig[1,:] = Label(fig, @lift(&quot;t = &quot;*lpad(round($t,digits=1), 4)*&quot; s&quot;), tellwidth=false)
+
+T = 20
+tmax = 10
+fps = 30
+trange = range(0.0, tmax, length=Int(T * fps))
+record(fig, &quot;square_grid.mp4&quot;, trange; framerate=30) do time
+    t[] = time
+end</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../rtsgmlc_plot/">« RTS-GMLC</a><a class="docs-footer-nextpage" href="../insulators/">Topological insulator »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Wednesday 7 December 2022 01:44">Wednesday 7 December 2022</span>. Using Julia version 1.8.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
