@@ -11,7 +11,7 @@ using Unitful: @u_str
 using DataFrames
 using CSV
 using LinearAlgebra
-using GairoMakie
+using CairoMakie
 
 # using CairoMakie
 
