@@ -1,6 +1,8 @@
+using Revise
 using DynamicCascades
 using Graphs
 using MetaGraphs
+using Unitful
 using Statistics
 using GraphMakie
 using Colors
@@ -22,7 +24,7 @@ Colors.color_names["pikblue"] = (124, 174, 175)
 ####
 #### using two steadystates
 ####
-network = import_system(:schaefer2018; γ = 0.8)
+network = import_system(:schaefer2018; γ = 0.8u"s")
 sol1 = simulate(network;
     initial_fail = [5],
     failtime = 1.0,
