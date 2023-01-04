@@ -299,7 +299,7 @@ function calculate_apparent_power!(S, u, p, t, nd, network::MetaGraph; gd=nd(u, 
         if iszero(K)
             S[i] = 0
         else
-            sqr = √(Vs^2 + Vd^2 - 2*abs(Vs)*abs(Vd)*cos(θd-θs))
+            sqr = √(Vs^2 + Vd^2 - 2*Vs*Vd*cos(θd-θs))
             S[i] = max(Vs, Vd) * abs(Y) * sqr
         end
     end
