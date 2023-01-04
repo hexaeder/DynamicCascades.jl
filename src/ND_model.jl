@@ -77,6 +77,11 @@ function project_theta!(nd, x0)
     end
 end
 
+"""
+# Arguments
+- `zeroidx::Integer=nothing`: If this flag is set, this shifts the voltage angle
+at all nodes by the voltage angle of the node with index `zeroidx`.
+"""
 function steadystate(network; project=false, verbose=false, tol=1e-7, zeroidx=nothing)
     verbose && println("Find steady state...")
     (nd, p) = nd_model(network)
@@ -330,11 +335,11 @@ This function returns a constructor for the overload callback with two kw argume
   - `trip_lines=true` : toggle whether the CB should kill lines (set K=0)
   - `load_S=nothing` : provide `SavedValues` type for S values
   - `load_P=nothing` : provide `SavedValues` type for P values
-  - `failurs=nothing` : provide `SavedValues` type where to save the failed lines
+  - `failures=nothing` : provide `SavedValues` type where to save the failed lines
   - `verbose=true` : toogle verbosity (print on line failures)
 
 This is all a bit hacky. I am creating a SavingCallback for the `load` values. However
-the SavingCallback is missing some values right befor the discontinuity. Those values
+the SavingCallback is missing some values right before the discontinuity. Those values
 are injected inside the shutdown affect. In order for this to work the affect needs to
 bump the `saveiter` counter of the other callback. Very ugly.
 """
@@ -350,7 +355,7 @@ function get_callback_generator(network::MetaGraph)
         scb_S = load_S === nothing ? nothing : SavingCallback(save_S_fun, load_S)
         scb_P = load_P === nothing ? nothing : SavingCallback(save_P_fun, load_P)
 
-        ## static line condition
+        ## dynamic line condition
         if trip_lines == :dynamic
             condition = let _current_load = zeros(ne(network)), _network = network, _rating = get_prop(network, edges(network), :rating)
                 (out, u, t, integrator) -> begin
