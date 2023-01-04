@@ -11,7 +11,7 @@ export DATA_DIR, RAWRESULTS_DIR, RESULTS_DIR, PLOT_DIR
 const DATA_DIR = abspath(@__DIR__, "..", "data")
 const RAWRESULTS_DIR = abspath("/Users/hw/MAScratch")
 const RESULTS_DIR = abspath(@__DIR__, "..", "results")
-const PLOT_DIR = abspath(@__DIR__, "..", "..", "thesis", "figures")
+const PLOT_DIR = abspath(@__DIR__, "..", "..", "MA_data", "figures")
 
 export import_system, describe_nodes, describe_edges, bustype, is_static_state
 
@@ -84,6 +84,7 @@ include("import_rts96.jl")
 include("import_kaiser2020.jl")
 include("import_schaefer2018.jl")
 include("import_square.jl")
+include("import_isolator_toymodel.jl")
 
 """
     describe_nodes(g::MetaGraph; firstcols=Vector{String}())
