@@ -48,8 +48,7 @@ fig[1,1] = leftpane = GridLayout()
 node_size = [60, 70, 60, 60, 70]
 # node_color = [colorant"pikblue", colorant"pikorange", colorant"pikblue", colorant"pikblue", colorant"pikorange"]
 node_color = :black
-edgecolortype = :relrating
-gpargs = gparguments(sol1, t1; colortype = :relrating)
+gpargs = gparguments(sol1, t1; colortype = :relrating, ecolorscaling = Observable(1.0))
 leftpane[1,1] = ax = Axis(fig)
 p = graphplot!(ax, network; gpargs..., node_size, node_color,
                nlabels=repr.(1:5), nlabels_align=(:center, :center), nlabels_color=:white,
