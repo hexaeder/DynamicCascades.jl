@@ -37,13 +37,29 @@ function plotnetwork(fig, sol, t)
     return ax, p
 end
 
-init = 27
+
 damping = 0.1u"s"
 network = import_system(:rtsgmlc; damping, tconst = 0.01u"s")
+
+x_static=steadystate(network; verbose=true),
+
+init = 27
 sol = simulate(network;
                initial_fail = Int[init],
+               tspan = (0, 100),
+               terminate_steady_state=true,
                trip_lines = :dynamic,
                solverargs = (;dtmax=0.01), verbose = true);
+
+sol.network
+sol.initial_fail
+sol.failtime
+sol.trip_lines
+
+sol.load_S
+sol.load_P
+sol.failures
+sol.sol
 
 tobs = Observable(0.0)
 fig = Figure(resolution=(1300,700))

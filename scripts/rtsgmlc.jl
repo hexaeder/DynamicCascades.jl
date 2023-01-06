@@ -172,17 +172,18 @@ inspect_solution(sol)
 
 times = [0.0, sol.failures.t..., 6.0]
 
-function plotnetwork(fig, sol, t; line=nothing, offset=nothing, text=nothing, apos=.5)
+function plotnetwork(fig, sol, t; line=nothing, offset=nothing, text=nothing, apos=.5, ecolortype=:abssteady,
+                     ecolorscaling=Observable(1.0), offlinecolor=colorant"lightgray")
     ax = Axis(fig)
     hidedecorations!(ax), hidespines!(ax)
     xlims!(ax, -10, 7)
     ylims!(ax, -5, 7)
-    gpargs = gparguments(sol, Observable(t);
-                         colortype=:abssteady,
+    gpargs = gparguments(sol, t isa Observable ? t : Observable(t);
+                         ecolortype=Observable(ecolortype),
                          Δω=Observable(3.0),
                          offlinewidth=5,
-                         offlinecolor=colorant"lightgray",
-                         ecolorscaling = Observable(1.0),
+                         offlinecolor,
+                         ecolorscaling,
                          node_size=15)
     p = graphplot!(ax, network; gpargs...)
 
@@ -245,3 +246,52 @@ fig[0, :] = Colorbar(fig, height=25, vertical=false,
                      colormap=Makie.ColorScheme([colorant"yellow", colorant"red"]), label="line load relative to rating")
 
 save(joinpath(PLOT_DIR, "rts_cascade.pdf"), fig)
+
+####
+#### Video for Defense
+####
+
+tobs = Observable(0.0)
+fig = Figure(resolution=(1300,700))
+
+fig[1,1] = Label(fig, @lift("t = "*repr(round($tobs,digits=2))*" s"), tellwidth=false)
+fig[2,1] = plotnetwork(fig, sol, tobs; ecolortype=:abssteadyboth,
+                       ecolorscaling=Observable(0.5), offlinecolor=colorant"black")
+
+fig[:,2] = ax = Axis(fig; xlabel="time t in s", ylabel="apparent power flow in p.u.", title="flow transients of failing lines")
+xlims!(ax, -0.01, 0.32)
+
+for (i, l) in pairs(sol.failures.saveval)
+    t, s = seriesforidx(sol.load_S, l)
+    lines!(ax, t, s; label="flow on edge ($i)", linewidth=5)
+end
+for (i, l) in pairs(sol.failures.saveval)
+    t, s = seriesforidx(sol.load_S, l)
+    scatter!(ax, (t[end], s[end]); marker=:star5, markersize=35)
+end
+vlines!(ax, tobs; color=:black, linewidth=1)
+
+times2 = copy(times)
+times2[end] = 0.5
+
+T = 30
+fps = 30
+
+dir = abspath(joinpath(@__DIR__,"..","..","defense"))
+@assert isdir(dir)
+for i in 1:length(times2)-1
+    t1 = times2[i]
+    t2 = times2[i+1]
+    trange = range(t1, t2, length=round(Int,(t2-t1)/times2[end] * T * fps))
+    record(fig, joinpath(dir,"rtsgmlc_$i.mp4"), trange; framerate=30) do time
+        tobs[] = time
+    end
+end
+
+T = 10
+tmax = 1
+fps = 30
+trange = range(0, tmax, length=round(Int, T * fps))
+record(fig, "rtsgmlc_full.mp4", trange; framerate=fps) do time
+    tobs[] = time
+end

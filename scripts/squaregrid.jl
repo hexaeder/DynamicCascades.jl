@@ -130,3 +130,4 @@ trange = range(0.0, tmax, length=Int(T * fps))
 record(fig, "square_grid.mp4", trange; framerate=30) do time
     t[] = time
 end
+
