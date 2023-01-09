@@ -16,7 +16,9 @@ using CairoMakie
 ####
 #### using two steadystates
 ####
-network = import_system(:isolator_toymodel; γ = 0.8u"s")
+γ = 0.8u"s"
+M = 1u"s^2"
+network = import_system(:isolator_toymodel; γ, M)
 init_fail = 5
 sol1 = simulate(network;
     initial_fail = [init_fail],
@@ -93,4 +95,4 @@ plot_flows(ax2, sol2)
 axislegend(ax1, position=:rt)
 ylims!(ax1, 0, 1.2)
 ylims!(ax2, 0, 1.1)
-save(joinpath(PLOT_DIR, "isolator_toymodel_dynamic_fails.pdf"), fig)
+save(joinpath(PLOT_DIR, "isolator_toymodel_dynamic_fails_D=$γ M=$M.pdf"), fig)
