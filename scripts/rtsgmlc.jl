@@ -1,3 +1,4 @@
+using Revise
 using DynamicCascades
 using Graphs
 using MetaGraphs
@@ -157,7 +158,7 @@ pie_static = [(i, count(==(i), B)) for i in unique(B)]
 res[res.ntriggered .> 0, :]
 
 #=
-Failure on 27 is super! Keine statisch cascade, aber dnamische
+Failure on 27 is super! Keine statische cascade, aber dynamische
 mit sehr schönem beispiel wie die nachbarline dynamisch trippt sonst aber nicht
 =#
 init = 27
@@ -179,7 +180,7 @@ function plotnetwork(fig, sol, t; line=nothing, offset=nothing, text=nothing, ap
     xlims!(ax, -10, 7)
     ylims!(ax, -5, 7)
     gpargs = gparguments(sol, t isa Observable ? t : Observable(t);
-                         ecolortype=Observable(ecolortype),
+                         # ecolortype=Observable(ecolortype),
                          Δω=Observable(3.0),
                          offlinewidth=5,
                          offlinecolor,
@@ -205,28 +206,28 @@ CairoMakie.activate!()
 set_theme!(theme_minimal(), fontsize = 20)
 fig = Figure(resolution=(1500,1500))
 
-fig[1,1] = nwax = plotnetwork(fig, sol, times[1]; line=11, offset=(-4,-.5), text="(3)")
-fig[1,1] = Label(fig, "(a) t = $(round(times[1],digits=2)) s", tellwidth=false, tellheight=false, halign=:left, valign=:top)
+fig[2,1] = nwax = plotnetwork(fig, sol, times[1]; line=11, offset=(-4,-.5), text="(3)")
+fig[2,1] = Label(fig, "(a) t = $(round(times[1],digits=2)) s", tellwidth=false, tellheight=false, halign=:left, valign=:top)
 
-fig[1,2] = plotnetwork(fig, sol, times[2]; line=27, offset=(0.75,2.5), text="(1)")
-fig[1,2] = Label(fig, "(b) t = $(round(times[2],digits=2)) s", tellwidth=false, tellheight=false, halign=:left, valign=:top)
+fig[2,2] = plotnetwork(fig, sol, times[2]; line=27, offset=(0.75,2.5), text="(1)")
+fig[2,2] = Label(fig, "(b) t = $(round(times[2],digits=2)) s", tellwidth=false, tellheight=false, halign=:left, valign=:top)
 
-fig[1,3] = plotnetwork(fig, sol, times[3]; line=29, offset=(-2,2.5), text="(2)",apos=.4)
-fig[1,3] = Label(fig, "(c) t = $(round(times[3],digits=2)) s", tellwidth=false, tellheight=false, halign=:left, valign=:top)
+fig[2,3] = plotnetwork(fig, sol, times[3]; line=29, offset=(-2,2.5), text="(2)",apos=.4)
+fig[2,3] = Label(fig, "(c) t = $(round(times[3],digits=2)) s", tellwidth=false, tellheight=false, halign=:left, valign=:top)
 
-fig[2,1] = plotnetwork(fig, sol, times[4]; line=11, offset=(-4,-.5), text="(3)")
-fig[2,1] = Label(fig, "(d) t = $(round(times[4],digits=2)) s", tellwidth=false, tellheight=false, halign=:left, valign=:top)
+fig[3,1] = plotnetwork(fig, sol, times[4]; line=11, offset=(-4,-.5), text="(3)")
+fig[3,1] = Label(fig, "(d) t = $(round(times[4],digits=2)) s", tellwidth=false, tellheight=false, halign=:left, valign=:top)
 
-fig[2,2] = plotnetwork(fig, sol, times[5]; line=12, offset=(-4,0), text="(4)", apos=.25)
-fig[2,2] = Label(fig, "(e) t = $(round(times[5],digits=2)) s", tellwidth=false, tellheight=false, halign=:left, valign=:top)
+fig[3,2] = plotnetwork(fig, sol, times[5]; line=12, offset=(-4,0), text="(4)", apos=.25)
+fig[3,2] = Label(fig, "(e) t = $(round(times[5],digits=2)) s", tellwidth=false, tellheight=false, halign=:left, valign=:top)
 
-fig[2,3] = plotnetwork(fig, sol, times[6]; line=37, offset=(1.75,1.75), text="(5)")
-fig[2,3] = Label(fig, "(f) t = $(round(times[6],digits=2)) s", tellwidth=false, tellheight=false, halign=:left, valign=:top)
+fig[3,3] = plotnetwork(fig, sol, times[6]; line=37, offset=(1.75,1.75), text="(5)")
+fig[3,3] = Label(fig, "(f) t = $(round(times[6],digits=2)) s", tellwidth=false, tellheight=false, halign=:left, valign=:top)
 
-fig[3,1] = plotnetwork(fig, sol, times[7])
-fig[3,1] = Label(fig, "(g) t → ∞ (steady state)", tellwidth=false, tellheight=false, halign=:left, valign=:top)
+fig[4,1] = plotnetwork(fig, sol, times[7])
+fig[4,1] = Label(fig, "(g) t → ∞ (steady state)", tellwidth=false, tellheight=false, halign=:left, valign=:top)
 
-fig[3,2:3] = ax = Axis(fig; xlabel="time t in s", ylabel="apparent power flow in p.u.", title="flow transients of failing lines")
+fig[4,2:3] = ax = Axis(fig; xlabel="time t in s", ylabel="apparent power flow in p.u.", title="flow transients of failing lines")
 for (i, l) in pairs(sol.failures.saveval)
     t, s = seriesforidx(sol.load_S, l)
     lines!(ax, t, s; label="flow on edge ($i)", linewidth=5)
@@ -240,10 +241,10 @@ axislegend(ax; position=:lt)
 p = nwax.scene.plots[2]
 @assert p isa GraphPlot
 
-fig[0,:] = Colorbar(fig, get_node_plot(p), height=25, vertical=false, label="node frequency deviation in hz")
-
-fig[0, :] = Colorbar(fig, height=25, vertical=false,
+fig[0,:] = Colorbar(fig, height=25, vertical=false,
                      colormap=Makie.ColorScheme([colorant"yellow", colorant"red"]), label="line load relative to rating")
+
+fig[1,:] = Colorbar(fig, get_node_plot(p), height=25, vertical=false, label="node frequency deviation in hz")
 
 save(joinpath(PLOT_DIR, "rts_cascade.pdf"), fig)
 
@@ -277,13 +278,11 @@ times2[end] = 0.5
 T = 30
 fps = 30
 
-dir = abspath(joinpath(@__DIR__,"..","..","defense"))
-@assert isdir(dir)
 for i in 1:length(times2)-1
     t1 = times2[i]
     t2 = times2[i+1]
     trange = range(t1, t2, length=round(Int,(t2-t1)/times2[end] * T * fps))
-    record(fig, joinpath(dir,"rtsgmlc_$i.mp4"), trange; framerate=30) do time
+    record(fig, joinpath(PLOT_DIR,"rtsgmlc_$i.mp4"), trange; framerate=30) do time
         tobs[] = time
     end
 end
@@ -292,6 +291,6 @@ T = 10
 tmax = 1
 fps = 30
 trange = range(0, tmax, length=round(Int, T * fps))
-record(fig, "rtsgmlc_full.mp4", trange; framerate=fps) do time
+record(fig, joinpath(PLOT_DIR,"rtsgmlc_full.mp4"), trange; framerate=fps) do time
     tobs[] = time
 end

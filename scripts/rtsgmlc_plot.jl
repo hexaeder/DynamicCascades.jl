@@ -4,6 +4,7 @@
 =#
 # load used packages
 
+using Revise
 using DynamicCascades
 using Graphs
 using MetaGraphs
@@ -17,8 +18,29 @@ using DataFrames
 using CSV
 using CairoMakie
 
-using GLMakie#jl
-GLMakie.activate!()#jl
+# using GLMakie#jl
+# GLMakie.activate!()#jl
+
+init = 27
+damping = 0.1u"s"
+network = import_system(:rtsgmlc; damping, tconst = 0.01u"s")
+# x_static=steadystate(network; verbose=true)
+sol = simulate(network;
+               initial_fail = Int[init],
+               tspan = (0, 100),
+               terminate_steady_state=true,
+               trip_lines = :dynamic,
+               solverargs = (;dtmax=0.01), verbose = true);
+
+# sol.network
+# sol.initial_fail
+# sol.failtime
+# sol.trip_lines
+#
+# sol.load_S
+# sol.load_P
+# sol.failures
+# sol.sol
 
 # plot solution
 function plotnetwork(fig, sol, t)
@@ -36,30 +58,6 @@ function plotnetwork(fig, sol, t)
     p = graphplot!(ax, network; gpargs...)
     return ax, p
 end
-
-
-damping = 0.1u"s"
-network = import_system(:rtsgmlc; damping, tconst = 0.01u"s")
-
-x_static=steadystate(network; verbose=true),
-
-init = 27
-sol = simulate(network;
-               initial_fail = Int[init],
-               tspan = (0, 100),
-               terminate_steady_state=true,
-               trip_lines = :dynamic,
-               solverargs = (;dtmax=0.01), verbose = true);
-
-sol.network
-sol.initial_fail
-sol.failtime
-sol.trip_lines
-
-sol.load_S
-sol.load_P
-sol.failures
-sol.sol
 
 tobs = Observable(0.0)
 fig = Figure(resolution=(1300,700))
@@ -83,6 +81,6 @@ tmax = 0.75
 fps = 30
 trange = range(0.0, tmax, length=Int(T * fps))
 
-record(fig, "rtsgmlc.mp4", trange; framerate=30) do time
+record(fig, joinpath(PLOT_DIR,"rtsgmlc.mp4"), trange; framerate=30) do time
     tobs[] = time
 end
