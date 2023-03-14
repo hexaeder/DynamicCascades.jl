@@ -77,6 +77,11 @@ function project_theta!(nd, x0)
     end
 end
 
+"""
+# Arguments
+- `zeroidx::Integer=nothing`: If this flag is set, this shifts the voltage angle
+at all nodes by the voltage angle of the node with index `zeroidx`.
+"""
 function steadystate(network; project=false, verbose=false, tol=1e-7, zeroidx=nothing)
     verbose && println("Find steady state...")
     (nd, p) = nd_model(network)
@@ -157,6 +162,51 @@ function simulate(network;
     else
         return container
     end
+end
+
+function simulate_pdis(network;
+                       verbose=true,
+                       x_static=steadystate(network; verbose),
+                       node=1,
+                       disturbance=1u"pu",
+                       failtime=0.1,
+                       tspan=(0., 100.),
+                       terminate_steady_state=true,
+                       solverargs=(;),
+                       warn=true)
+    (nd, p, overload_cb) = nd_model(network);
+
+    # find the fault parameters
+    fault = deepcopy(network)
+    set_prop!(fault, node, :P, get_prop(fault, node, :P) + disturbance)
+    pfault = get_parameters(fault);
+
+    prob = ODEProblem(nd, copy(x_static), tspan, p);
+
+    failures = SavedValues(Float64, Int);
+    load_S = SavedValues(Float64, Vector{Float64});
+    load_P = SavedValues(Float64, Vector{Float64});
+
+    cbs = CallbackSet(overload_cb(;trip_lines=Int[], load_S, load_P, failures, verbose));
+    cbs = CallbackSet(cbs, TerminateSelectiveSteadyState(nd; min_t=failtime+eps(failtime)))
+    affect! = (integrator) -> integrator.p = pfault
+    cbs = CallbackSet(PresetTimeCallback(failtime, affect!), cbs)
+
+    verbose && println("Run simulation for pertubation $disturbance on lines $(node)")
+    sol = solve(prob, AutoTsit5(Rosenbrock23()); callback=cbs, progress=true, solverargs...);
+    container = SolutionContainer(network,
+                                  [node,], failtime, :none,
+                                  sol, load_S, load_P, failures)
+
+    if terminate_steady_state
+        if sol.t[end] < tspan[2]
+            verbose && println("Terminated on steady state at $(sol.t[end])")
+        else
+            warn && @warn "Did not reach steady state!"
+        end
+    end
+
+    return container
 end
 
 function nd_model(network::MetaGraph)
@@ -299,7 +349,7 @@ function calculate_apparent_power!(S, u, p, t, nd, network::MetaGraph; gd=nd(u, 
         if iszero(K)
             S[i] = 0
         else
-            sqr = √(Vs^2 + Vd^2 - 2*abs(Vs)*abs(Vd)*cos(θd-θs))
+            sqr = √(Vs^2 + Vd^2 - 2*Vs*Vd*cos(θd-θs))
             S[i] = max(Vs, Vd) * abs(Y) * sqr
         end
     end
@@ -330,11 +380,11 @@ This function returns a constructor for the overload callback with two kw argume
   - `trip_lines=true` : toggle whether the CB should kill lines (set K=0)
   - `load_S=nothing` : provide `SavedValues` type for S values
   - `load_P=nothing` : provide `SavedValues` type for P values
-  - `failurs=nothing` : provide `SavedValues` type where to save the failed lines
+  - `failures=nothing` : provide `SavedValues` type where to save the failed lines
   - `verbose=true` : toogle verbosity (print on line failures)
 
 This is all a bit hacky. I am creating a SavingCallback for the `load` values. However
-the SavingCallback is missing some values right befor the discontinuity. Those values
+the SavingCallback is missing some values right before the discontinuity. Those values
 are injected inside the shutdown affect. In order for this to work the affect needs to
 bump the `saveiter` counter of the other callback. Very ugly.
 """
@@ -350,7 +400,7 @@ function get_callback_generator(network::MetaGraph)
         scb_S = load_S === nothing ? nothing : SavingCallback(save_S_fun, load_S)
         scb_P = load_P === nothing ? nothing : SavingCallback(save_P_fun, load_P)
 
-        ## static line condition
+        ## dynamic line condition
         if trip_lines == :dynamic
             condition = let _current_load = zeros(ne(network)), _network = network, _rating = get_prop(network, edges(network), :rating)
                 (out, u, t, integrator) -> begin
@@ -451,6 +501,9 @@ function InitialFailCB(idxs, time; failures = nothing, verbose = true)
         end
     end
     PresetTimeCallback(time, affect!)
+end
+
+function ChangePCB(fualtp, time)
 end
 
 function getSteadyStateCondition(nd; min_t=nothing)

@@ -11,7 +11,7 @@ export DATA_DIR, RAWRESULTS_DIR, RESULTS_DIR, PLOT_DIR
 const DATA_DIR = abspath(@__DIR__, "..", "data")
 const RAWRESULTS_DIR = abspath("/Users/hw/MAScratch")
 const RESULTS_DIR = abspath(@__DIR__, "..", "results")
-const PLOT_DIR = abspath(@__DIR__, "..", "..", "thesis", "figures")
+const PLOT_DIR = abspath(@__DIR__, "..", "..", "MA_data", "figures")
 
 export import_system, describe_nodes, describe_edges, bustype, is_static_state
 
@@ -30,6 +30,7 @@ include("utils.jl")
     bustype(s::Symbol)
 
 Helper to convert the different representations of bus types into eachother.
+syncon stands for synchronous condenser.
 Base representation is Symbol:
 
     :load   == bustype(1) == bustype("PQ") == bustype(:PQ)
@@ -45,7 +46,8 @@ bustype(::Union{Val{:Ref}, Val{3}, Val{:syncon}}) = :syncon
 """
     import_system(sym::Symbol; kwargs...)::MetaGraph
 
-Main entry point to load the systems. New systems should overload this function. Known implementations
+Main entry point to load the systems. New systems should overload (add a method to)
+this function. Known implementations
 - `import_system(:rtsgmlc)`: loads the GMLC update for the rts96
 - `import_system(:rts96raw)`: loads the RTS96 system based on the raw files
 - `import_system(:rts96prepared)`: loads the RTS96 system based on Antons prepared files
@@ -53,12 +55,13 @@ Main entry point to load the systems. New systems should overload this function.
 Those functions return a `MetaGraph` which has properties attached to the Nodes/Edges.
 
 Graph properties:
-- `Pbase` : Base power for PU
+- `Pbase` : Base power in PU
 optional:
 - `NodeProps` : tuple of node property names which should appear first in describe functions
 - `EdgeProps` : tuple of edge property names which should appear first in describe functions
 
 Node properties:
+- `n` : node index
 - `P` : active power in PU
 - `Q` : reactive power in PU
 - `Vbase` : base voltage in kV
@@ -71,7 +74,7 @@ optional:
 - `Va` : voltage angle in rad
 
 Edge properties:
-- `rating` : short term emergency rating in PU
+- `rating` : short term emergency rating (= maximum capacity) in PU
 - `R` : resistance in PU
 - `X` : reactance in PU
 """
@@ -82,6 +85,7 @@ include("import_rts96.jl")
 include("import_kaiser2020.jl")
 include("import_schaefer2018.jl")
 include("import_square.jl")
+include("import_isolator_toymodel.jl")
 
 """
     describe_nodes(g::MetaGraph; firstcols=Vector{String}())
@@ -102,7 +106,7 @@ function describe_nodes(g::MetaGraph; firstcols=Vector{String}())
 end
 
 """
-    describe_nodes(g::MetaGraph; firstcols=Vector{String}())
+    describe_edges(g::MetaGraph; firstcols=Vector{String}())
 
 Returns DataFrame with all the edge meta data.
 """

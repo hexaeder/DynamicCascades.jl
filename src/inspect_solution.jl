@@ -45,13 +45,11 @@ function inspect_solution(c::SolutionContainer)
                                     ("diff to steady", :abssteady),
                                     ("diff to steady (both dir)", :abssteadyboth),
                                     ("absolut", :abs)],
-                    i_selected=1,
-                    selection=:relrating)
+                    default="rel to rating")
     nodemenu = Menu(fig, options = [("ω (with loads)", :ωall),
                                     ("ω", :ω),
                                     ("θ diff to steady", :θdiff)],
-                    i_selected=1,
-                    selection=:ωall)
+                    default="ω (with loads)")
     toggles = reshape([Label(fig, "Active Power:"), tg_activeP,
                        Label(fig, "Edge colors:"), edgemenu,
                        Label(fig, "Node colors:"), nodemenu,

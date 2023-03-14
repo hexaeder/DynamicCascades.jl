@@ -7,7 +7,7 @@ using NetworkLayout
     import_system(:square)
 """
 function import_system(::Val{:square}; seed=1, M=1u"s^2", D=0.1u"s", K=1, size=10, x=size, y=size,
-                       add_e=Tuple{Int,Int}[])
+                       add_e=Tuple{Int,Int}[], genbase=1u"pu", loadbase=1u"pu")
     rng = MersenneTwister(seed)
 
     N = x*y
@@ -23,8 +23,8 @@ function import_system(::Val{:square}; seed=1, M=1u"s^2", D=0.1u"s", K=1, size=1
     Nload = N - Ngen
     @assert N == Ngen + Nload
 
-    Pgen  =   N/(2*Ngen) *u"pu"
-    Pload = - N/(2*Nload)*u"pu"
+    Pgen  =   N/(2*Ngen) *genbase
+    Pload = - N/(2*Nload)*loadbase
 
     # lets split up the vertices in loads and generators
     mask = shuffle(rng, vcat(ones(Bool, Ngen), zeros(Bool, Nload)))
