@@ -23,7 +23,14 @@ using CairoMakie
 
 init = 27
 damping = 0.1u"s"
-network = import_system(:rtsgmlc; damping, tconst = 0.01u"s")
+scale_inertia = 20.0
+network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.01u"s")
+# # test if `scale_inertia` applies correctly
+# n1 = describe_nodes(network)
+# n1.H
+#
+# n2 = describe_nodes(network)
+# n2.H
 # x_static=steadystate(network; verbose=true)
 sol = simulate(network;
                initial_fail = Int[init],
@@ -77,10 +84,10 @@ end
 vlines!(ax, tobs; color=:black, linewidth=1)
 
 T = 20
-tmax = 0.75
+tmax = 3.5 # tmax = 0.75
 fps = 30
 trange = range(0.0, tmax, length=Int(T * fps))
 
-record(fig, joinpath(PLOT_DIR,"rtsgmlc.mp4"), trange; framerate=30) do time
+record(fig, joinpath(PLOT_DIR,"rtsgmlc_scaleM=$scale_inertia.mp4"), trange; framerate=30) do time
     tobs[] = time
 end

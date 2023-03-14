@@ -49,7 +49,7 @@ function import_system(::Val{:rts96raw}; losses=false, kwargs...)
         generators = leftjoin(generators, SystemDynamicsData, on = :unit => :group)
         generators = generators[:, [:MW_inj, :MVar_inj, :inertia, :V_pu]]
 
-        # extract voltage setpoints in PU, make sure alle generators at bus have same setpoint
+        # extract voltage setpoints in PU, make sure all generators at bus have same setpoint
         vpus = unique(generators.V_pu)
         if length(vpus) == 1
             set_prop!(g, n, :Vm, vpus[1]*u"pu")

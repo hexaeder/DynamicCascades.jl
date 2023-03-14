@@ -30,6 +30,7 @@ include("utils.jl")
     bustype(s::Symbol)
 
 Helper to convert the different representations of bus types into eachother.
+syncon stands for synchronous condenser.
 Base representation is Symbol:
 
     :load   == bustype(1) == bustype("PQ") == bustype(:PQ)

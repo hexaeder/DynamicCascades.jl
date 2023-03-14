@@ -10,6 +10,7 @@ using DynamicCascades: PLOT_DIR
 
 using CairoMakie
 
+# for interactive plots
 # using GLMakie
 # GLMakie.activate!()
 
@@ -33,7 +34,7 @@ sol2 = simulate(network;
     trip_lines = :dynamic,
     tspan = (0.0, 15.0),
     solverargs = (; dtmax = 0.01));
-# inspect_solution(sol1)
+# display(inspect_solution(sol1))
 t1 = 0.0
 
 set_theme!(theme_minimal(), fontsize=20, textsize=25)

@@ -3,7 +3,7 @@
 
 Import the RTS-GMLC system as a MetaGraph.
 """
-function import_system(::Val{:rtsgmlc}; losses=false, kwargs...)
+function import_system(::Val{:rtsgmlc}; losses=false, scale_inertia=1.0, kwargs...)
     @info "Import system RTS-GMLC"
     data = joinpath(DATA_DIR, "RTS-GMLC")
     bus_data    = CSV.read(joinpath(data,"bus.csv"), DataFrame)
@@ -51,12 +51,12 @@ function import_system(::Val{:rtsgmlc}; losses=false, kwargs...)
         if controltype ∈ ("PV", "Ref")
             if bus_data."Bus ID"[n] ∈ [114, 214, 314]
                 type = :syncon
-                set_prop!(g, n, :H, 5u"MJ/MW")
+                set_prop!(g, n, :H, scale_inertia * 5u"MJ/MW")
             else
                 type = :gen
-                inertia = sum(generators."Inertia MJ/MW")u"MJ/MW"
-                @assert !iszero(P_inj) "Generator $n doese not inject power?"
-                @assert !iszero(inertia) "Generator $n doese not have inrtia?"
+                inertia = scale_inertia * sum(generators."Inertia MJ/MW")u"MJ/MW"
+                @assert !iszero(P_inj) "Generator $n does not inject power?"
+                @assert !iszero(inertia) "Generator $n does not have inertia?"
                 set_prop!(g, n, :H, inertia)
             end
         elseif controltype == "PQ"
@@ -70,7 +70,7 @@ function import_system(::Val{:rtsgmlc}; losses=false, kwargs...)
         set_prop!(g, n, :Q, (Q_inj - Q_load) / baseP * u"pu")
     end
 
-    # set thepe intertia for sync condenser
+    # set the inertia for sync condenser
     # scidxs = findall(s -> !ismissing(s) && iszero(s), describe_nodes(g).H)
     # @assert bus_data."Bus ID"[scidxs] == [114, 214, 314]
     # set_prop!(g, scidxs, :H, 5u"MJ/MW")
@@ -133,7 +133,7 @@ end
 function set_gmlc_pos_relaxed!(g)
     # set location property based on rts gmlc data
     data = joinpath(DATA_DIR, "RTS-GMLC")
-    bus_data    = CSV.read(joinpath(data,"bus.csv"), DataFrame)
+    bus_data = CSV.read(joinpath(data,"bus.csv"), DataFrame)
     x = bus_data."lng"
     y = bus_data."lat"
     xn = 10*(x .- minimum(x))./(maximum(x)-minimum(x)).-5
