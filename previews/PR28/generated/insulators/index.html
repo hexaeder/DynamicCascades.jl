@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Topological insulator · DynamicCascades.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link rel="canonical" href="https://wuerfel.io/DynamicCascades.jl/generated/insulators/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">DynamicCascades.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../rtsgmlc_plot/">RTS-GMLC</a></li><li><a class="tocitem" href="../squaregrid/">Disturbance in Grid</a></li><li class="is-active"><a class="tocitem" href>Topological insulator</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Topological insulator</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Topological insulator</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/hexaeder/DynamicCascades.jl/blob/main/scripts/insulators.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Dynamic-disturbances-and-topological-insulators"><a class="docs-heading-anchor" href="#Dynamic-disturbances-and-topological-insulators">Dynamic disturbances and topological insulators</a><a id="Dynamic-disturbances-and-topological-insulators-1"></a><a class="docs-heading-anchor-permalink" href="#Dynamic-disturbances-and-topological-insulators" title="Permalink"></a></h1><p><video src="../insulator.mp4" controls="true" title="animation"><a href="../insulator.mp4">animation</a></video> load used packages</p><pre><code class="language-julia hljs">using DynamicCascades
+using Graphs
+using MetaGraphs
+using Statistics
+using GraphMakie
+using Colors
+using ColorSchemes
+using DynamicCascades: PLOT_DIR
+using Unitful
+using NetworkDynamics
+using DataFrames
+using CairoMakie
+
+set_theme!(theme_minimal(), fontsize = 20)</code></pre><p>set up the grid</p><pre><code class="language-julia hljs">x = 20
+y = 3
+add_e = [(10, 31),
+         (10, 51),
+         (30, 11),
+         (30, 51),
+         (50, 11),
+         (50, 31)]
+network = import_system(:square; x, y, M=0.5u&quot;s^2&quot;, D=0.1u&quot;s&quot;, K=-10u&quot;pu&quot;, seed=2, add_e)
+region1 = vcat(1:10, 21:30, 41:50);
+region2 = vcat(11:20, 31:40, 51:60);
+
+edgetype = map(edges(network)) do e
+    if e.src ∈ region1 &amp;&amp; e.dst ∈ region1
+        1
+    elseif e.src ∈ region2 &amp;&amp; e.dst ∈ region2
+        2
+    else
+        0
+    end
+end</code></pre><p>Simulate failure of all lines, analyise solution and save maximum pertubation on lines</p><pre><code class="language-julia hljs">function max_flowdiff(sol::SolutionContainer)
+    init_region = edgetype[sol.initial_fail[]]
+    other_region = init_region == 1 ? 2 : 1
+
+    rege = [findall(isequal(i), edgetype) for i in 1:2]
+
+    static = sol.load_P.saveval[begin]
+    diff = [(abs.(val)-abs.(static))/static[sol.initial_fail[]] for val in sol.load_P.saveval]
+
+    t = sol.load_P.t
+    this  = [maximum(d[rege[init_region]]) for d in diff]
+    other = [maximum(d[rege[other_region]]) for d in diff]
+
+    return (t, this, other)
+end
+
+df = DataFrame(; edge = Int[], direction=Symbol[], thismax=Float64[], othermax=Float64[],
+               endthis=Float64[], endother=Float64[])
+for (i, edge) in enumerate(edges(network))
+    edgetype[i] == 0 &amp;&amp; continue
+    direction = edge.dst == edge.src+1 ? :h : :v
+    sol = simulate(network;
+                   initial_fail = [i],
+                   failtime = 0.1,
+                   trip_lines = :none,
+                   tspan = (0.0, 100.0),warn=false,verbose=false);
+    (t, this, other) = max_flowdiff(sol)
+    push!(df, (; edge=i, direction, thismax=maximum(this), othermax=maximum(other), endthis=this[end], endother=other[end]))
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8
+┌ Warning: This method is deprecated in favor of using NonlinearSolve.jl. Note that an ODEProblem
+│ can be converted into a steady state NonlinearProblem via
+│ `NonlinearProblem(prob::ODEProblem)`. The algorithm `NLSolveJL` as part of the
+│ SciMLNLSolve.jl set of nonlinear solvers for NonlinearSolve.jl is equivalent to
+│ SteadyStateDiffEq.jl&#39;s default `SSRootfind` (with a few improvements).
+│
+│ See [the documentation of NonlinearSolve.jl](https://docs.sciml.ai/NonlinearSolve/stable/)
+│ for more details.
+└ @ SteadyStateDiffEq ~/.julia/packages/SteadyStateDiffEq/S1swh/src/solve.jl:8</code></pre><p>maximum disturbane in <em>other</em> region after vertical fail</p><pre><code class="language-julia hljs">extrema(df[df.direction.==:v, :othermax])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(0.00012410415329943642, 0.000981791373830931)</code></pre><p>maximum disturbane in <em>same</em> region after vertical fail</p><pre><code class="language-julia hljs">extrema(df[df.direction.==:v, :thismax])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(0.3473965149757261, 1.6027146371958936)</code></pre><p>maximum disturbane in <em>other</em> region after horizontal fail</p><pre><code class="language-julia hljs">extrema(df[df.direction.==:h, :othermax])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(0.16522197644130177, 0.3021392853604493)</code></pre><p>maximum disturbane in <em>same</em> region after horizontal fail</p><pre><code class="language-julia hljs">extrema(df[df.direction.==:h, :thismax])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(0.6861067061575937, 1.5709347270841372)</code></pre><p>Create plot for thesis</p><pre><code class="language-julia hljs">sol1 = simulate(network;
+               initial_fail = [60],
+               failtime = 0.1,
+               trip_lines = :none,
+               tspan = (0.0, 50.0),
+               solverargs = (; dtmax = 0.01));
+
+sol2 = simulate(network;
+               initial_fail = [18],
+               failtime = 0.1,
+               trip_lines = :none,
+               tspan = (0.0, 50.0),
+               solverargs = (; dtmax = 0.01));
+
+fig = Figure(resolution=(1500, 600))
+ts = [Observable(0.25),
+      Observable(0.5),
+      Observable(1.5),
+      Observable(50.0)]
+function graphplot_axis_edges(fig, sol, t::Observable, scaling)
+    ax = Axis(fig)
+    gpargs = gparguments(sol, t;
+                         ecolortype = Observable(:abssteadyboth),
+                         activeP=true,
+                         ecolorscaling=scaling,
+                         )
+    p = graphplot!(ax, network; gpargs...,
+                   node_size=0,
+                   edge_width=5)
+
+    ax.aspect = DataAspect()
+    hidedecorations!(ax); hidespines!(ax)
+    return ax
+end
+scaling = Observable(0.25)
+for (i,t) in pairs(ts)
+    fig[i,1] = Label(fig, &quot;t = $(t[])&quot;, tellheight=false)
+    fig[i,2] = graphplot_axis_edges(fig, sol1, t, scaling)
+    fig[i,3] = graphplot_axis_edges(fig, sol2, t, scaling)
+end
+fig[0, 2] = Label(fig, &quot;horizontal failure&quot;, tellwidth=false)
+fig[1, 3] = Label(fig, &quot;vertical failure&quot;, tellwidth=false)
+
+fig</code></pre><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABdwAAAJYCAIAAAD30bNzAAAABmJLR0QA/wD/AP+gvaeTAAAgAElEQVR4nOzdd2AU1f428O/M9pKeQBKSSE9Cr0pVUQISwCuxoICgqHgvoqiI5aeC5VW8otcrNkSUIpdgASxAAgS4qBSlyRWkBIiENNKz2c3WmXn/GNjMTkIomWVD8nz+ypyZOTuzm505+8yZM4wgCAQAAAAAAAAAAFcXG+gNAAAAAAAAAABoiRDKAAAAAAAAAAAEAEIZAAAAAAAAAIAAQCgDAAAAAAAAABAACGUAAAAAAAAAAAIAoQwAAAAAAAAAQAAglAEAAAAAAAAACACEMgAAAAAAAAAAAYBQBgAAAAAAAAAgABDKAAAAAAAAAAAEAEIZAAAAAAAAAIAAQCgDAAAAAAAAABAACGUAAAAAAAAAAAIAoQwAAAAAAAAAQAAglAEAAAAAAAAACACEMgAAAAAAAAAAAYBQBgAAAAAAAAAgABDKAAAAAAAAAAAEAEIZAAAAAAAAAIAAQCgDAP6ycuXKGTNmuFwuZas9c+bMiRMn7Ha7stUqZfny5TNmzOB5/kIL5OXlvfjii48++mhJScmlVCjd34tWDgAAAAAA1xCEMgDgL1u3bv3oo48UD2XGjh3bqVOnHTt2KFvtheTl5a1YsSInJ+cSl9+0adNHH310odzE4XAMGTLkzTffzMzMtFqtl1KhdH8brhwAAAAAAK4tCGUA4BoTFBQUEhKi0Wiuzsvt3bv3/vvvVyoDOnTo0OnTp5944onTp0+3a9fuUla5yvsLAAAAAABXjTrQGwAAcHl+/vnnQG/ClRN7xyQnJ1/6Ktf0/gIAAAAAQAMQygCA3/34448ZGRnHjx9v27btjBkzevXqJZ27cuXK//73vzk5OZ07dx4+fPi4ceO8szIyMk6ePDljxowVK1YsW7Zs5syZY8aMycjIOHjw4KxZszQazTvvvOPxeGQvFxYW9uijj15K/eJLHDt27Mknn8zMzFyyZElJSUmHDh0ee+wxcSNXrVq1YcMGIlq3bl1eXt7MmTMNBoPFYlm8ePHu3buLi4ujoqJuuOGGhx9+ODQ09KLvw7p163744Qci2rhxY2Vl5bRp08LDw4mo4Qql+yur8Ntvv83NzX366ae9JRzHzZ8/v1u3bmPGjLnQGygumZWVtX79+kOHDkVGRo4ZM2b8+PFqNc4IAAAAAABXlwAA4B8PPfQQET3++ONarXbgwIF9+/YlIo1G8+uvv4oL1NTUiBmB0Wjs3r27TqcjogkTJng8Hm8NrVu3/vDDD8Xj1cKFC73VVldXC4JgMplUvoioQ4cOl1i/WFtISMi//vUvrVY7YMCA/v37ixu5e/duQRDuvffeiIgIIgoLC2vTpk15eXllZWXnzp2JqE2bNv369YuKiiKirl27itsjCMLEiROJyO12131DHn/88cjISCIKDQ1t06bNiRMnBEG4aIXS/ZVVPnr0aJPJJH0JcTzgiRMnNvAGCoLw1FNPEZHBYOjRo4fZbCaiW2+91Wq1NubjBgAAAACAy4UxZQDAv1avXn3gwIGdO3fu3bv3008/dbvdixcvFmctWLBg3bp1kydPLi8v/9///ldaWjp27NiVK1d++eWX3tWrqqrmzJnz73//OycnZ9q0abLKrVarR+KJJ54gounTp196/WIl77777p49e3bt2vXbb78tWbLE7XYvWrSIiNLT08WtXbBgQV5eXlhY2KJFi44fP/7mm2+eOXNmz549hYWFM2bMOHz4cFZW1kXfigULFnzzzTdENG/evLy8vA4dOhBRYyq8FHXfwDVr1rz33nt33HFHUVHRwYMHS0tLH3300S1btrzyyiuKvCIAAAAAAFwihDIA4F+vvPJKly5dxL8feOABtVp95swZIhIE4e23346Ojl60aJHYh8VsNi9dutRkMr399tve1R0Ox3PPPTdz5sy2bdsyDNPAC33++efvvffe1KlTxdt5LrF+IuI47qWXXurRo4c4OXnyZIPBkJubW++rhIaGPvDAA0899ZS4MSqV6u677yai06dPX9n7o3iFMnXfwFdffTUyMnL58uXBwcFEpNPpPvzww6SkpM8++wzPdQIAAAAAuJoQygCAf918883ev7VarU6nEwSBiAoKCsrLy0ePHi0mJqLw8PCbbrrp+PHjbrfbW/i3v/3toq/y008//eMf/xg8ePAnn3willx6/UR0yy23eP9mWdZoNIobWdcjjzyyZMkSvV5PRB6P58iRIx988AERXWj5i1K8wrqkb6DL5Tp8+HD//v2rqqryzisqKurXr19VVVV2drZSLwoAAAAAABeFYR0BwL9iYmLqLc/JySGihIQEWXlCQgLHcbm5ueLdPUQUHR3d8EucOnUqLS0tJiZm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kJWVtXXr1jFjxniHED5+/PjmzZsHDhx4oc0DAJAJcTIZa0233G2ztUv4duy3UYaoQG8RAABAC3Xbbbfp9frvvvvu999/HzduXNj5/q0Mw6SkpKxbt+7333/v1auXWFheXt6nT5/OnTvv3Lmz4Wrr/V3TuXNncdTbV1991XvZuGRHSfHPxeH9wovPFldWViYnJ0vDi++/+wXgkuQAACAASURBVP7c9hCjVWkvq8dHcXGxxWLp1KmTtMKVK1de4up6vb6mpqawsDAmJkYsWbhwYQPLMwwzatSotWvX7tmzp3///mJhZWXlyJEj27dvv3v37kvfcgBopCsJZcTQOj09Xa1Wp6WlyTrME1FaWpp3tN1LlJaWlpyc/OKLL7IsO3jw4O3bt8+dO7dr167jxo0TF9i+fXtKSkrPnj1///13IsrJycnOzo6MjBTDXZlVq1ZFRkbOmTPnscceGzp06KxZs6Kjow8dOjR//nyO4z7++OMr2GsAaLEi7UzWLx0LHlvRyuBzI7rdYzeoDRdaCwAAAJRlMplGjBjxww8/kOTarWju3LmZmZn33nvv448/npycfOrUqfT09MrKyjlz5jRQofd3Ded2Dxs8WDpLpVK99dZbd91114ABA1544YWzf53NO5hXuLHQ3N4c1CkoOiY6Li5u7dq177///sCBAwsLCz/59JMdP+8goqxNWYMHDO7Ro4e0NoGEBjrOEFF0dHRMTExGRsbixYtvuOEGnucXL14s9pT5/vvv+/Tp01HambeO3r17r1+//tFHH3322Wc1Gs2mTZt+/PHHug+3lZo3b966detSUlJeeOGFhISEP/7445tvvrFYLE899VQDawGA4q4klBk0aNCgQYMyMzMzMjJKSkrqhjJXQKfTbd++/Y477vCOzjt06NC1a9fKblX1ysnJIaLS0tItW7bUnSv2jZw+fbrNZnvjjTe8h+xu3bpt2LChZ8+ejd9gAGg5uOhoWri8dZDPQFR51rxcS+6g2EGB2ioAAIAWKC0t7YcffoiPj7/llluk5R06dPjhhx9mzJjx5ptviiXx8fGrVq267bbbGqhN+rvm0L59srl33nnnN998M23atEcffVQsCe0W2nZSW4ZlGIZJT0+/7777nnzySSJiGObW4bdu+3nb/3v1/33/3ffvv//+559/7q1HEASBhIY7zjAM8/HHH0+fPn3u3Lni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+XwqGJScaaeam7VNmyQSEZHADTdkqg9E5Hgo6z7Zq5tWa6IV+YseWv5QTi7DVFYAAEwquh5buzY56jdLOpEREWPpUr2xMVOfmj3buZgRDgfq6kTkqllXjc5lAExN5x3K/PrXv3722WdF5MUXX/zBD37g1hQtH374oYgsWLDgwIEDzz///K5du5LJrJ89b7755uzZs5uamjI1ixYtamho2Lp16+naHMdTAEw56UQmp1d06aXapk1SWZkuGYsWZQbL/L/GrAVnVMxYMH1B+u+QERqdywAAgEnibIlMWmawjF1drcrLnUsWLVqU+ZtcBkCaNo4TuRs2bFizZs0zzzzz2c9+1q31+PznP//4449fd911r7/+eromEol873vfu++++0TEtu1AIHDVVVe98UbWPWivvPLK7du3m6Y5enc2jqcUju7u7sSpIZGaSO4JfFdoGmfwz5VSmu3J1GspZRmi26LiykyJ+y8xaA6KEk3TBpIDvbFe55Ryrgj3RBenqqRpgf+998Jf+pLv8GF321cir4tcJjIk8g8iXoxw+9OL/Ic+aRyu1G/ba/3rC3q56fJuIdbYsPdnP66ONA4lh1IqVR2qdrd9nC/Xt4IMTQr3mDLVBIPBqqqqfK/FhOru6jLNU3fb9ej4rpSIaCJKJDfFdql9TdNEKe/6J7ay03sAXXRPOoFWSktZSinl023D5377yZQxHNMyfUK334JSqmewfaA8aJjJmv1tZT1D7rYvIq+Ge0uamosDcAtJNAAAGJJJREFUJesPrP/+u993fV7bikDFqsZVNUU17cPtmw9vHkwOutt+sVG07vofm4YW0IymwUBDq/v/ImvOnGRdnRiGHo3aZWWebGuThUrvNICPJhAIVFfnv39ueNHor371q/fee2/Mh+6+++4FCxaMrk+PlOns7PzhD384Z86cnTt3futb37r//vtDodCnPvWprq4uy7IikUjOs6qqqlKpVE9Pz+ju1zieUjiSma6ViBJPevokMudB05SmaW5HY5ayDNFFRBetWAsOqpi7L2Bapk/zpb894UA4mUq63jtZbFaq5mYRMZct6/vXf61as8bd9t8U+biIiFSI/C+Rt0Xed7X9CkPevsd/okQTkf+z1NdSqTb8Qsrdm5k3Xhx4e9335lfPFZFwMBxPxS1l+TQPeurINxKZgmI6jqFTRDKVGiko5cUPOc3x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" /><p>create the video</p><pre><code class="language-julia hljs">fig = Figure(resolution=(1000, 400))
+scaling = Observable(0.5)
+t = Observable(0.0)
+fig[1,1] = Label(fig, @lift(&quot;t = &quot;*repr(round($t,digits=2))*&quot; s&quot;), tellwidth=false)
+fig[2,1] = graphplot_axis_edges(fig, sol1, t, scaling)
+fig[3,1] = graphplot_axis_edges(fig, sol2, t, scaling)
+fig[2, 0] = Label(fig, &quot;horizontal failure&quot;, tellheight=false)
+fig[3, 1] = Label(fig, &quot;vertical failure&quot;, tellheight=false)
+
+
+T = 10
+tmax = 3
+fps = 30
+trange = range(0.0, tmax, length=Int(T * fps))
+
+record(fig, &quot;insulator.mp4&quot;, trange; framerate=30) do time
+    t[] = time
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&quot;insulator.mp4&quot;</code></pre><p>Create plot for Defense</p><pre><code class="language-julia hljs">x = 30
+y = 3
+add_e = [(15, 46),
+         (15, 76),
+         (45, 16),
+         (45, 76),
+         (75, 16),
+         (75, 46)]
+network1 = import_system(:square; x, y, M=0.5u&quot;s^2&quot;, D=0.1u&quot;s&quot;, K=-10u&quot;pu&quot;, seed=1)
+network2 = import_system(:square; x, y, M=0.5u&quot;s^2&quot;, D=0.1u&quot;s&quot;, K=-10u&quot;pu&quot;, seed=1, add_e)
+@assert describe_nodes(network1).P[15] != describe_nodes(network1).P[16]
+
+sol1 = simulate(network1;
+               initial_fail = [86],
+               failtime = 0.1,
+               trip_lines = :none,
+               tspan = (0.0, 150.0),
+               solverargs = (; dtmax = 0.01));
+
+sol2 = simulate(network2;
+               initial_fail = [90],
+               failtime = 0.1,
+               trip_lines = :none,
+               tspan = (0.0, 150.0),
+               solverargs = (; dtmax = 0.01));
+
+right1 = collect(88:2:114)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">14-element Vector{Int64}:
+  88
+  90
+  92
+  94
+  96
+  98
+ 100
+ 102
+ 104
+ 106
+ 108
+ 110
+ 112
+ 114</code></pre><p>left1  = reverse(collect(62:2:84))</p><pre><code class="language-julia hljs">right2 = vcat(92,95, 98:2:120)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">14-element Vector{Int64}:
+  92
+  95
+  98
+ 100
+ 102
+ 104
+ 106
+ 108
+ 110
+ 112
+ 114
+ 116
+ 118
+ 120</code></pre><p>left2  = reverse(collect(66:2:88))</p><pre><code class="language- hljs">fig = Figure(resolution=(1800, 600))
+ax1a = fig[1,1] = Axis(fig, xlabel=&quot;Time in s&quot;, ylabel=&quot;Flow Disturbance&quot;, title=&quot;w/o insulator&quot;)
+max_dist_1 = Point2[]
+maxt_dist_1 = Point2[]
+steady_dist_1 = Point2[]
+for (dist, idx) in enumerate(right1)
+    t, P = seriesforidx(sol1.load_P, idx, f = P -&gt;(P - sol1.load_P.saveval[1][idx]))
+    if dist in [2,4,6]
+        lines!(ax1a, t, P, label=&quot;dist = $dist&quot;)
+    end
+    P = abs.(P)
+    pmax, i = firstmax(P)
+    tmax = t[i]
+    push!(max_dist_1, Point(dist, pmax))
+    push!(maxt_dist_1, Point(dist, tmax))
+    push!(steady_dist_1, Point(dist, P[end]))
+end
+
+ax1b = fig[1,2]=Axis(fig, xlabel=&quot;Time in s&quot;, ylabel=&quot;Flow Disturbance&quot;, title=&quot;with insulator&quot;)
+max_dist_2 = Point2[]
+maxt_dist_2 = Point2[]
+steady_dist_2 = Point2[]
+for (dist, idx) in enumerate(right2)
+    t, P = seriesforidx(sol2.load_P, idx, f = P -&gt; (P - sol2.load_P.saveval[1][idx]))
+    if dist in [2,4,6]
+        lines!(ax1b, t, P, label=&quot;dist = $dist&quot;)
+    end
+    P = abs.(P)
+    pmax, i = firstmax(P)
+    tmax = t[i]
+    push!(max_dist_2, Point(dist, pmax))
+    push!(maxt_dist_2, Point(dist, tmax))
+    push!(steady_dist_2, Point(dist, P[end]))
+end
+axislegend(ax1a)
+axislegend(ax1b)
+xlims!(ax1a, 0, 3)
+ylims!(ax1a, -0.15, 0.3)
+xlims!(ax1b, 0, 3)
+ylims!(ax1b, -0.15, 0.3)
+
+save(&quot;insulator_transients.png&quot;, fig)
+
+fig = Figure(resolution=(1800, 600))
+ax1 = fig[1,1] = Axis(fig, xlabel=&quot;Distance from incidence&quot;, ylabel=&quot;Maximum disturbance in transient&quot;)
+scatterlines!(ax1, max_dist_1, label=&quot;w/o insulator&quot;)
+scatterlines!(ax1, max_dist_2, label=&quot;with insulator&quot;)
+axislegend(ax1)
+
+ax2 = fig[1,2] = Axis(fig, xlabel=&quot;Distance from incidence&quot;, ylabel=&quot;steady state&quot;)
+scatterlines!(ax2, steady_dist_1, label=&quot;w/o insulator&quot;)
+scatterlines!(ax2, steady_dist_2, label=&quot;with insulator&quot;)
+axislegend(ax2)
+save(&quot;insulator_pmax.png&quot;, fig)</code></pre><p>video</p><pre><code class="language-julia hljs">t = Observable(0.0)
+fig = Figure(resolution=(1200, 400))
+ax1 = fig[1,1] = Axis(fig)
+ax2 = fig[2,1] = Axis(fig)
+hidedecorations!(ax1), hidespines!(ax1)
+hidedecorations!(ax2), hidespines!(ax2)
+ax1.aspect = DataAspect()
+ax2.aspect = DataAspect()
+gpargs1 = gparguments(sol1, t;
+                     ecolortype=Observable(:abssteady),
+                     Δω=Observable(3.0),
+                     offlinewidth=5,
+                     offlinecolor=colorant&quot;black&quot;,
+                     ecolorscaling=Observable(0.5),
+                     node_size=10)
+gpargs2 = gparguments(sol2, t;
+                     ecolortype=Observable(:abssteady),
+                     Δω=Observable(3.0),
+                     offlinewidth=5,
+                     offlinecolor=colorant&quot;black&quot;,
+                     ecolorscaling=Observable(0.5),
+                     node_size=10)
+p1 = graphplot!(ax1, network1; gpargs1..., edge_width=5)
+p2 = graphplot!(ax2, network2; gpargs2..., edge_width=5)
+
+T = 20
+fps = 30
+tmax = 5
+trange = range(0, tmax, length=round(Int, T * fps))
+record(fig, &quot;insulator_video.mp4&quot;, trange; framerate=30) do time
+    t[] = time
+end
+
+t[] = 100.0
+save(&quot;insulator_final_state.png&quot;, fig)</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../squaregrid/">« Disturbance in Grid</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Wednesday 15 March 2023 01:39">Wednesday 15 March 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
