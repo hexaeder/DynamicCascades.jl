@@ -23,7 +23,7 @@ using CairoMakie
 
 init = 27
 damping = 0.1u"s"
-scale_inertia = 20.0
+scale_inertia = 1.0
 network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.01u"s")
 # # test if `scale_inertia` applies correctly
 # n1 = describe_nodes(network)
