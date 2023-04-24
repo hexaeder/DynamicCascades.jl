@@ -19,7 +19,7 @@ function powerflow!(e, v_s, v_d, K, t)
     nothing
 end
 
-function swing_equation!(dv, v, edges, (power, M, D), t)
+function swing_equation!(dv, v, edges, (_, power, M, _, D), t)
     # dθ = ω
     dv[1] = v[2]
     # dω = (P - γ ω + flowsum)/H
@@ -38,7 +38,7 @@ end
 D⋅dϕᵢ/dt = Pᵢ + ∑ⱼ Kᵢⱼ⋅sin(ϕⱼ-ϕᵢ)
 The parameter D defines a time scale for the dynamics. For D → 0 this model approaches
 the behavior of the algebraic load model (⩯ instantanious power balance). =#
-function dynamic_load!(dv, v, edges, (power, τ, _), t)
+function dynamic_load!(dv, v, edges, (_, power, _, τ, _), t)
     # dynamic_load_time = 0.1
     dv[1] = power
     for e in edges
@@ -52,6 +52,34 @@ function algebraic_load!(dv, v, edges, (power, _, _), t)
     dv[1] = power
     for e in edges
         dv[1] += e[1]
+    end
+    nothing
+end
+
+function swing_dynload!(dv, v, edges, (swing_vs_dynload, power, M, τ, D), t)
+    if swing_vs_dynload == 1.0 # swing equation node #bool
+        # dθ = ω
+        dv[1] = v[2]
+        # dω = (P - γ ω + flowsum)/H
+        # dv[2] = power - 0.1 * v[2]
+        dv[2] = power - D * v[2]
+        for e in edges
+            dv[2] += e[1]
+        end
+        # ω0 = 2π * 50
+        # dv[2] = dv[2] * 2ω0/H
+        dv[2] = dv[2]/M
+
+    elseif swing_vs_dynload == 2.0 # dynamical load node
+        dv[2] = 0.0 # state not used => shall not be dynamic.
+        # v[2] = 0
+        dv[1] = power
+        for e in edges
+            dv[1] += e[1]
+        end
+        dv[1] = dv[1] / τ
+    else
+        error()
     end
     nothing
 end
@@ -209,56 +237,73 @@ function simulate_pdis(network;
     return container
 end
 
+# function nd_model(network::MetaGraph, generator_model::Symbol, load_model::Symbol)
 function nd_model(network::MetaGraph)
     @assert isapprox(sum(describe_nodes(network).P), 0, atol=1e-14) "Power sum not zero!"
     flow_edge = StaticEdge(f=powerflow!, dim=1, coupling=:antisymmetric)
 
-    standardmodels = Dict(
-        :gen => :swing,
-        :load => :dynload,
-        :syncon => :swing,
-    )
-    for i in 1:nv(network)
-        if !has_prop(network, i, :model)
-            mod = standardmodels[get_prop(network, i, :type)]
-            set_prop!(network, i, :model, mod)
-        end
+    #= model choice hardcoded NOTE: implement as argument in simulate() in case of
+    implementing new model =#
+    # generator_model = :swing
+    generator_model = :swing_dynload
+    load_model = :dynload
+
+    vertexmodels = Dict{Symbol, ODEVertex}() # mapping :type to vertex model
+
+    # generator models
+    if generator_model === :swing_dynload
+        vertexmodels[:gen] = ODEVertex(f=swing_dynload!, dim=2, sym=[:θ, :ω])
+        vertexmodels[:syncon] = ODEVertex(f=swing_dynload!, dim=2, sym=[:θ, :ω])
+    elseif generator_model === :swing # NOTE implemented only for testing
+        vertexmodels[:gen] = ODEVertex(f=swing_equation!, dim=2, sym=[:θ, :ω])
+        vertexmodels[:syncon] = ODEVertex(f=swing_equation!, dim=2, sym=[:θ, :ω])
+    else
+        error("No generator model defined!")
     end
 
-    vertexmodels = Dict(
-        :swing => ODEVertex(f=swing_equation!, dim=2, sym=[:θ, :ω]),
-        :dynload => ODEVertex(f=dynamic_load!, dim=1, sym=[:θ])
-    )
+    # load models
+    if load_model === :dynload
+        vertexmodels[:load] = ODEVertex(f=dynamic_load!, dim=1, sym=[:θ])
+    else
+        error("No load model defined!")
+    end
 
-    vertex_array = [vertexmodels[k] for k in get_prop(network, 1:nv(network), :model)]
-    vertex_array = [v for v in vertex_array] # try to narrow type
+    vertex_array = [vertexmodels[i] for i in get_prop(network, 1:nv(network), :type)]
+    #= try to narrow type: if vertex_array used to of e.g Type{Any} as it contained
+    two different types but then vertex_array was changed and now only contain elements
+    of the same type, then this line results in vertex_array of only a single type.=#
+    vertex_array = [v for v in vertex_array]
 
     nd = network_dynamics(vertex_array, flow_edge, SimpleGraph(network))
 
-    # second we generate the parameter tuple for the simulation
+    # generate the parameter tuple for the simulation
     p = get_parameters(network)
 
-    cb_gen = get_callback_generator(network)
+    cb_gen = get_callback_generator(network,nd)
 
     return (;nd, p, cb_gen)
 end
 
+#= NOTE Vector{NTuple{5,Float64}} generally less performant compared to
+Array{Float64}(undef, nv(network), 5) =#
 function get_parameters(network::MetaGraph)
     set_inertia!(network)
     edge_p = set_coupling!(network)
-
-    vertex_p = Vector{NTuple{3,Float64}}(undef, nv(network))
+    vertex_p = Vector{NTuple{5,Float64}}(undef, nv(network))
     for v in 1:nv(network)
         P = get_prop(network, v, :P)
-        model = get_prop(network, v, :model)
-        if model === :swing
+        τ = ustrip(u"s", get_prop(network, v, :timeconst))
+        type = get_prop(network, v, :type)
+        if type in (:gen, :syncon)
             M = ustrip(u"s^2", get_prop(network, v, :_M))
             D = ustrip(u"s", get_prop(network, v, :damping))
-            vertex_p[v] = (P, M, D)
-        elseif model === :dynload
-            τ = ustrip(u"s", get_prop(network, v, :timeconst))
-            vertex_p[v] = (P, τ, 0.0)
+            swing_vs_dynload = 1.0
+        elseif type === :load
+            M = NaN # Shall never be used for load. If used => warning (NaN is "infectious")
+            D = NaN
+            swing_vs_dynload = 2.0
         end
+        vertex_p[v] = (swing_vs_dynload, P, M, τ, D)
     end
     return (vertex_p, edge_p)
 end

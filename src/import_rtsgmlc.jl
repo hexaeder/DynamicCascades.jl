@@ -80,6 +80,7 @@ function import_system(::Val{:rtsgmlc}; losses=false, scale_inertia=1.0, kwargs.
         dst = findfirst(x->x==row."To Bus", bus_data."Bus ID")
         propertys = Dict(:R => row."R"u"pu",
                          :X => row."X"u"pu",
+                         # :rating => 0.5*(row."STE Rating"u"MW"/baseP * u"pu"),
                          :rating => row."STE Rating"u"MW"/baseP * u"pu",
                          :id => row."UID")
         add_edge!(g, src, dst, propertys)
@@ -125,8 +126,9 @@ function set_missing_props!(network; damping = nothing, tconst = nothing)
         set_prop!(network, idxs, :damping, damping)
     end
     if !isnothing(tconst)
-        idxs = findall(x -> x === :load, bustype.(nodes.type))
-        set_prop!(network, idxs, :timeconst, tconst)
+        # idxs = findall(x -> x === :load, bustype.(nodes.type))
+        # set_prop!(network, idxs, :timeconst, tconst)
+        set_prop!(network, 1:nv(network), :timeconst, tconst)
     end
 end
 
@@ -138,7 +140,7 @@ function set_gmlc_pos_relaxed!(g)
     y = bus_data."lat"
     xn = 10*(x .- minimum(x))./(maximum(x)-minimum(x)).-5
     yn = 10*(y .- minimum(y))./(maximum(y)-minimum(y)).-5
-    pos2 = spring(g, initialpos=Point2f0.(zip(xn, yn)))
+    pos2 = spring(g, initialpos=Point2f.(zip(xn, yn)))
 
     pos2[21] += Point2(-.3,.25)
     pos2[15] += Point2(-.5,.0)
