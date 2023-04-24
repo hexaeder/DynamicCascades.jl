@@ -111,7 +111,7 @@ end
 
 export thetashape
 function thetashape(θ; loc=(0,0), r=0.5, b=0.05, pin=20, pout=100)
-    points = Vector{Point2f0}(undef, pin+pout)
+    points = Vector{Point2f}(undef, pin+pout)
     # inner half circle
     for (i, ϕ) in enumerate(range(π/2 + θ, 3/2*π + θ, length=pin))
         points[i] = (b*sin(ϕ), b*cos(ϕ)).+loc

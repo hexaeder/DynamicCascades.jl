@@ -179,7 +179,7 @@ function import_system(::Val{:rts96prepared}; losses=false, kwargs...)
     y = bus_data."lat"
     xn = 10*(x .- minimum(x))./(maximum(x)-minimum(x)).-5
     yn = 10*(y .- minimum(y))./(maximum(y)-minimum(y)).-5
-    pos2 = spring(g, initialpos=Point2f0.(zip(xn, yn)))
+    pos2 = spring(g, initialpos=Point2f.(zip(xn, yn)))
 
     # manual tweak som positions
     # pos2[70] = (-3,3.7)

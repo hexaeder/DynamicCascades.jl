@@ -40,7 +40,7 @@ function import_system(::Val{:schaefer2018}; γ=0.1u"s", M=1u"s^2")
     set_prop!(g, edges(g), :X, 1/K)
     set_prop!(g, edges(g), :rating, 0.6*K)
 
-    positions = Point2f0.([(0, 1.4),
+    positions = Point2f.([(0, 1.4),
                            (1,.1),
                            (1,1.3),
                            (0,0),
