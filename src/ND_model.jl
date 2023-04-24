@@ -89,10 +89,15 @@ struct SolutionContainer{G,T}
     initial_fail::Vector{Int}
     failtime::Float64
     trip_lines::Symbol
+    trip_nodes::Symbol
+    trip_load_nodes::Symbol
     sol::T
+    frequencies_load_nodes::SavedValues{Float64,Vector{Float64}}
     load_S::SavedValues{Float64,Vector{Float64}}
     load_P::SavedValues{Float64,Vector{Float64}}
     failures::SavedValues{Float64,Int}
+    failures_nodes::SavedValues{Float64,Int}
+    failures_load_nodes::SavedValues{Float64,Int}
 end
 
 terminated(sc::SolutionContainer) = sc.sol.t[end] < sc.sol.prob.tspan[end]
@@ -150,6 +155,8 @@ function simulate(network;
                   failtime=0.1,
                   tspan=(0., 100.),
                   trip_lines=:dynamic,
+                  trip_nodes=:dynamic,
+                  trip_load_nodes=:dynamic,
                   filename=nothing,
                   terminate_steady_state=true,
                   solverargs=(;),
@@ -157,15 +164,30 @@ function simulate(network;
     (nd, p, overload_cb) = nd_model(network);
     prob = ODEProblem(nd, copy(x_static), tspan, p);
 
-    failures = SavedValues(Float64, Int);
+    # saving for each integration time step the frequencie of each load node
+    frequencies_load_nodes = SavedValues(Float64, Vector{Float64});
+
+    #= saving for each integration time step the value of the load (apparent and
+    active) power on each line =#
     load_S = SavedValues(Float64, Vector{Float64});
     load_P = SavedValues(Float64, Vector{Float64});
 
-    cbs = CallbackSet(overload_cb(;trip_lines, load_S, load_P, failures, verbose));
+    # saving time and edge that is failing
+    failures = SavedValues(Float64, Int);
+
+    # saving time and generator/load node that is failing
+    failures_nodes = SavedValues(Float64, Int);
+    failures_load_nodes = SavedValues(Float64, Int);
+
+    #= TODO Next line, overload_cb() returns CallbackSet(vccb_lines, vccb_nodes_max, vccb_nodes_min, scb_P, scb_S).
+    So it is CallbackSet(CallbackSet(vccb_lines, vccb_nodes_max, vccb_nodes_min, scb_P, scb_S)). Try out if this is
+    redundant =#
+    cbs = CallbackSet(overload_cb(;trip_lines, trip_nodes, trip_load_nodes, frequencies_load_nodes, load_S, load_P, failures, failures_nodes, failures_load_nodes, verbose));
     if !isempty(initial_fail)
+        # NOTE add node failures in case of implementing initial node failures
         cbs = CallbackSet(InitialFailCB(initial_fail, failtime; failures, verbose), cbs)
     end
-    if trip_lines !== :static && terminate_steady_state
+    if (trip_lines !== :static || trip_nodes !== :static || trip_load_nodes !== :static) && terminate_steady_state
         min_t = isempty(initial_fail) ? nothing : failtime+eps(failtime)
         # cbs = CallbackSet(cbs, TerminateSteadyState(1e-8, 1e-6; min_t))
         cbs = CallbackSet(cbs, TerminateSelectiveSteadyState(nd; min_t))
@@ -174,14 +196,14 @@ function simulate(network;
     verbose && println("Run simulation for trips on lines $(initial_fail)")
     sol = solve(prob, AutoTsit5(Rosenbrock23()); callback=cbs, progress=true, solverargs...);
     container = SolutionContainer(network,
-                                  initial_fail, failtime, trip_lines,
-                                  sol, load_S, load_P, failures)
+                                  initial_fail, failtime, trip_lines, trip_nodes, trip_load_nodes,
+                                  sol, frequencies_load_nodes, load_S, load_P, failures, failures_nodes, failures_load_nodes)
 
     if terminate_steady_state
         if sol.t[end] < tspan[2]
             verbose && println("Terminated on steady state at $(sol.t[end])")
         else
-            warn && @warn "Did not reach steady state! (lines $trip_lines)"
+            warn && @warn "Did not reach steady state! (lines $trip_lines, nodes $trip_nodes, load nodes $trip_load_nodes)"
         end
     end
 
@@ -192,6 +214,7 @@ function simulate(network;
     end
 end
 
+# NOTE [2023-04-21 Fr] has to be adapted probably
 function simulate_pdis(network;
                        verbose=true,
                        x_static=steadystate(network; verbose),
@@ -423,18 +446,23 @@ end
 
 This function returns a constructor for the overload callback with two kw arguments
   - `trip_lines=true` : toggle whether the CB should kill lines (set K=0)
+  - `trip_nodes=true` : toggle whether the CB should switch generator to (dynamic) load nodes (and set load to zero)
+  - `trip__load_nodes=true` : toggle whether the CB should set the load of (dynamic) load nodes to zero
+  - `frequencies_load_nodes=nothing` : provide `SavedValues` type for frequency values of load nodes
   - `load_S=nothing` : provide `SavedValues` type for S values
   - `load_P=nothing` : provide `SavedValues` type for P values
   - `failures=nothing` : provide `SavedValues` type where to save the failed lines
-  - `verbose=true` : toogle verbosity (print on line failures)
+  - `failures_nodes=nothing` : provide `SavedValues` type where to save the failed nodes
+  - `failures_load_nodes=nothing` : provide `SavedValues` type where to save the failed laod nodes
+  - `verbose=true` : toogle verbosity (print on line and node failures)
 
 This is all a bit hacky. I am creating a SavingCallback for the `load` values. However
-the SavingCallback is missing some values right before the discontinuity. Those values
+the SavingCallback is missing one value each right before the discontinuity. Those values
 are injected inside the shutdown affect. In order for this to work the affect needs to
 bump the `saveiter` counter of the other callback. Very ugly.
 """
-function get_callback_generator(network::MetaGraph)
-    function gen_cb(;trip_lines=:dynamic, load_S=nothing, load_P=nothing, failures=nothing, verbose=true)
+function get_callback_generator(network::MetaGraph, nd::ODEFunction)
+    function gen_cb(;trip_lines=:dynamic, trip_nodes=:dynamic, trip_load_nodes=:dynamic, frequencies_load_nodes=nothing, load_S=nothing, load_P=nothing, failures=nothing, failures_nodes=nothing, failures_load_nodes=nothing, verbose=true)
         save_S_fun = let _network=network
             (u, t, integrator) -> calculate_apparent_power(u, integrator.p, t, integrator.f.f, _network)
         end
@@ -444,6 +472,33 @@ function get_callback_generator(network::MetaGraph)
 
         scb_S = load_S === nothing ? nothing : SavingCallback(save_S_fun, load_S)
         scb_P = load_P === nothing ? nothing : SavingCallback(save_P_fun, load_P)
+
+        θ_state_idxs= idx_containing(nd, "θ")
+        load_node_idxs = findall(x -> x==:load, get_prop(network, 1:nv(network), :type))
+        θ_load_node_state_idxs = θ_state_idxs[load_node_idxs]
+        # array indicates whether load node is failed: 1: not failed, 0: failed.
+        failed_loads = ones(Float64, length(θ_load_node_state_idxs))
+
+        function load_frequencies(u, t, integrator)
+            if t == 0.0 # NOTE TODO Remove this!!! (done as first value is NaN)
+                return zeros(Float64, length(θ_load_node_state_idxs))
+            end
+            testval = first(get_tmp_cache(integrator))
+            DiffEqBase.get_du!(testval, integrator)
+            return testval[θ_load_node_state_idxs]
+        end
+
+        scb_load_node_frequencies = frequencies_load_nodes === nothing ? nothing : SavingCallback(load_frequencies, frequencies_load_nodes; save_start=true)
+
+        if trip_nodes !== :none || trip_load_nodes !== :none
+            # frequency bounds
+            # Source: https://eepublicdownloads.entsoe.eu/clean-documents/Network%20codes%20documents/NC%20RfG/210412_IGD_Frequency_ranges.pdf
+            # TODO consider frequencies here
+            ω_min = -2.5
+            ω_max = 1.5
+            ω_state_idxs = idx_containing(nd, "ω") # array: indices of ω-states
+            gen_node_idxs = map(s -> parse(Int, String(s)[4:end]), nd.syms[ω_state_idxs]) # array: indices of vertices that are generators
+        end
 
         ## dynamic line condition
         if trip_lines == :dynamic
@@ -476,65 +531,209 @@ function get_callback_generator(network::MetaGraph)
                     end
                     edge_p = integrator.p[2]
                     edge_p[event_idx] = 0.0
+                    auto_dt_reset!(integrator)
                     nothing
                 end
             end
 
-            vcb = VectorContinuousCallback(condition, affect!, ne(network);
+            vccb_lines = VectorContinuousCallback(condition, affect!, ne(network); # VectorContinuousCallback (vccb)
                 save_positions = (true, true),
                 affect_neg! = nothing, #only trigger on upcrossing -> 0
                 abstol = 10eps(), reltol = 0)
 
-        elseif trip_lines == :static
+        else
+            vccb_lines = nothing
+        end
+
+        ## dynamic node condition
+        if trip_nodes == :dynamic
+            function node_condition_max(out, u, t, integrator)
+                out .= u[ω_state_idxs] .- ω_max
+            end
+
+            function node_condition_min(out, u, t, integrator)
+                out .= ω_min .- u[ω_state_idxs]
+            end
+
+            affect! = let _failures_nodes = failures_nodes, _verbose = verbose
+                (integrator, event_idx) -> begin
+                    fgen_idx = gen_node_idxs[event_idx] # index of failed generator
+                    _verbose && println("Shutdown node $fgen_idx at t = $(integrator.t)")
+
+                    if _failures_nodes !== nothing
+                        push!(_failures_nodes.t, integrator.t)
+                        push!(_failures_nodes.saveval, fgen_idx)
+                    end
+                    vertex_p = integrator.p[1]
+                    mutated_tuple = (2.0, 0.0, vertex_p[fgen_idx][3], vertex_p[fgen_idx][4], vertex_p[fgen_idx][5])
+                    vertex_p[fgen_idx] = mutated_tuple
+
+                    integrator.u[ω_state_idxs[event_idx]] = 0.0 # set state to zero to not trigger condition anymore.
+                    auto_dt_reset!(integrator)
+                    nothing
+                end
+            end
+
+            vccb_nodes_max = VectorContinuousCallback(node_condition_max, affect!, length(ω_state_idxs);
+                save_positions = (true, true),
+                affect_neg! = nothing, #only trigger on upcrossing -> 0
+                abstol = 10eps(), reltol = 0)
+
+            vccb_nodes_min = VectorContinuousCallback(node_condition_min, affect!, length(ω_state_idxs);
+                save_positions = (true, true),
+                affect_neg! = nothing, #only trigger on upcrossing -> 0
+                abstol = 10eps(), reltol = 0)
+
+        else
+            vccb_nodes_max = nothing
+            vccb_nodes_min = nothing
+        end
+
+        ## dynamic load node condition
+        if trip_load_nodes == :dynamic
+            function load_node_condition_max(out, u, t, integrator)
+                out .= load_frequencies(u, t, integrator) .* failed_loads .- ω_max
+            end
+
+            function load_node_condition_min(out, u, t, integrator)
+                out .= ω_min .- load_frequencies(u, t, integrator) .* failed_loads
+            end
+
+            affect! = let _failures_load_nodes = failures_load_nodes, _verbose = verbose
+                (integrator, event_idx) -> begin
+                    print("triggered?")
+                    fload_node_idx = load_node_idxs[event_idx] # index of failed load node
+                    _verbose && println("Shutdown load node $fload_node_idx at t = $(integrator.t)")
+
+                    if _failures_load_nodes !== nothing
+                        push!(_failures_load_nodes.t, integrator.t)
+                        push!(_failures_load_nodes.saveval, fload_node_idx)
+                    end
+
+                    failed_loads[event_idx] = 0.0
+                    vertex_p = integrator.p[1]
+                    mutated_tuple = (vertex_p[fload_node_idx][1], 0.0, vertex_p[fload_node_idx][3], vertex_p[fload_node_idx][4], vertex_p[fload_node_idx][5])
+                    vertex_p[fload_node_idx] = mutated_tuple
+                    auto_dt_reset!(integrator)
+                    nothing
+                end
+            end
+
+            vccb_load_nodes_max = VectorContinuousCallback(load_node_condition_max, affect!, length(θ_load_node_state_idxs);
+                save_positions = (true, true),
+                affect_neg! = nothing,
+                abstol = 10eps(), reltol = 0)
+
+            vccb_load_nodes_min = VectorContinuousCallback(load_node_condition_min, affect!, length(θ_load_node_state_idxs);
+                save_positions = (true, true),
+                affect_neg! = nothing,
+                abstol = 10eps(), reltol = 0)
+
+        else
+            vccb_load_nodes_max = nothing
+            vccb_load_nodes_min = nothing
+        end
+
+        ## condition for static failures
+        if trip_lines == :static || trip_nodes == :static
             ## static line condition
             nd, = nd_model(network)
             condition = getSteadyStateCondition(nd)
-            affect! = let _failures = failures, _verbose = verbose, _current_load = zeros(ne(network)), _network = network, _rating = get_prop(network, edges(network), :rating)
+            affect! = let _failures = failures, _failures_nodes = failures_nodes, _verbose = verbose, _current_load = zeros(ne(network)), _network = network, _rating = get_prop(network, edges(network), :rating)
                 function (integrator)
                     u = integrator.u
                     t = integrator.t
+                    # NOTE add `failures_nodes` when implementing initial node failures
                     # wait til after the failure which just happend
                     if isempty(_failures.t) || t <= _failures.t[end]
                         return
                     end
 
-                    calculate_apparent_power!(_current_load, u, integrator.p, t, integrator.f.f, _network)
-                    _current_load .-= _rating
-                    triggered = findall(x->x>0, _current_load)
+                    if trip_lines == :static
+                        calculate_apparent_power!(_current_load, u, integrator.p, t, integrator.f.f, _network)
+                        _current_load .-= _rating
+                        triggered_lines = findall(x->x>0, _current_load)
+                    else
+                        triggered_lines = []
+                    end
 
-                    if isempty(triggered)
+                    if trip_nodes == :static
+                        triggered_nodes = gen_node_idxs[findall(x -> (x > ω_max) || (x < ω_min) , u[ω_state_idxs])]
+                    else
+                        triggered_nodes = []
+                    end
+
+                    if isempty(triggered_lines) && isempty(triggered_nodes)
                         terminate!(integrator)
                     else
-                        integrator.p[2][triggered] .= 0.0
-                            _verbose && println("Shutdown line ",
-                                length(triggered) == 1 ? only(triggered) : triggered,
+                        if trip_nodes == :static && !isempty(triggered_nodes)
+                            _verbose && println("Shutdown node ",
+                                length(triggered_nodes) == 1 ? only(triggered_nodes) : triggered_nodes,
                                 " at t = $(integrator.t)")
-                        if !isnothing(failures)
-                            for i in triggered
-                                push!(failures.t, integrator.t)
-                                push!(failures.saveval, i)
+
+                            if !isnothing(failures_nodes)
+                                vertex_p = integrator.p[1]
+                                for i in triggered_nodes
+                                    mutated_tuple = (2.0, 0.0, vertex_p[i][3], vertex_p[i][4], vertex_p[i][5])
+                                    vertex_p[i] = mutated_tuple
+
+                                    integrator.u[ω_state_idxs[findfirst(x -> x == i, gen_node_idxs)]] = 0.0
+                                    push!(failures_nodes.t, integrator.t)
+                                    push!(failures_nodes.saveval, i)
+                                end
+                                if length(failures_nodes.t) == count(x -> x==:gen || x==:syncon, get_prop(network, 1:nv(network), :type))
+                                    @warn "All generator nodes have failed, integrator is terminated!"
+                                    terminate!(integrator)
+                                end
                             end
                         end
+
+                        if trip_lines == :static && !isempty(triggered_lines)
+                            _verbose && println("Shutdown line ",
+                                length(triggered_lines) == 1 ? only(triggered_lines) : triggered_lines,
+                                " at t = $(integrator.t)")
+
+                            integrator.p[2][triggered_lines] .= 0.0
+
+                            if !isnothing(failures)
+                                for i in triggered_lines
+                                    push!(failures.t, integrator.t)
+                                    push!(failures.saveval, i)
+                                end
+                                if length(failures.t) == ne(network)
+                                    @warn "All lines have failed, integrator is terminated!"
+                                    terminate!(integrator)
+                                end
+                            end
+                        end
+                        auto_dt_reset!(integrator)
                     end
                 end
             end
-            vcb = DiscreteCallback(condition, affect!)
-
+            dcb = DiscreteCallback(condition, affect!)
         else
-            vcb = nothing
+            dcb = nothing
         end
 
-        # static line condition
-
-        return CallbackSet(vcb, scb_P, scb_S)
+        # NOTE order of DiscreteCallbacks matters!
+        return CallbackSet(vccb_lines, vccb_nodes_max, vccb_nodes_min, vccb_load_nodes_max, vccb_load_nodes_min, dcb, scb_load_node_frequencies, scb_P, scb_S)
     end
     return gen_cb
 end
 
 function InitialFailCB(idxs, time; failures = nothing, verbose = true)
     affect! = function (integrator)
-        # set coupling to zero
+        # set coupling to zero (corresponds to line failure)
         integrator.p[2][idxs] .= 0.0
+
+        ## for initially failing a node:
+        # vertex_p = integrator.p[1]
+        # idxs = 1 # vertex 1
+        # mutated_tuple = (2.0, 0.0, vertex_p[idxs][3], vertex_p[idxs][4], vertex_p[idxs][5])
+        # vertex_p[idxs] = mutated_tuple
+        # integrator.u[2] = 0 # frequency variable of vertex 1 is state 2 in the u-vector.
+        # auto_dt_reset!(integrator)
+
         verbose && println("Shutdown line ",
             length(idxs) == 1 ? only(idxs) : idxs,
             " at t = $(integrator.t)")
