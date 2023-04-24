@@ -25,6 +25,7 @@ sol1 = simulate(network;
     initial_fail = [init_fail],
     failtime = 1.0,
     trip_lines = :none,
+    trip_nodes = :none,
     tspan = (0.0, 15.0),
     solverargs = (; dtmax = 0.01));
 
@@ -32,6 +33,7 @@ sol2 = simulate(network;
     initial_fail = [init_fail],
     failtime = 1.0,
     trip_lines = :dynamic,
+    trip_nodes = :none,
     tspan = (0.0, 15.0),
     solverargs = (; dtmax = 0.01));
 # display(inspect_solution(sol1))
@@ -96,4 +98,4 @@ plot_flows(ax2, sol2)
 axislegend(ax1, position=:rt)
 ylims!(ax1, 0, 1.2)
 ylims!(ax2, 0, 1.1)
-save(joinpath(PLOT_DIR, "isolator_toymodel_dynamic_fails_D=$γ M=$M.pdf"), fig)
+save(joinpath(PLOT_DIR, "new2_isolator_toymodel_dynamic_fails_D=$γ M=$M.pdf"), fig)

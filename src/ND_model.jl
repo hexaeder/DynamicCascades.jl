@@ -112,8 +112,8 @@ end
 
 """
 # Arguments
-- `zeroidx::Integer=nothing`: If this flag is set, this shifts the voltage angle
-at all nodes by the voltage angle of the node with index `zeroidx`.
+- `zeroidx::Integer=nothing`: If this flag is set, this shifts the phase angle
+at all nodes by the phase angle of the node with index `zeroidx`.
 """
 function steadystate(network; project=false, verbose=false, tol=1e-7, zeroidx=nothing)
     verbose && println("Find steady state...")
@@ -747,7 +747,7 @@ function InitialFailCB(idxs, time; failures = nothing, verbose = true)
     PresetTimeCallback(time, affect!)
 end
 
-function ChangePCB(fualtp, time)
+function ChangePCB(fualtp, time) # TODO This function is used nowhere?
 end
 
 function getSteadyStateCondition(nd; min_t=nothing)
@@ -756,7 +756,11 @@ function getSteadyStateCondition(nd; min_t=nothing)
         if !isnothing(min_t) && t <= min_t
             return false
         end
+
+        # getting internal cache vector containing elements of `integrator.u`
         testval = first(get_tmp_cache(integrator))
+        # writing the current derivative at t into `testval`
+        # see https://docs.sciml.ai/DiffEqDocs/dev/basics/integrator/#SciMLBase.get_du!
         DiffEqBase.get_du!(testval, integrator)
         for i in idxs
             if abs(testval[i]) > 1e-6
@@ -767,6 +771,7 @@ function getSteadyStateCondition(nd; min_t=nothing)
     end
 end
 
+# CB terminates integration when in steady state and all faults are dynamically modelled
 function TerminateSelectiveSteadyState(nd; min_t = nothing)
     condition = getSteadyStateCondition(nd; min_t)
     affect! = (integrator) -> terminate!(integrator)

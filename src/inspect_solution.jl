@@ -299,6 +299,7 @@ function gparguments(c::SolutionContainer, t::Observable;
                      ecolorscaling = Observable(0.1),
                      edgescheme = @lift(edge_colorsheme($ecolortype)),
                      offlinewidth = 3.0,
+                     show_labels = false,
                      load_S = @lift(c.load_S($t)),
                      load_P = @lift(c.load_P($t)),
                      sel_nodes = Observable(Set{Int}()),
@@ -322,28 +323,6 @@ function gparguments(c::SolutionContainer, t::Observable;
     markers = Dict(:load => :rect, :gen => :circle, :syncon => :circle);
     node_marker = [markers[k] for k in get_prop(network, vertices(network), :type)];
 
-    node_color = @lift begin
-        if $ncolortype ∈ (:ωall, :ω)
-            ω = [0.0 for i in 1:nv(network)]
-            # hacky way to caclulate ω from θ as finite differnece
-            if $ncolortype == :ωall
-                idx = idx_containing(nd, "θ")
-                ω = (sol($t+0.1)[idx] - sol($t-0.1)[idx]) ./ 0.2
-            end
-            # overwrite with ω where there are "true" values in state
-            for (n, s) in zip(node_idx, state_idx)
-                ω[n] = ($state)[s]
-            end
-            ω
-        elseif $ncolortype == :θdiff
-            idx = idx_containing(nd, "θ")
-            sol($t)[idx] .- sol[begin][idx]
-        else
-            error("don't know nodecolortype $ncolortype")
-            [0.0 for i in 1:nv(network)]
-        end
-    end
-
     nc_range = @lift begin
         if $ncolortype ∈ (:ωall, :ω)
             (-$Δω, $Δω)
@@ -352,6 +331,37 @@ function gparguments(c::SolutionContainer, t::Observable;
         else
             error("don't know nodecolortype $ncolortype")
         end
+    end
+
+    node_color = @lift begin
+        if $ncolortype ∈ (:ωall, :ω)
+            ω = [0.0 for i in 1:nv(network)]
+            # hacky way to calculate ω from θ as finite difference
+            if $ncolortype == :ωall
+                idx = idx_containing(nd, "θ")
+                # ω = (sol($t+0.1)[idx] - sol($t-0.1)[idx]) ./ 0.2
+                ω = (sol($t+0.01)[idx] - sol($t-0.01)[idx]) ./ 0.02
+            end
+            # overwrite with ω where there are "true" values in state
+            for (n, s) in zip(node_idx, state_idx)
+                ω[n] = ($state)[s]
+            end
+            cvals = ω
+        elseif $ncolortype == :θdiff
+            idx = idx_containing(nd, "θ")
+            cvals = sol($t)[idx] .- sol[begin][idx]
+        else
+            error("don't know nodecolortype $ncolortype")
+            cvals = [0.0 for i in 1:nv(network)]
+        end
+        # map from nc_range to [0,1]
+        cvals_mapped = map(x -> ((x - nc_range[][1]) / (nc_range[][2] - nc_range[][1])), cvals)
+        # get RGB-colors
+        colors = get(node_colorscheme, cvals_mapped)
+        # get indices of nodes that failed at given time t
+        offline = @view colors[c.failures_nodes.saveval[findall(c.failures_nodes.t .<= t[])]]
+        offline .= offlinecolor
+        colors
     end
 
     alltime_max_S = maximum(map(load -> maximum(abs.(load)), S_values.saveval))
@@ -390,7 +400,6 @@ function gparguments(c::SolutionContainer, t::Observable;
         end
 
         colors = get(edgescheme[], cvals)
-
         offline = @view colors[findall(iszero, $load_S)]
         offline .= offlinecolor
         colors
@@ -432,13 +441,29 @@ function gparguments(c::SolutionContainer, t::Observable;
         end
         size
     end
+    if show_labels == false
+        return (;layout=read_pos_or_spring,
+                node_marker,
+                node_color,
+                node_size,
+                # node_attr=(colorrange=nc_range, colormap=node_colorscheme),
+                edge_color,
+                edge_width, kwargs...)
+    end
     return (;layout=read_pos_or_spring,
             node_marker,
             node_color,
             node_size,
-            node_attr=(colorrange=nc_range, colormap=node_colorscheme),
+            # node_attr=(colorrange=nc_range, colormap=node_colorscheme),
+            nlabels=repr.(1:nv(network)),
+            nlabels_align=(:center,:center),
+            nlabels_color=[:black for i in 1:nv(network)],
+            nlabels_fontsize=50, # TODO this does not take effect
             edge_color,
-            edge_width, kwargs...)
+            edge_width,
+            elabels=repr.(1:ne(network)),
+            elabels_fontsize=50, # TODO this does not take effect
+            elabels_align=(:center, :center), kwargs...)
 end
 
 function edge_colorsheme(type)

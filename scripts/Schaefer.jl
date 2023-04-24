@@ -29,6 +29,7 @@ sol1 = simulate(network;
     initial_fail = [5],
     failtime = 1.0,
     trip_lines = :none,
+    trip_nodes = :none,
     tspan = (0.0, 40.0),
     solverargs = (; dtmax = 0.01));
 
@@ -36,6 +37,7 @@ sol2 = simulate(network;
     initial_fail = [5],
     failtime = 1.0,
     trip_lines = :dynamic,
+    trip_nodes = :dynamic,
     tspan = (0.0, 40.0),
     solverargs = (; dtmax = 0.01));
 # inspect_solution(sol1)
@@ -48,6 +50,7 @@ fig[1,1] = leftpane = GridLayout()
 node_size = [60, 70, 60, 60, 70]
 # node_color = [colorant"pikblue", colorant"pikorange", colorant"pikblue", colorant"pikblue", colorant"pikorange"]
 node_color = :black
+edgecolortype = :relrating
 gpargs = gparguments(sol1, t1; colortype = :relrating, ecolorscaling = Observable(1.0))
 leftpane[1,1] = ax = Axis(fig)
 p = graphplot!(ax, network; gpargs..., node_size, node_color,
@@ -82,4 +85,4 @@ axislegend(ax2, position=:rc)
 ylims!(ax1, 0, 1.1)
 ylims!(ax2, 0, 1.1)
 
-save(joinpath(PLOT_DIR, "schaefer_network.pdf"), fig)
+save(joinpath(PLOT_DIR, "new2_schaefer_network.pdf"), fig)

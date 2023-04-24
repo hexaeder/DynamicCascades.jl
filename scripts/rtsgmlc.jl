@@ -5,6 +5,7 @@ using MetaGraphs
 using Statistics
 using GraphMakie
 using Colors
+using ColorSchemes
 using DynamicCascades: PLOT_DIR
 using NetworkDynamics
 using Unitful
@@ -167,6 +168,7 @@ network = import_system(:rtsgmlc; damping, tconst = 0.01u"s")
 sol = simulate(network;
     initial_fail = Int[init],
     trip_lines = :dynamic,
+    trip_nodes = :none,
     solverargs = (;dtmax=0.01), verbose = true);
 GLMakie.activate!()
 inspect_solution(sol)
@@ -238,15 +240,16 @@ for (i, l) in pairs(sol.failures.saveval)
 end
 axislegend(ax; position=:lt)
 
-p = nwax.scene.plots[2]
-@assert p isa GraphPlot
+# p = nwax.scene.plots[2]
+# @assert p isa GraphPlot
 
 fig[0,:] = Colorbar(fig, height=25, vertical=false,
                      colormap=Makie.ColorScheme([colorant"yellow", colorant"red"]), label="line load relative to rating")
 
-fig[1,:] = Colorbar(fig, get_node_plot(p), height=25, vertical=false, label="node frequency deviation in hz")
+fig[1,:] = Colorbar(fig, height=25, vertical=false,
+                     colormap=ColorSchemes.diverging_bkr_55_10_c35_n256, label="node frequency deviation in hz")
 
-save(joinpath(PLOT_DIR, "rts_cascade.pdf"), fig)
+save(joinpath(PLOT_DIR, "rts_cascade_new1.pdf"), fig)
 
 ####
 #### Video for Defense
