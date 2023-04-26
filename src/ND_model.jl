@@ -480,12 +480,11 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
         failed_loads = ones(Float64, length(θ_load_node_state_idxs))
 
         function load_frequencies(u, t, integrator)
-            if t == 0.0 # NOTE TODO Remove this!!! (done as first value is NaN)
-                return zeros(Float64, length(θ_load_node_state_idxs))
-            end
-            testval = first(get_tmp_cache(integrator))
-            DiffEqBase.get_du!(testval, integrator)
-            return testval[θ_load_node_state_idxs]
+            nd = SciMLBase.unwrapped_f(integrator.f.f)
+            dx = similar(u)
+            nd(dx, u, integrator.p, integrator.t)
+            # print("new"); print(round.(dx[θ_load_node_state_idxs]; digits=2)); print("\n")
+            return dx[θ_load_node_state_idxs]
         end
 
         scb_load_node_frequencies = frequencies_load_nodes === nothing ? nothing : SavingCallback(load_frequencies, frequencies_load_nodes; save_start=true)
@@ -494,8 +493,8 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
             # frequency bounds
             # Source: https://eepublicdownloads.entsoe.eu/clean-documents/Network%20codes%20documents/NC%20RfG/210412_IGD_Frequency_ranges.pdf
             # TODO consider frequencies here
-            ω_min = -2.5
-            ω_max = 1.5
+            ω_min = -0.5 #-2.5
+            ω_max = 0.5 #1.5
             ω_state_idxs = idx_containing(nd, "ω") # array: indices of ω-states
             gen_node_idxs = map(s -> parse(Int, String(s)[4:end]), nd.syms[ω_state_idxs]) # array: indices of vertices that are generators
         end
@@ -510,6 +509,13 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
                     nothing
                 end
             end
+
+            # function condition(out, u, t, integrator)
+            #     current_load = zeros(ne(network))
+            #     rating = get_prop(network, edges(network), :rating)
+            #     calculate_apparent_power!(current_load, u, integrator.p, t, integrator.f.f, network)
+            #     out .= current_load .- rating
+            # end
 
             affect! = let _failures = failures, _verbose = verbose, _load_S = load_S, _load_P = load_P, _scb_S = scb_S, _scb_P = scb_P
                 (integrator, event_idx) -> begin
@@ -602,20 +608,20 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
             affect! = let _failures_load_nodes = failures_load_nodes, _verbose = verbose
                 (integrator, event_idx) -> begin
                     print("triggered?")
-                    fload_node_idx = load_node_idxs[event_idx] # index of failed load node
-                    _verbose && println("Shutdown load node $fload_node_idx at t = $(integrator.t)")
-
-                    if _failures_load_nodes !== nothing
-                        push!(_failures_load_nodes.t, integrator.t)
-                        push!(_failures_load_nodes.saveval, fload_node_idx)
-                    end
-
-                    failed_loads[event_idx] = 0.0
-                    vertex_p = integrator.p[1]
-                    mutated_tuple = (vertex_p[fload_node_idx][1], 0.0, vertex_p[fload_node_idx][3], vertex_p[fload_node_idx][4], vertex_p[fload_node_idx][5])
-                    vertex_p[fload_node_idx] = mutated_tuple
-                    auto_dt_reset!(integrator)
-                    nothing
+                    # fload_node_idx = load_node_idxs[event_idx] # index of failed load node
+                    # _verbose && println("Shutdown load node $fload_node_idx at t = $(integrator.t)")
+                    #
+                    # if _failures_load_nodes !== nothing
+                    #     push!(_failures_load_nodes.t, integrator.t)
+                    #     push!(_failures_load_nodes.saveval, fload_node_idx)
+                    # end
+                    #
+                    # failed_loads[event_idx] = 0.0
+                    # vertex_p = integrator.p[1]
+                    # mutated_tuple = (vertex_p[fload_node_idx][1], 0.0, vertex_p[fload_node_idx][3], vertex_p[fload_node_idx][4], vertex_p[fload_node_idx][5])
+                    # vertex_p[fload_node_idx] = mutated_tuple
+                    # auto_dt_reset!(integrator)
+                    # nothing
                 end
             end
 
