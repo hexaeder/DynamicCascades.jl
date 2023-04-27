@@ -3,6 +3,7 @@ using NetworkDynamics
 using OrdinaryDiffEq
 using DiffEqCallbacks
 using SteadyStateDiffEq
+using SciMLNLSolve
 using LinearAlgebra
 using OrdinaryDiffEq.DiffEqBase
 
@@ -119,7 +120,8 @@ function steadystate(network; project=false, verbose=false, tol=1e-7, zeroidx=no
     verbose && println("Find steady state...")
     (nd, p) = nd_model(network)
     x0 = zeros(length(nd.syms));
-    x_static = solve(SteadyStateProblem(nd, x0, p), SSRootfind())
+    # x_static = solve(SteadyStateProblem(nd, x0, p), SSRootfind())
+    x_static = solve(NonlinearProblem(nd, x0, p), NLSolveJL())
 
     θidx = idx_containing(nd, "θ")
     if zeroidx !== nothing
@@ -483,8 +485,7 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
             nd = SciMLBase.unwrapped_f(integrator.f.f)
             dx = similar(u)
             nd(dx, u, integrator.p, integrator.t)
-            # print("new"); print(round.(dx[θ_load_node_state_idxs]; digits=2)); print("\n")
-            return dx[θ_load_node_state_idxs]
+            return @views dx[θ_load_node_state_idxs]
         end
 
         scb_load_node_frequencies = frequencies_load_nodes === nothing ? nothing : SavingCallback(load_frequencies, frequencies_load_nodes; save_start=true)
@@ -607,21 +608,20 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
 
             affect! = let _failures_load_nodes = failures_load_nodes, _verbose = verbose
                 (integrator, event_idx) -> begin
-                    print("triggered?")
-                    # fload_node_idx = load_node_idxs[event_idx] # index of failed load node
-                    # _verbose && println("Shutdown load node $fload_node_idx at t = $(integrator.t)")
-                    #
-                    # if _failures_load_nodes !== nothing
-                    #     push!(_failures_load_nodes.t, integrator.t)
-                    #     push!(_failures_load_nodes.saveval, fload_node_idx)
-                    # end
-                    #
-                    # failed_loads[event_idx] = 0.0
-                    # vertex_p = integrator.p[1]
-                    # mutated_tuple = (vertex_p[fload_node_idx][1], 0.0, vertex_p[fload_node_idx][3], vertex_p[fload_node_idx][4], vertex_p[fload_node_idx][5])
-                    # vertex_p[fload_node_idx] = mutated_tuple
-                    # auto_dt_reset!(integrator)
-                    # nothing
+                    fload_node_idx = load_node_idxs[event_idx] # index of failed load node
+                    _verbose && println("Shutdown load node $fload_node_idx at t = $(integrator.t)")
+
+                    if _failures_load_nodes !== nothing
+                        push!(_failures_load_nodes.t, integrator.t)
+                        push!(_failures_load_nodes.saveval, fload_node_idx)
+                    end
+
+                    failed_loads[event_idx] = 0.0
+                    vertex_p = integrator.p[1]
+                    mutated_tuple = (vertex_p[fload_node_idx][1], 0.0, vertex_p[fload_node_idx][3], vertex_p[fload_node_idx][4], vertex_p[fload_node_idx][5])
+                    vertex_p[fload_node_idx] = mutated_tuple
+                    auto_dt_reset!(integrator)
+                    nothing
                 end
             end
 
