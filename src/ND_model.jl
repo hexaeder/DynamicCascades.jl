@@ -338,8 +338,7 @@ function set_inertia!(network::MetaGraph)
         if has_prop(network, v, :_M)
             continue
         elseif has_prop(network, v, :H)
-            # ω0 = 2π * 50u"1/s" # angular frequency
-            ω0 = 50u"1/s" # frequency
+            ω0 = 2π * 50u"1/s" # angular frequency
             H = get_prop(network, v, :H)
             M = upreferred((2H)/ω0)
             # M = upreferred(H/(2ω0)) # old code
@@ -496,8 +495,11 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
             # frequency bounds
             # Source: https://eepublicdownloads.entsoe.eu/clean-documents/Network%20codes%20documents/NC%20RfG/210412_IGD_Frequency_ranges.pdf
             # TODO consider frequencies here
-            ω_min = -0.5 #-2.5
-            ω_max = 0.5 #1.5
+
+            f_min = -2.5 # -1/2π #-0.4 # -0.5
+            f_max = 1.5 # 1/2π #0.24 # 0.5
+            ω_min = 2π * f_min
+            ω_max = 2π * f_max
             ω_state_idxs = idx_containing(nd, "ω") # array: indices of ω-states
             gen_node_idxs = map(s -> parse(Int, String(s)[4:end]), nd.syms[ω_state_idxs]) # array: indices of vertices that are generators
         end
