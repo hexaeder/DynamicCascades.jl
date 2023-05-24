@@ -338,9 +338,11 @@ function set_inertia!(network::MetaGraph)
         if has_prop(network, v, :_M)
             continue
         elseif has_prop(network, v, :H)
-            ω0 = 2π * 50u"1/s"
+            # ω0 = 2π * 50u"1/s" # angular frequency
+            ω0 = 50u"1/s" # frequency
             H = get_prop(network, v, :H)
-            M = upreferred(H/(2ω0))
+            M = upreferred((2H)/ω0)
+            # M = upreferred(H/(2ω0)) # old code
             set_prop!(network, v, :_M, M)
         end
     end
