@@ -339,8 +339,7 @@ function gparguments(c::SolutionContainer, t::Observable;
             # hacky way to calculate ω from θ as finite difference
             if $ncolortype == :ωall
                 idx = idx_containing(nd, "θ")
-                # ω = (sol($t+0.1)[idx] - sol($t-0.1)[idx]) ./ 0.2
-                ω = (sol($t+0.01)[idx] - sol($t-0.01)[idx]) ./ 0.02
+                ω = (sol($t+0.001)[idx] - sol($t-0.001)[idx]) ./ 0.002
             end
             # overwrite with ω where there are "true" values in state
             for (n, s) in zip(node_idx, state_idx)
@@ -359,8 +358,10 @@ function gparguments(c::SolutionContainer, t::Observable;
         # get RGB-colors
         colors = get(node_colorscheme, cvals_mapped)
         # get indices of nodes that failed at given time t
-        offline = @view colors[c.failures_nodes.saveval[findall(c.failures_nodes.t .<= t[])]]
-        offline .= offlinecolor
+        offline_gen_nodes = @view colors[c.failures_nodes.saveval[findall(c.failures_nodes.t .<= t[])]]
+        offline_gen_nodes .= offlinecolor
+        offline_load_nodes = @view colors[c.failures_load_nodes.saveval[findall(c.failures_load_nodes.t .<= t[])]]
+        offline_load_nodes .= offlinecolor
         colors
     end
 
@@ -457,12 +458,13 @@ function gparguments(c::SolutionContainer, t::Observable;
             # node_attr=(colorrange=nc_range, colormap=node_colorscheme),
             nlabels=repr.(1:nv(network)),
             nlabels_align=(:center,:center),
-            nlabels_color=[:black for i in 1:nv(network)],
-            nlabels_fontsize=50, # TODO this does not take effect
+            nlabels_color=[:white for i in 1:nv(network)],
+            nlabels_textsize=10, # TODO change to `fontsize` when updating GraphMakie
             edge_color,
             edge_width,
             elabels=repr.(1:ne(network)),
-            elabels_fontsize=50, # TODO this does not take effect
+            elabels_color=[:black for i in 1:ne(network)],
+            elabels_textsize=10, # TODO change to `fontsize` when updating GraphMakie
             elabels_align=(:center, :center), kwargs...)
 end
 

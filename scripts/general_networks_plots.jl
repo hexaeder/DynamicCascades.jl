@@ -1,79 +1,44 @@
-#=
-# Exemplary dynamic cascade in RTS-GMLC grid
-![animation](rtsgmlc.mp4)
-=#
-# load used packages
-
 using Revise
-# using Infiltrator
-# using BenchmarkTools
 using DynamicCascades
 using Graphs
 using MetaGraphs
+using Unitful
 using Statistics
 using GraphMakie
 using Colors
-using NetworkDynamics
-using Unitful
-using Unitful: @u_str
-using DataFrames
-using CSV
+using DynamicCascades: PLOT_DIR
+
 using CairoMakie
 
-# using GLMakie#jl
-# GLMakie.activate!()#jl
+# using GLMakie
+# GLMakie.activate!()
 
-damping = 0.1u"s"
-scale_inertia = 1.0
-network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.01u"s")
-# network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.11u"s")
-# network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.5u"s")
+# γ = 0.1u"s"
+# τ = 1/γ
+# network = import_system(:erdosrenyi; γ=0.5u"s", τ=0.01u"s", σ=1.0, K=1.0)
+
+# network = import_system(:wattsstrogatz; β=0.9, graph_seed=123, distr_seed=1234, K=1, γ=1u"s", τ=1u"s", σ=1.0)
+# network = import_system(:wattsstrogatz; β=0.7, graph_seed=nothing, distr_seed=nothing, K=1, γ=20u"s", τ=1u"s", σ=1.0)
+network = import_system(:wattsstrogatz; β=0.7, graph_seed=123, distr_seed=1230, K=1, γ=1u"s", τ=1u"s", σ=1.0)
 
 sol = simulate(network;
-               # initial_fail = Int[37,73],
-               # initial_fail = Int[27],
-               # initial_fail = Int[27],
                initial_fail = Int[1,2],
                # failtime=0.01,
-               # tspan = (0, 0.02),
-               # tspan = (0, 0.05),
-               # tspan = (0, 0.17),
-               # tspan = (0, 0.012),
-               # tspan = (0, 0.4),
-               # tspan = (0, 0.11),
-               # tspan = (0, 0.08),
-               tspan = (0, 30),
+               tspan = (0, 50),
                terminate_steady_state=true,
-               trip_lines = :dynamic,
+               trip_lines = :none,
                trip_nodes = :dynamic,
                trip_load_nodes = :none,
-               f_min = -0.3/(2π),
-               f_max = 0.3/(2π),
                solverargs = (;dtmax=0.01),
                verbose = true);
-               # solverargs = (;dtmax=0.0000001), verbose = true);
-
-# save(joinpath(PLOT_DIR, "rtsgmlc_scaleM=$scale_inertia.pdf"), fig)
-
-# sol.sol.u
-# sol.initial_fail
-# sol.failtime
-# sol.trip_lines
-# sol.network
-# sol.load_P
-# sol.failures
-
-# nd, = nd_model(network)
-# ω_state_idxs = idx_containing(nd, "ω")
-# gen_node_idxs = map(s -> parse(Int, String(s)[4:end]), nd.syms[ω_state_idxs])
 
 
 # plot solution
 function plotnetwork(fig, sol, t)
     ax = Axis(fig)
     hidedecorations!(ax), hidespines!(ax)
-    xlims!(ax, -10, 7)
-    ylims!(ax, -5, 7)
+    # xlims!(ax, -10, 7)
+    # ylims!(ax, -5, 7)
     gpargs = gparguments(sol, t;
                          colortype=:abssteady,
                          Δω=Observable(2.5),
@@ -168,16 +133,17 @@ end
 vlines!(ax, tobs; color=:black, linewidth=1)
 fig
 
+
 # create video
 # tobs = Observable(0.0)
-T = 20 #10
+T = 10 #10
 tmax = sol.sol.t[end] #0.15 # tmax = 3.5
 # tmax = 2
 tmin = 0.0
-fps = 30 # 20,100
+fps = 20 # 20,100
 trange = range(tmin, tmax, length=Int(T * fps))
 
-record(fig, joinpath(PLOT_DIR,"test_init_node_corrected_gen_node_fails_included_rtsgmlc_scaleM=$scale_inertia.mp4"), trange; framerate=30) do time
+record(fig, joinpath(PLOT_DIR,"WS_2.mp4"), trange; framerate=30) do time
     tobs[] = time
 end
 
@@ -188,6 +154,7 @@ end
 # t = sol.sol.t
 # y = [sol.sol.u[t][i] for t in 1:length(sol.sol.t)]
 # lines!(ax, t, y; label="frequency on node ($i)", linewidth=3)
+
 # # go through all edges
 # for i in 1:ne(network)
 #     print("failed edge "); print(i); print("\n")

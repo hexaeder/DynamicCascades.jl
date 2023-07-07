@@ -1,82 +1,110 @@
-#=
-# Exemplary dynamic cascade in RTS-GMLC grid
-![animation](rtsgmlc.mp4)
-=#
-# load used packages
-
 using Revise
-# using Infiltrator
-# using BenchmarkTools
 using DynamicCascades
 using Graphs
 using MetaGraphs
+using Unitful
 using Statistics
 using GraphMakie
 using Colors
-using NetworkDynamics
-using Unitful
-using Unitful: @u_str
-using DataFrames
-using CSV
+using DynamicCascades: PLOT_DIR
+
 using CairoMakie
 
-# using GLMakie#jl
-# GLMakie.activate!()#jl
+using Dates
 
-damping = 0.1u"s"
-scale_inertia = 1.0
-network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.01u"s")
-# network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.11u"s")
-# network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.5u"s")
+N = 20
+network = import_system(:wattsstrogatz; N=N, β=0.7, graph_seed=124, distr_seed=1230, K=1, γ=1u"s", τ=1u"s", σ=1.0)
 
+# create folder
+t=now()
+datetime = Dates.format(t, "yyyymmdd_HHMMSS.s") # https://riptutorial.com/julia-lang/example/20476/current-time
+folder = string("/",datetime)
+directory = string(RES_GEN_NET,folder)
+mkpath(directory)
+
+nd, = nd_model(network)
+ω_state_idxs = idx_containing(nd, "ω")
+gen_node_idxs = map(s -> parse(Int, String(s)[4:end]), nd.syms[ω_state_idxs])
+
+angular_frequency_bounds = Float64[]
+rel_number_node_failures = Float64[]
+df_all_node_failures = DataFrame()
+for i in 0.001:0.025:0.4
+    f_bound = i/(2π)
+    number_node_failures = Float64[]
+    for j in gen_node_idxs
+        sol = simulate(network;
+                       initial_fail = Int[j],
+                       tspan = (0, 5),
+                       trip_lines = :none,
+                       trip_nodes = :dynamic,
+                       trip_load_nodes = :none,
+                       f_min = -f_bound,
+                       f_max = f_bound,
+                       solverargs = (;dtmax=0.01),
+                       verbose = true);
+        push!(number_node_failures, length(sol.failures_nodes.saveval)-1)
+    end
+    df_all_node_failures[!, string(i)] = number_node_failures
+    push!(angular_frequency_bounds, i)
+    # push!(avg_number_node_failures, mean(number_node_failures))
+    push!(rel_number_node_failures, mean(number_node_failures)/(length(gen_node_idxs)-1))
+end
+CSV.write(string(directory,"/all_node_failures.csv"), df_all_node_failures)
+
+df_angular_frequency_bound_vs_rel_node_failures = DataFrame("angular_frequency_bounds" => angular_frequency_bounds, "rel_node_failures" => rel_number_node_failures)
+CSV.write(string(directory,"/angular_frequency_bound_vs_rel_node_failures.csv"), df_angular_frequency_bound_vs_rel_node_failures)
+
+# load data
+# df = DataFrame(CSV.File(string(directory,"/frequency_bound_vs_rel_node_failures.csv")))
+
+# plot data
+fig = Figure(fontsize = 30)
+Axis(fig[1, 1],
+    # title = L"Decreasing $G_{av}$ for one sample grid",
+    # titlesize = 30,
+    xlabel = "symmectric angular frequency bound",
+    # xlabelsize = 30,
+    ylabel = "normalized average of failed nodes",
+    # ylabelsize = 30
+)
+
+x = df_angular_frequency_bound_vs_rel_node_failures.angular_frequency_bounds
+y = df_angular_frequency_bound_vs_rel_node_failures.rel_node_failures
+
+# scatter!(x, y, color = :blue,label = "Test")
+scatter!(x, y, color = :blue)
+# axislegend()
+
+CairoMakie.save(string(directory,"/frequency_bound_vs_rel_node_failures.pdf"),fig)
+
+
+
+
+########################## CREATE EXAMPLE PLOT #################################
+j = 1 # node
+i = 0.05 # ω bound
+f_bound = i/(2π)
 sol = simulate(network;
-               # initial_fail = Int[37,73],
-               # initial_fail = Int[27],
-               # initial_fail = Int[27],
-               initial_fail = Int[1,2],
-               # failtime=0.01,
-               # tspan = (0, 0.02),
-               # tspan = (0, 0.05),
-               # tspan = (0, 0.17),
-               # tspan = (0, 0.012),
-               # tspan = (0, 0.4),
-               # tspan = (0, 0.11),
-               # tspan = (0, 0.08),
-               tspan = (0, 30),
-               terminate_steady_state=true,
-               trip_lines = :dynamic,
+               initial_fail = Int[j],
+               tspan = (0, 8),
+               trip_lines = :none,
                trip_nodes = :dynamic,
                trip_load_nodes = :none,
-               f_min = -0.3/(2π),
-               f_max = 0.3/(2π),
+               f_min = -f_bound,
+               f_max = f_bound,
                solverargs = (;dtmax=0.01),
                verbose = true);
-               # solverargs = (;dtmax=0.0000001), verbose = true);
-
-# save(joinpath(PLOT_DIR, "rtsgmlc_scaleM=$scale_inertia.pdf"), fig)
-
-# sol.sol.u
-# sol.initial_fail
-# sol.failtime
-# sol.trip_lines
-# sol.network
-# sol.load_P
-# sol.failures
-
-# nd, = nd_model(network)
-# ω_state_idxs = idx_containing(nd, "ω")
-# gen_node_idxs = map(s -> parse(Int, String(s)[4:end]), nd.syms[ω_state_idxs])
-
 
 # plot solution
 function plotnetwork(fig, sol, t)
     ax = Axis(fig)
     hidedecorations!(ax), hidespines!(ax)
-    xlims!(ax, -10, 7)
-    ylims!(ax, -5, 7)
+    # xlims!(ax, -10, 7)
+    # ylims!(ax, -5, 7)
     gpargs = gparguments(sol, t;
                          colortype=:abssteady,
-                         Δω=Observable(2.5),
+                         Δω=Observable(0.05),
                          offlinewidth=3,
                          offlinecolor=colorant"lightgray",
                          ecolorscaling = Observable(1.0),
@@ -168,16 +196,17 @@ end
 vlines!(ax, tobs; color=:black, linewidth=1)
 fig
 
+
 # create video
 # tobs = Observable(0.0)
-T = 20 #10
+T = 10 #10
 tmax = sol.sol.t[end] #0.15 # tmax = 3.5
 # tmax = 2
 tmin = 0.0
-fps = 30 # 20,100
+fps = 20 # 20,100
 trange = range(tmin, tmax, length=Int(T * fps))
 
-record(fig, joinpath(PLOT_DIR,"test_init_node_corrected_gen_node_fails_included_rtsgmlc_scaleM=$scale_inertia.mp4"), trange; framerate=30) do time
+record(fig, joinpath(PLOT_DIR,"WS_5.mp4"), trange; framerate=30) do time
     tobs[] = time
 end
 
@@ -188,6 +217,7 @@ end
 # t = sol.sol.t
 # y = [sol.sol.u[t][i] for t in 1:length(sol.sol.t)]
 # lines!(ax, t, y; label="frequency on node ($i)", linewidth=3)
+
 # # go through all edges
 # for i in 1:ne(network)
 #     print("failed edge "); print(i); print("\n")

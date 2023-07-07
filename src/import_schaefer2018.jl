@@ -29,7 +29,7 @@ function import_system(::Val{:schaefer2018}; γ=0.1u"s", M=1u"s^2", tconst=0.01u
     set_prop!(g, gen_idxs, :type, :gen)
     set_prop!(g, gen_idxs, :_M, M)
     set_prop!(g, load_idxs, :P, -1.0)
-    set_prop!(g, load_idxs, :type, :gen) # NOTE due to restrutured `nd_model`
+    set_prop!(g, load_idxs, :type, :gen) # NOTE due to restructured `nd_model`
     set_prop!(g, load_idxs, :_M, M)
     set_prop!(g, 1:5, :model, :swing)
     set_prop!(g, 1:5, :Q, 0.0)

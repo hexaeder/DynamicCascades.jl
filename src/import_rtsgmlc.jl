@@ -95,7 +95,7 @@ function import_system(::Val{:rtsgmlc}; losses=false, scale_inertia=1.0, kwargs.
 end
 
 export balance_power!, lossless!
-function balance_power!(network)
+function balance_power!(network) # s. Schmierzettel S. 7
     nodes = describe_nodes(network)
     imbalance = sum(nodes.P)
     if imbalance ≈ 0
@@ -104,7 +104,8 @@ function balance_power!(network)
     end
     genidx = findall(!ismissing, nodes.P_inj)
 
-    relative_inj = nodes.P_inj[genidx] ./ sum(nodes.P_inj[genidx])
+    # relative_inj = nodes.P_inj[genidx] ./ sum(nodes.P_inj[genidx])
+    relative_inj = abs.(nodes.P_inj[genidx]) ./ sum(abs.(nodes.P_inj[genidx]))
 
     newp = copy(nodes.P)
     newp[genidx] .-= relative_inj .* imbalance
