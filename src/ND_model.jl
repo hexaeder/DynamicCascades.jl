@@ -49,6 +49,22 @@ function dynamic_load!(dv, v, edges, (_, power, _, τ, _), t)
     nothing
 end
 
+# function slack_node!(dv, v, edges, (_, _, _, _, _), t)
+#     dv[1] = 0
+#     dv[2] = 0
+#     v[1] = 0
+#     v[2] = 0
+#     nothing
+# end
+
+# function dynamic_load!(dv, v, edges, (_, power, _, τ, _), t)
+#     dv[1] = 0
+#     dv[2] = 0
+#     v[1] = 0
+#     v[2] = 0
+#     nothing
+# end
+
 function algebraic_load!(dv, v, edges, (power, _, _), t)
     dv[1] = power
     for e in edges
@@ -846,6 +862,7 @@ function InitialFailCB(network, idxs, time; failures = nothing, failures_nodes =
             vertex_p = integrator.p[1]
             for i in idxs
                 P_adapted = 0.0
+                # P_adapted = 2.0
                 if has_prop(network, i, :P_load)
                     P_adapted = - ustrip(get_prop(network, i, :P_load))
                 end

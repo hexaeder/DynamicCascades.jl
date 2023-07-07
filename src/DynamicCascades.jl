@@ -89,6 +89,7 @@ include("import_square.jl")
 include("import_isolator_toymodel.jl")
 include("import_toymodel.jl")
 include("import_general_networks.jl")
+include("import_nadir_sim.jl")
 
 """
     describe_nodes(g::MetaGraph; firstcols=Vector{String}())
