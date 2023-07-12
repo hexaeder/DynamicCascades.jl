@@ -3,10 +3,7 @@
 ![animation](rtsgmlc.mp4)
 =#
 # load used packages
-
 using Revise
-# using Infiltrator
-# using BenchmarkTools
 using DynamicCascades
 using Graphs
 using MetaGraphs

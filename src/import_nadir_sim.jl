@@ -5,7 +5,7 @@ Creates a toymodel in which two nodes are connected by a line. One node is a
 swing equation node, the other node is a slack node.
 """
 # `tconst` only needed for syntax, tconst is not used in this model
-function import_system(::Val{:nadir_sim}; M=1u"s^2", γ=0.1u"s", tconst=0.01u"s")
+function import_system(::Val{:nadir_sim}; M=1u"s^2", γ=0.5u"s", tconst=0.0u"s")
     g = MetaGraph(2)
     add_edge!(g, 1,2)
 
@@ -18,11 +18,11 @@ function import_system(::Val{:nadir_sim}; M=1u"s^2", γ=0.1u"s", tconst=0.01u"s"
     gen_idxs = [1]
     load_idxs = [2]
 
-    set_prop!(g, gen_idxs, :P, 1.0)
+    set_prop!(g, gen_idxs, :P, 0.0)
     set_prop!(g, gen_idxs, :type, :gen)
     set_prop!(g, gen_idxs, :_M, M)
-    set_prop!(g, load_idxs, :P, -1.0)
-    set_prop!(g, load_idxs, :type, :gen)
+    set_prop!(g, load_idxs, :P, 0.0)
+    set_prop!(g, load_idxs, :type, :load)
     set_prop!(g, load_idxs, :_M, M)
     set_prop!(g, 1:2, :Q, 0.0)
     # set_prop!(g, 1:5, :inertia, 1.0)
@@ -31,7 +31,7 @@ function import_system(::Val{:nadir_sim}; M=1u"s^2", γ=0.1u"s", tconst=0.01u"s"
     # set_prop!(g, load_idxs, :damping, γ)
     set_prop!(g, 1:2, :timeconst, tconst)
 
-    K = 100.0
+    K = 1.0
     set_prop!(g, edges(g), :R, 0.0)
     set_prop!(g, edges(g), :X, 1/K)
     set_prop!(g, edges(g), :rating, 1.0)

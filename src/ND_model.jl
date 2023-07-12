@@ -49,21 +49,6 @@ function dynamic_load!(dv, v, edges, (_, power, _, τ, _), t)
     nothing
 end
 
-# function slack_node!(dv, v, edges, (_, _, _, _, _), t)
-#     dv[1] = 0
-#     dv[2] = 0
-#     v[1] = 0
-#     v[2] = 0
-#     nothing
-# end
-
-# function dynamic_load!(dv, v, edges, (_, power, _, τ, _), t)
-#     dv[1] = 0
-#     dv[2] = 0
-#     v[1] = 0
-#     v[2] = 0
-#     nothing
-# end
 
 function algebraic_load!(dv, v, edges, (power, _, _), t)
     dv[1] = power
@@ -333,11 +318,16 @@ function nd_model(network::MetaGraph)
 
     #= model choice hardcoded NOTE: implement as argument in simulate() in case of
     implementing new model =#
+
+    # generator models
     # generator_model = :swing
     generator_model = :swing_dynload
-    load_model = :dynload
 
-    vertexmodels = Dict{Symbol, ODEVertex}() # mapping :type to vertex model
+    # load models
+    load_model = :dynload
+    load_model = :slack
+
+    vertexmodels = Dict{Symbol, VertexFunction}() # mapping :type to vertex model
 
     # generator models
     if generator_model === :swing_dynload
@@ -350,9 +340,12 @@ function nd_model(network::MetaGraph)
         error("No generator model defined!")
     end
 
-    # load models
+    # load models /slack
     if load_model === :dynload
         vertexmodels[:load] = ODEVertex(f=dynamic_load!, dim=1, sym=[:θ])
+    elseif load_model === :slack
+        θ_slack = 0.0 # phase angle of slack
+        vertexmodels[:load] = StaticVertex(; f=(θ, edges, _, t) -> θ .= θ_slack, dim=1, sym=[:θ])
     else
         error("No load model defined!")
     end
@@ -829,7 +822,8 @@ end
 function InitialFailCB(network, idxs, time; failures = nothing, failures_nodes = nothing, verbose = true)
     affect! = function (integrator)
 
-        init_pert = :node # NOTE TODO Hardcoded => maybe introduce as argument in simulate()
+        # init_pert = :node # NOTE TODO Hardcoded => maybe introduce as argument in simulate()
+        init_pert = :power_perturbation
         if init_pert == :line
             # set coupling to zero (corresponds to line failure)
             integrator.p[2][idxs] .= 0.0
@@ -862,7 +856,6 @@ function InitialFailCB(network, idxs, time; failures = nothing, failures_nodes =
             vertex_p = integrator.p[1]
             for i in idxs
                 P_adapted = 0.0
-                # P_adapted = 2.0
                 if has_prop(network, i, :P_load)
                     P_adapted = - ustrip(get_prop(network, i, :P_load))
                 end
@@ -873,6 +866,30 @@ function InitialFailCB(network, idxs, time; failures = nothing, failures_nodes =
                 integrator.u[ω_state_idxs[findfirst(x -> x == i, gen_node_idxs)]] = 0.0
                 push!(failures_nodes.t, integrator.t)
                 push!(failures_nodes.saveval, i)
+            end
+        end
+
+        if init_pert == :power_perturbation
+            nd, = nd_model(network)
+            #= NOTE This allows to perturb both, generator and load nodes.
+            The following code block can be removed once we perturb nodes that are not generators.
+            =#
+            ω_state_idxs = idx_containing(nd, "ω")
+            gen_node_idxs = map(s -> parse(Int, String(s)[4:end]), nd.syms[ω_state_idxs])
+            for i in idxs
+                if findfirst(x -> x == i, gen_node_idxs) == nothing
+                    println("Perturbed node ", i, " is not a generator")
+                end
+            end
+
+            verbose && println("Perturb node(s) ",
+                length(idxs) == 1 ? only(idxs) : idxs,
+                " at t = $(integrator.t)")
+            vertex_p = integrator.p[1]
+            for i in idxs
+                P_adapted = vertex_p[i][2] + 0.5
+                mutated_tuple = (vertex_p[i][1], P_adapted, vertex_p[i][3], vertex_p[i][4], vertex_p[i][5])
+                vertex_p[i] = mutated_tuple
             end
         end
         auto_dt_reset!(integrator)
