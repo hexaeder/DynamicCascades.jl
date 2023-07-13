@@ -196,6 +196,8 @@ function simulate(network;
                   x_static=steadystate(network; verbose),
                   initial_fail=Int[],
                   failtime=0.1,
+                  init_pert=:power_perturbation,
+                  P_perturb=0.5,
                   tspan=(0., 100.),
                   trip_lines=:dynamic,
                   trip_nodes=:dynamic,
@@ -230,7 +232,7 @@ function simulate(network;
     cbs = CallbackSet(overload_cb(;trip_lines, trip_nodes, trip_load_nodes, f_min, f_max, frequencies_load_nodes, load_S, load_P, failures, failures_nodes, failures_load_nodes, verbose));
     if !isempty(initial_fail)
         # NOTE add node failures in case of implementing initial node failures
-        cbs = CallbackSet(InitialFailCB(network, initial_fail, failtime; failures, failures_nodes, verbose), cbs)
+        cbs = CallbackSet(InitialFailCB(network, initial_fail, failtime; init_pert, P_perturb, failures, failures_nodes, verbose), cbs)
     end
     if (trip_lines !== :static || trip_nodes !== :static || trip_load_nodes !== :static) && terminate_steady_state
         min_t = isempty(initial_fail) ? nothing : failtime+eps(failtime)
@@ -324,8 +326,8 @@ function nd_model(network::MetaGraph)
     generator_model = :swing_dynload
 
     # load models
-    load_model = :dynload
     load_model = :slack
+    # load_model = :dynload
 
     vertexmodels = Dict{Symbol, VertexFunction}() # mapping :type to vertex model
 
@@ -819,11 +821,11 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
     return gen_cb
 end
 
-function InitialFailCB(network, idxs, time; failures = nothing, failures_nodes = nothing, verbose = true)
+function InitialFailCB(network, idxs, time; init_pert = :line, P_perturb = nothing, failures = nothing, failures_nodes = nothing, verbose = true)
     affect! = function (integrator)
 
         # init_pert = :node # NOTE TODO Hardcoded => maybe introduce as argument in simulate()
-        init_pert = :power_perturbation
+        # init_pert = :power_perturbation
         if init_pert == :line
             # set coupling to zero (corresponds to line failure)
             integrator.p[2][idxs] .= 0.0
@@ -887,7 +889,7 @@ function InitialFailCB(network, idxs, time; failures = nothing, failures_nodes =
                 " at t = $(integrator.t)")
             vertex_p = integrator.p[1]
             for i in idxs
-                P_adapted = vertex_p[i][2] + 0.5
+                P_adapted = vertex_p[i][2] + P_perturb
                 mutated_tuple = (vertex_p[i][1], P_adapted, vertex_p[i][3], vertex_p[i][4], vertex_p[i][5])
                 vertex_p[i] = mutated_tuple
             end
