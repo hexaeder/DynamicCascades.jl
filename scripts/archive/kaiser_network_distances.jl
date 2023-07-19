@@ -20,7 +20,7 @@ set_theme!(resolution=(800, 600))
 ####
 #### create Data
 ####
-dir1 = joinpath(RAWRESULTS_DIR, timestamp()*"_kaiser_insulator")
+dir1 = joinpath(RESULTS_DIR, timestamp()*"_kaiser_insulator")
 mkpath(dir1)
 damping = 1.0
 loadt = 0.1
@@ -39,7 +39,7 @@ loadt = 0.1
     end
 end
 
-dir2 = joinpath(RAWRESULTS_DIR, timestamp()*"_kaiser_wo_insulator")
+dir2 = joinpath(RESULTS_DIR, timestamp()*"_kaiser_wo_insulator")
 mkpath(dir2)
 @showprogress for seed in 1:20
     network = import_system(:kaiser2020; gen_γ=damping, load_τ=loadt, seed)

@@ -7,11 +7,12 @@ using MetaGraphs
 using Missings
 using Unitful
 
-export DATA_DIR, RAWRESULTS_DIR, RESULTS_DIR, PLOT_DIR, RES_GEN_NET
-const DATA_DIR = abspath(@__DIR__, "..", "data")
-const RAWRESULTS_DIR = abspath("/Users/hw/MAScratch")
-const RESULTS_DIR = abspath(@__DIR__, "..", "results")
+export DATA_DIR, RESULTS_DIR, PLOT_DIR, MA_DIR, RES_GEN_NET
+const DATA_DIR = abspath(@__DIR__, "..", "data") # data used for simulations
+const RESULTS_DIR = abspath(@__DIR__, "..", "results") # generated data
 const PLOT_DIR = abspath(@__DIR__, "..", "..", "MA_data", "figures")
+const MA_DIR = abspath(@__DIR__, "..", "..", "..", "..", "repos", "649871baa3fa7bffa33bf152","MA_figs")
+# further directories
 const RES_GEN_NET = abspath(@__DIR__, "..", "..", "MA_data", "res_gen_net") # results general networks
 
 export import_system, describe_nodes, describe_edges, bustype, is_static_state
@@ -89,7 +90,7 @@ include("import_square.jl")
 include("import_isolator_toymodel.jl")
 include("import_toymodel.jl")
 include("import_general_networks.jl")
-include("slack_gen_analytic_vs_numeric.jl")
+include("import_slack_gen.jl")
 
 """
     describe_nodes(g::MetaGraph; firstcols=Vector{String}())
