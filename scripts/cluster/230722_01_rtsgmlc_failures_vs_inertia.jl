@@ -1,4 +1,7 @@
-using Revise
+using Pkg
+Pkg.activate("/home/brandner/DynamicCascades.jl") /home/brandner/DynamicCascades.jl
+Pkg.instantiate()
+
 using DynamicCascades
 using Graphs
 using MetaGraphs
@@ -11,7 +14,6 @@ using CairoMakie
 using Dates
 using DataFrames
 
-
 # create folder
 t=now()
 datetime = Dates.format(t, "yyyymmdd_HHMMSS.s") # https://riptutorial.com/julia-lang/example/20476/current-time
@@ -20,13 +22,13 @@ directory = string(RESULTS_DIR,folder)
 mkpath(directory)
 directory
 damping = 0.1u"s"
-scale_inertia_values = [0.2, 0.5, 1, 1.5, 2, 7, 10, 20] # varying parameter
+scale_inertia_values = [1, 1.5] # varying parameter
 rel_number_failures = Float64[]
 df_all_failures = DataFrame()
 for scale_inertia in scale_inertia_values
     network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.01u"s")
     number_failures = Float64[]
-    for i in 1:ne(network)
+    for i in 1:3
         sol = simulate(network;
                        initial_fail = Int[i],
                        init_pert = :line,
