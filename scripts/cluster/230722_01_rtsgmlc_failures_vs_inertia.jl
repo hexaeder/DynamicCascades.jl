@@ -1,5 +1,5 @@
 using Pkg
-Pkg.activate("/home/brandner/DynamicCascades.jl") /home/brandner/DynamicCascades.jl
+Pkg.activate("/home/brandner/DynamicCascades.jl") 
 Pkg.instantiate()
 
 using DynamicCascades
