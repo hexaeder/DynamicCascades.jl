@@ -18,7 +18,7 @@ CairoMakie.activate!()
 ################################################################################
 ################################# parameters ###################################
 ################################################################################
-M = 6.0
+M = 1.0
 D = 0.5
 K = 1.0
 P0 = 0.0
@@ -173,8 +173,8 @@ fig = Figure(fontsize=30)
 fig[1,1] = ax = Axis(fig; xlabel="inertia M [s^2]", ylabel="damping D [s]",
                     title="Ang. frequency deviation, K=$K, P_perturb=$P_perturb [p.u.]",
                     titlesize=25)
-xs = range(start=0.0, step=0.01, stop = 6.0)
-ys = range(start=0.0, step=0.01, stop = 5.0)
+xs = range(start=0.0, step=0.1, stop = 6.0)
+ys = range(start=0.0, step=0.1, stop = 5.0)
 zs = [frequency_nadir(x, y, K, P0, P1) for x in xs, y in ys]
 hm = Makie.heatmap!(ax, xs, ys, zs, colormap = Reverse(:deep))
 Colorbar(fig[:, end+1], hm, label="maximal absolute ang. frequency dev.")
@@ -182,8 +182,8 @@ fig
 
 # NOTE frequency_nadir(0.5, 1.0, K=1.0, P0=0.0, P1=0.5)
 
-save(joinpath(MA_DIR, "heatmap_frequency_K=$K,P_perturb=$P_perturb.pdf"), fig)
-save(joinpath(MA_DIR, "heatmap_frequency_K=$K,P_perturb=$P_perturb.png"), fig)
+save(joinpath(PLOT_DIR, "heatmap_frequency_K=$K,P_perturb=$P_perturb.pdf"), fig)
+save(joinpath(PLOT_DIR, "heatmap_frequency_K=$K,P_perturb=$P_perturb.png"), fig)
 
 ##################### border complex and real eigenvalues ######################
 fig = Figure(fontsize=30)
@@ -259,6 +259,15 @@ function t_ω_nadir(M, D, K, P0, P1)
     return t
 end
 
+
+function calc_constants(M, D, K, P0, P1)
+    w = sqrt(4*M*K-D^2) / (2*M)
+    g = D / (2*M)
+    α = atan(w / g)
+    β = (P0 - P1) / (K*sin(α))
+    return α, β, g, w
+end
+
 # function t_ω_nadir(M, D, K, P0, P1)
 #     α, β, g, w = calc_constants(M, D, K, P0, P1)
 #
@@ -275,13 +284,7 @@ end
 # end
 
 ############################# analytic functions ###############################
-function calc_constants(M, D, K, P0, P1)
-    w = sqrt(4*M*K-D^2) / (2*M)
-    g = D / (2*M)
-    α = atan(w / g)
-    β = (P0 - P1) / (K*sin(α))
-    return α, β, g, w
-end
+
 
 function phase(t, failtime, M, D, K, P0, P1)
     if t < failtime

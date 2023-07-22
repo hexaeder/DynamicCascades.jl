@@ -9,7 +9,7 @@ using Unitful
 
 export DATA_DIR, RESULTS_DIR, PLOT_DIR, MA_DIR, RES_GEN_NET
 const DATA_DIR = abspath(@__DIR__, "..", "data") # data used for simulations
-const RESULTS_DIR = abspath(@__DIR__, "..", "results") # generated data
+const RESULTS_DIR = abspath(@__DIR__, "..", "..", "MA_data", "results_NB") # generated data
 const PLOT_DIR = abspath(@__DIR__, "..", "..", "MA_data", "figures")
 const MA_DIR = abspath(@__DIR__, "..", "..", "..", "..", "repos", "649871baa3fa7bffa33bf152","MA_figs")
 # further directories
