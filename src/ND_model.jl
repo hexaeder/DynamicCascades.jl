@@ -569,8 +569,8 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
         if trip_nodes !== :none || trip_load_nodes !== :none
             # frequency bounds
             # Source: https://eepublicdownloads.entsoe.eu/clean-documents/Network%20codes%20documents/NC%20RfG/210412_IGD_Frequency_ranges.pdf
-            f_min = -2.5 # -0.01 # -0.2/(2π) # -1/2π # -0.4
-            f_max = 1.5 # 0.01 # +0.2/(2π) # 1/2π # 0.24
+            # f_min = -2.5 # -0.01 # -0.2/(2π) # -1/2π # -0.4
+            # f_max = 1.5 # 0.01 # +0.2/(2π) # 1/2π # 0.24
             ω_min = 2π * f_min
             ω_max = 2π * f_max
             # ω_min = -2.5
