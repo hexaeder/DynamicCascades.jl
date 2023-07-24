@@ -30,10 +30,10 @@ sol = simulate(network;
                # initial_fail = Int[37,73],
                # initial_fail = Int[27],
                # initial_fail = Int[27],
-               initial_fail = Int[1,2],
+               initial_fail = Int[22],
                # failtime=0.01,
-               init_pert = :node,
-               P_perturb = 1.0,
+               init_pert = :line,
+               # P_perturb = 1.0,
                # tspan = (0, 0.02),
                # tspan = (0, 0.05),
                # tspan = (0, 0.17),
@@ -41,13 +41,17 @@ sol = simulate(network;
                # tspan = (0, 0.4),
                # tspan = (0, 0.11),
                # tspan = (0, 0.08),
-               tspan = (0, 30),
+               tspan = (0, 0.4),
                terminate_steady_state=true,
                trip_lines = :dynamic,
                trip_nodes = :dynamic,
                trip_load_nodes = :none,
-               f_min = -0.3/(2π),
-               f_max = 0.3/(2π),
+               # f_min = -0.3/(2π),
+               # f_max = 0.3/(2π),
+               f_min = -2.5/(2π),
+               f_max = 1.5/(2π),
+               # f_min = -2.5,
+               # f_max = 1.5,
                solverargs = (;dtmax=0.01),
                verbose = true);
                # solverargs = (;dtmax=0.0000001), verbose = true);
@@ -181,23 +185,30 @@ record(fig, joinpath(PLOT_DIR,"test_init_node_corrected_gen_node_fails_included_
 end
 
 
-# # single gen
-# node_idx = 3
-# i = state_idx[node_idx]
-# t = sol.sol.t
-# y = [sol.sol.u[t][i] for t in 1:length(sol.sol.t)]
-# lines!(ax, t, y; label="frequency on node ($i)", linewidth=3)
-# # go through all edges
-# for i in 1:ne(network)
-#     print("failed edge "); print(i); print("\n")
-#     sol = simulate(network;
-#                    initial_fail = Int[i],
-#                    # tspan = (0, 50),
-#                    # tspan = (0, 0.17),
-#                    tspan = (0, 50),
-#                    # terminate_steady_state=true,
-#                    trip_lines = :dynamic,
-#                    trip_nodes = :dynamic,
-#                    solverargs = (;dtmax=0.01), verbose = true);
-#     print("number of node failures "); print(length(sol.failures_nodes.saveval)); print("\n")
-# end
+# single gen
+node_idx = 3
+i = state_idx[node_idx]
+t = sol.sol.t
+y = [sol.sol.u[t][i] for t in 1:length(sol.sol.t)]
+lines!(ax, t, y; label="frequency on node ($i)", linewidth=3)
+
+# go through all/certain edges
+edges_to_fail = [22,23,33,59]
+# edges_to_fail = [22]
+for i in edges_to_fail
+    print("failed edge "); print(i); print("\n")
+    sol = simulate(network;
+                   initial_fail = Int[i],
+                   init_pert = :line,
+                   # tspan = (0, 50),
+                   # tspan = (0, 0.17),
+                   tspan = (0, 10),
+                   # terminate_steady_state=true,
+                   trip_lines = :dynamic,
+                   trip_nodes = :dynamic,
+                   trip_load_nodes = :none,
+                   f_min = -2.5/(2π),
+                   f_max = 1.5/(2π),
+                   solverargs = (;dtmax=0.01), verbose = true);
+    print("number of node failures "); print(length(sol.failures_nodes.saveval)); print("\n")
+end

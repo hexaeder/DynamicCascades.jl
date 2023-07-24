@@ -104,7 +104,7 @@ function balance_power!(network) # s. Schmierzettel S. 7
     end
     genidx = findall(!ismissing, nodes.P_inj)
 
-    # relative_inj = nodes.P_inj[genidx] ./ sum(nodes.P_inj[genidx])
+    # relative_inj = nodes.P_inj[genidx] ./ sum(nodes.P_inj[genidx]) # old code
     relative_inj = abs.(nodes.P_inj[genidx]) ./ sum(abs.(nodes.P_inj[genidx]))
 
     newp = copy(nodes.P)
