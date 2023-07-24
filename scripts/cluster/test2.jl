@@ -1,6 +1,6 @@
 using Pkg
 Pkg.activate("/home/brandner/DynamicCascades.jl")
-Pkg.instantiate()
+# Pkg.instantiate()
 
 using DynamicCascades
 using Graphs
@@ -13,8 +13,8 @@ using DynamicCascades: PLOT_DIR
 using CairoMakie
 using Dates
 using DataFrames
+using CSV
 
-print("Hallo2")
 # create folder
 t=now()
 datetime = Dates.format(t, "yyyymmdd_HHMMSS.s") # https://riptutorial.com/julia-lang/example/20476/current-time
