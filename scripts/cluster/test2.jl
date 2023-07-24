@@ -51,7 +51,7 @@ CSV.write(string(directory,"/all_failures.csv"), df_all_failures)
 # calculate relative number of failures
 df_all_failures = DataFrame(CSV.File(string(directory,"/all_failures.csv")))
 rel_number_failures = Float64[]
-network = import_system(:rtsgmlc; damping, 1.0, tconst = 0.01u"s")
+network = import_system(:rtsgmlc; damping, tconst = 0.01u"s")
 for scale_inertia in scale_inertia_values
     number_failures = df_all_failures[!, string(scale_inertia)]
     push!(rel_number_failures, mean(number_failures)/(ne(network)-1))
