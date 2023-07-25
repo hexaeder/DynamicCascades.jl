@@ -12,4 +12,5 @@
 module purge
 module load julia/1.7.0
 
+git checkout feature/node_failures
 julia test_julia170.jl
