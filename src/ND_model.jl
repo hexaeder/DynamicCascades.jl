@@ -210,7 +210,7 @@ function simulate(network;
                   warn=true)
     (nd, p, overload_cb) = nd_model(network);
     prob = ODEProblem(nd, copy(x_static), tspan, p);
-    print("on feature_npdefails \n")
+    print(x_static)
     # saving for each integration time step the frequencie of each load node
     frequencies_load_nodes = SavedValues(Float64, Vector{Float64});
 
