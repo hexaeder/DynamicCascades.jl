@@ -20,15 +20,10 @@ using Dates
 using DataFrames
 using CSV
 
-# ###############
-#
-#
-# network = import_system(:rtsgmlc; damping= 0.1u"s", scale_inertia =0.2, tconst = 0.01u"s")
-# x_static = steadystate(network)
-# issteadystate(network, x_static)
-# ###############
 
-
+# damping = 0.1u"s"
+# network = import_system(:rtsgmlc; damping, scale_inertia=1.0, tconst = 0.01u"s")
+#
 
 # create folder
 t=now()
@@ -36,16 +31,26 @@ datetime = Dates.format(t, "yyyymmdd_HHMMSS.s") # https://riptutorial.com/julia-
 folder = string("/",datetime,"inertia_vs_line_failures")
 directory = string(RESULTS_DIR,folder)
 mkpath(directory)
-
+damping = 0.1u"s"
 # scale_inertia_values = [0.2, 0.5, 1, 1.5, 2, 7, 10, 20] # varying parameter
 scale_inertia_values = [0.2] # varying parameter
 df_all_failures = DataFrame()
 @time for scale_inertia in scale_inertia_values
-    network = import_system(:rtsgmlc; damping = 0.1u"s", scale_inertia, tconst = 0.01u"s")
+    network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.01u"s")
+    # ###############
+    sol = simulate(network;
+                   tspan = (0, 2000),
+                   solverargs = (;dtmax=0.01),
+                   terminate_steady_state=true,
+                   verbose = true);
+    x_static = sol.sol[end]
+    print("Steady state \n"); print(x_static); print("\n")
+    # ###############
     number_failures = Float64[]
     # for i in 1:ne(network)
     for i in 1:4
         sol = simulate(network;
+                       x_static = x_static,
                        initial_fail = Int[i],
                        init_pert = :line,
                        tspan = (0, 50),
