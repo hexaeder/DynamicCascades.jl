@@ -1,6 +1,6 @@
 using Pkg
 Pkg.activate("/home/brandner/DynamicCascades.jl")
-# Pkg.instantiate()
+Pkg.instantiate()
 
 using LinearAlgebra
 print("Number of threads before setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
@@ -21,9 +21,22 @@ using DataFrames
 using CSV
 
 
-# damping = 0.1u"s"
-# network = import_system(:rtsgmlc; damping, scale_inertia=1.0, tconst = 0.01u"s")
-#
+network = import_system(:rtsgmlc; damping, scale_inertia=0.2, tconst = 0.01u"s")
+# sol = simulate(network;
+#                tspan = (0, 2000),
+#                solverargs = (;dtmax=0.01),
+#                terminate_steady_state=true,
+#                verbose = true);
+# x_static = sol.sol[end]
+
+
+# x_static = steadystate(network)
+# using DelimitedFiles
+# open(string(abspath(@__DIR__), "/x_static.txt"), "w") do io
+#            writedlm(io, x_static)
+#        end
+
+# x_static = readdlm(string(abspath(@__DIR__), "/x_static.txt"))[:]
 
 # create folder
 t=now()
@@ -38,17 +51,18 @@ df_all_failures = DataFrame()
 @time for scale_inertia in scale_inertia_values
     network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.01u"s")
     # ###############
-    sol = simulate(network;
-                   tspan = (0, 2000),
-                   solverargs = (;dtmax=0.01),
-                   terminate_steady_state=true,
-                   verbose = true);
-    x_static = sol.sol[end]
-    print("Steady state \n"); print(x_static); print("\n")
+    # sol = simulate(network;
+    #                tspan = (0, 2000),
+    #                solverargs = (;dtmax=0.01),
+    #                terminate_steady_state=true,
+    #                verbose = true);
+    # x_static = sol.sol[end]
+    # print("Steady state \n"); print(x_static); print("\n")
+    x_static = readdlm(string(abspath(@__DIR__), "/x_static.txt"))[:]
     # ###############
     number_failures = Float64[]
     # for i in 1:ne(network)
-    for i in 1:4
+    @time for i in 1:4
         sol = simulate(network;
                        x_static = x_static,
                        initial_fail = Int[i],
@@ -62,6 +76,8 @@ df_all_failures = DataFrame()
                        solverargs = (;dtmax=0.01),
                        verbose = true);
         push!(number_failures, length(sol.failures.saveval)-1) # `-1` as we don't want to count the initial failure
+        x_final = sol.sol[end]
+        print("Final state \n"); print(x_final); print("\n")
     end
     df_all_failures[!, string(scale_inertia)] = number_failures
 end
