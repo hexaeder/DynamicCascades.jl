@@ -24,7 +24,7 @@ function import_system(::Val{:toymodel_square}; M=1u"s^2", γ=0.1u"s", tconst=0.
     set_prop!(g, gen_idxs, :type, :gen)
     set_prop!(g, gen_idxs, :_M, M)
     set_prop!(g, load_idxs, :P, -1.0)
-    set_prop!(g, load_idxs, :type, :gen)
+    set_prop!(g, load_idxs, :type, :load)
     set_prop!(g, load_idxs, :_M, M)
     set_prop!(g, 1:4, :Q, 0.0)
     # set_prop!(g, 1:5, :inertia, 1.0)
