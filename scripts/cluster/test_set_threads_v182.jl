@@ -21,7 +21,7 @@ using DataFrames
 using CSV
 
 
-network = import_system(:rtsgmlc; damping, scale_inertia=0.2, tconst = 0.01u"s")
+# network = import_system(:rtsgmlc; damping, scale_inertia=0.2, tconst = 0.01u"s")
 # sol = simulate(network;
 #                tspan = (0, 2000),
 #                solverargs = (;dtmax=0.01),
