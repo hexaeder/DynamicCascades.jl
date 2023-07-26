@@ -163,8 +163,8 @@ function steadystate(network; project=false, verbose=false, tol=1e-7, zeroidx=no
     verbose && println("Find steady state...")
     (nd, p) = nd_model(network)
     x0 = zeros(length(nd.syms));
-    x_static = solve(SteadyStateProblem(nd, x0, p), SSRootfind())
-    # x_static = solve(NonlinearProblem(nd, x0, p), NLSolveJL())
+    # x_static = solve(SteadyStateProblem(nd, x0, p), SSRootfind())
+    x_static = solve(NonlinearProblem(nd, x0, p), NLSolveJL())
     θidx = idx_containing(nd, "θ")
     if zeroidx !== nothing
         offset = x_static[θidx[zeroidx]]
