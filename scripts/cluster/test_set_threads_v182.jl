@@ -20,6 +20,13 @@ using Dates
 using DataFrames
 using CSV
 
+# ###############
+#
+#
+# network = import_system(:rtsgmlc; damping= 0.1u"s", scale_inertia =0.2, tconst = 0.01u"s")
+# x_static = steadystate(network)
+# issteadystate(network, x_static)
+# ###############
 
 # create folder
 t=now()
@@ -29,7 +36,7 @@ directory = string(RESULTS_DIR,folder)
 mkpath(directory)
 damping = 0.1u"s"
 # scale_inertia_values = [0.2, 0.5, 1, 1.5, 2, 7, 10, 20] # varying parameter
-scale_inertia_values = [1] # varying parameter
+scale_inertia_values = [0.2] # varying parameter
 df_all_failures = DataFrame()
 for scale_inertia in scale_inertia_values
     network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.01u"s")
@@ -39,7 +46,7 @@ for scale_inertia in scale_inertia_values
         sol = simulate(network;
                        initial_fail = Int[i],
                        init_pert = :line,
-                       tspan = (0, 500),
+                       tspan = (0, 50),
                        trip_lines = :dynamic,
                        trip_nodes = :none,
                        trip_load_nodes = :none,
