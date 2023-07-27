@@ -41,7 +41,7 @@ df_all_failures = DataFrame()
     x_static = steadystate(network)
     println("Scaling of inertia $scale_inertia \n steady state \n $x_static \n ")
     number_failures = Float64[]
-    for i in gen_node_idxs
+    for i in 1:ne(network)
         sol = simulate(network;
                        x_static = x_static,
                        initial_fail = Int[i],
