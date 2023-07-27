@@ -1,12 +1,13 @@
 using Pkg
-Pkg.activate("/home/brandner/DynamicCascades.jl")
-# Pkg.instantiate()
+Pkg.activate("/users/stud/brandner/MA/repos/DynamicCascades.jl")
+Pkg.instantiate()
 
 using LinearAlgebra
 print("Number of threads before setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
 BLAS.set_num_threads(1)
 print("Number of threads after setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
 
+#using MKL
 
 using NetworkDynamics
 using Graphs
@@ -58,6 +59,7 @@ nd = network_dynamics(odevertex, staticedge, network)
 
 x0 = zeros(length(nd.syms));
 # x_static = solve(SteadyStateProblem(nd, x0, p), SSRootfind())
+x_static = solve(NonlinearProblem(nd, x0, p), NLSolveJL())
 x_static = @time solve(NonlinearProblem(nd, x0, p), NLSolveJL())
 println("x_static $x_static \n")
 

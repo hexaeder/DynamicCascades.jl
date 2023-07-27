@@ -1,11 +1,11 @@
 using Pkg
-Pkg.activate("/users/stud/brandner/MA/repos/DynamicCascades.jl")
-Pkg.instantiate()
+Pkg.activate("/home/brandner/DynamicCascades.jl")
+#Pkg.instantiate()
 
-# using LinearAlgebra
-# print("Number of threads before setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
-# BLAS.set_num_threads(1)
-# print("Number of threads after setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
+using LinearAlgebra
+print("Number of threads before setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
+BLAS.set_num_threads(1)
+print("Number of threads after setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
 
 #using MKL
 
