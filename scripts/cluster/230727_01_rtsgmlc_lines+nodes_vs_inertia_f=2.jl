@@ -30,8 +30,8 @@ directory = string(RESULTS_DIR,folder)
 mkpath(directory)
 
 damping = 0.1u"s"
-network = import_system(:rtsgmlc; damping, scale_inertia = 0.2, tconst = 0.01u"s")
-nd, = nd_model(network)
+network0 = import_system(:rtsgmlc; damping, scale_inertia = 0.2, tconst = 0.01u"s")
+nd, = nd_model(network0)
 ω_state_idxs = idx_containing(nd, "ω")
 gen_node_idxs = map(s -> parse(Int, String(s)[4:end]), nd.syms[ω_state_idxs])
 
@@ -44,8 +44,7 @@ df_all_failures_nodes = DataFrame()
     println("Scaling of inertia $scale_inertia \n steady state \n $x_static \n ")
     number_failures = Float64[]
     number_failures_nodes = Float64[]
-    # for i in 1:ne(network)
-    for i in 1:1
+    for i in 1:ne(network)
         sol = simulate(network;
                        initial_fail = Int[i],
                        init_pert = :line,
