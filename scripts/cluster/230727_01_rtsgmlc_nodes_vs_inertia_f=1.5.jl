@@ -8,6 +8,7 @@ BLAS.set_num_threads(1)
 print("Number of threads after setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
 
 using DynamicCascades
+using NetworkDynamics
 using Graphs
 using MetaGraphs
 using Unitful

@@ -21,11 +21,11 @@ using Dates
 using DataFrames
 using CSV
 
-freq_bound = round(3.0/(2*π), digits=2)
+freq_bound = round(1.0/(2*π), digits=2)
 # create folder
 t=now()
 datetime = Dates.format(t, "yyyymmdd_HHMMSS.s") # https://riptutorial.com/julia-lang/example/20476/current-time
-folder = string("/",datetime,"inertia_vs_node_failures_f_bound=$freq_bound")
+folder = string("/",datetime,"inertia_vs_line+node_failures_f_bound=$freq_bound")
 directory = string(RESULTS_DIR,folder)
 mkpath(directory)
 
@@ -35,49 +35,65 @@ nd, = nd_model(network)
 ω_state_idxs = idx_containing(nd, "ω")
 gen_node_idxs = map(s -> parse(Int, String(s)[4:end]), nd.syms[ω_state_idxs])
 
-
-damping = 0.1u"s"
 scale_inertia_values = [0.2, 0.5, 0.8, 1.1, 1.4, 1.7, 2.0, 3.0, 4.0, 5.1, 6.1, 7.1, 8.0, 9.0, 10.0, 15.0, 21.0] # varying parameter
 df_all_failures = DataFrame()
+df_all_failures_nodes = DataFrame()
 @time for scale_inertia in scale_inertia_values
     network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.01u"s")
     x_static = steadystate(network)
     println("Scaling of inertia $scale_inertia \n steady state \n $x_static \n ")
     number_failures = Float64[]
-    for i in 1:ne(network)
+    number_failures_nodes = Float64[]
+    # for i in 1:ne(network)
+    for i in 1:1
         sol = simulate(network;
-                       x_static = x_static,
                        initial_fail = Int[i],
                        init_pert = :line,
-                       tspan = (0, 500),
-                       trip_lines = :none,
+                       tspan = (0, 1),
+                       trip_lines = :dynamic,
                        trip_nodes = :dynamic,
                        trip_load_nodes = :none,
                        f_min = -freq_bound,
                        f_max = freq_bound,
                        solverargs = (;dtmax=0.01),
                        verbose = true);
-        push!(number_failures, length(sol.failures_nodes.saveval))
+        push!(number_failures, length(sol.failures.saveval)-1) # `-1` as we don't want to count the initial failure
+        push!(number_failures_nodes, length(sol.failures_nodes.saveval))
     end
     df_all_failures[!, string(scale_inertia)] = number_failures
+    df_all_failures_nodes[!, string(scale_inertia)] = number_failures_nodes
 end
+
+
 # write failures for each node/line to .csv
 CSV.write(string(directory,"/all_failures.csv"), df_all_failures)
+CSV.write(string(directory,"/all_failures_nodes.csv"), df_all_failures_nodes)
 
 # calculate relative number of failures
+#lines
 df_all_failures = DataFrame(CSV.File(string(directory,"/all_failures.csv")))
 rel_number_failures = Float64[]
+network = import_system(:rtsgmlc; damping, tconst = 0.01u"s")
 for scale_inertia in scale_inertia_values
     number_failures = df_all_failures[!, string(scale_inertia)]
-    push!(rel_number_failures, mean(number_failures)/length(gen_node_idxs))
+    push!(rel_number_failures, mean(number_failures)/(ne(network)-1))
 end
-
-
 df_inertia_vs_failures = DataFrame("scale_inertia_values" => scale_inertia_values, "rel_failures" => rel_number_failures)
 CSV.write(string(directory,"/inertia_vs_failures.csv"), df_inertia_vs_failures)
 
+# nodes
+df_all_failures_nodes = DataFrame(CSV.File(string(directory,"/all_failures_nodes.csv")))
+rel_number_failures = Float64[]
+for scale_inertia in scale_inertia_values
+    number_failures_nodes = df_all_failures_nodes[!, string(scale_inertia)]
+    push!(rel_number_failures, mean(number_failures_nodes)/length(gen_node_idxs))
+end
+df_inertia_vs_failures_nodes = DataFrame("scale_inertia_values" => scale_inertia_values, "rel_failures" => rel_number_failures)
+CSV.write(string(directory,"/inertia_vs_failures_nodes.csv"), df_inertia_vs_failures_nodes)
+
 # load data
 df_inertia_vs_failures = DataFrame(CSV.File(string(directory,"/inertia_vs_failures.csv")))
+df_inertia_vs_failures_nodes = DataFrame(CSV.File(string(directory,"/inertia_vs_failures_nodes.csv")))
 
 # plot data
 fig = Figure(fontsize = 30)
@@ -91,10 +107,12 @@ Axis(fig[1, 1],
 )
 
 x = df_inertia_vs_failures.scale_inertia_values
-y = df_inertia_vs_failures.rel_failures
+y_lines = df_inertia_vs_failures.rel_failures
+y_nodes = df_inertia_vs_failures_nodes.rel_failures
 
-# scatter!(x, y, color = :blue,label = "Test")
-scatter!(x, y, color = :blue)
-# axislegend()
 
-CairoMakie.save(string(directory,"/inertia_vs_number_node_failures.pdf"),fig)
+scatter!(x, y_lines, label = "lines")
+scatter!(x, y_nodes, label = "nodes")
+axislegend(position = :rb)
+
+CairoMakie.save(string(directory,"/inertia_vs_number_line+node_failures.pdf"),fig)
