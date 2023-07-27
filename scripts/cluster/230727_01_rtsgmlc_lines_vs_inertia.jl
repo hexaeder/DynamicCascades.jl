@@ -27,16 +27,14 @@ folder = string("/",datetime,"inertia_vs_line_failures")
 directory = string(RESULTS_DIR,folder)
 mkpath(directory)
 damping = 0.1u"s"
-# scale_inertia_values = [0.2, 0.5, 1, 1.5, 2, 7, 10, 20] # varying parameter
-scale_inertia_values = [0.2, 0.5, 1.5]
+scale_inertia_values = [0.2, 0.5, 0.8, 1.1, 1.4, 1.7, 2.0, 3.0, 4.0, 5.1, 6.1, 7.1, 8.0, 9.0, 10.0, 15.0, 21.0] # varying parameter
 df_all_failures = DataFrame()
 @time for scale_inertia in scale_inertia_values
     network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.01u"s")
     x_static = steadystate(network)
     println("Scaling of inertia $scale_inertia \n steady state \n $x_static \n ")
     number_failures = Float64[]
-    # for i in 1:ne(network)
-    for i in 1:3
+    for i in 1:ne(network)
         sol = simulate(network;
                        x_static = x_static,
                        initial_fail = Int[i],

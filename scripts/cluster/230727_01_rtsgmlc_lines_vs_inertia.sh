@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --qos=medium
-#SBATCH --time=2-00:00:00
+#SBATCH --time=3-00:00:00
 #SBATCH --job-name=230727_01_rtsgmlc_lines_vs_inertia
 #SBATCH --output=230727_01_rtsgmlc_lines_vs_inertia.out
 #SBATCH --nodes=1
