@@ -28,6 +28,8 @@ folder = string("/",datetime,"inertia_vs_node_failures_f_bound=$freq_bound")
 directory = string(RESULTS_DIR,folder)
 mkpath(directory)
 
+damping = 0.1u"s"
+network = import_system(:rtsgmlc; damping, scale_inertia = 0.2, tconst = 0.01u"s")
 nd, = nd_model(network)
 ω_state_idxs = idx_containing(nd, "ω")
 gen_node_idxs = map(s -> parse(Int, String(s)[4:end]), nd.syms[ω_state_idxs])

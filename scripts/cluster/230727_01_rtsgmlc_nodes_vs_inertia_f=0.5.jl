@@ -28,12 +28,12 @@ folder = string("/",datetime,"inertia_vs_node_failures_f_bound=$freq_bound")
 directory = string(RESULTS_DIR,folder)
 mkpath(directory)
 
+damping = 0.1u"s"
+network = import_system(:rtsgmlc; damping, scale_inertia = 0.2, tconst = 0.01u"s")
 nd, = nd_model(network)
 ω_state_idxs = idx_containing(nd, "ω")
 gen_node_idxs = map(s -> parse(Int, String(s)[4:end]), nd.syms[ω_state_idxs])
 
-
-damping = 0.1u"s"
 scale_inertia_values = [0.2, 0.5, 0.8, 1.1, 1.4, 1.7, 2.0, 3.0, 4.0, 5.1, 6.1, 7.1, 8.0, 9.0, 10.0, 15.0, 21.0] # varying parameter
 df_all_failures = DataFrame()
 @time for scale_inertia in scale_inertia_values
