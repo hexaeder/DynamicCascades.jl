@@ -600,26 +600,26 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
 
             affect! = let _failures = failures, _verbose = verbose, _load_S = load_S, _load_P = load_P, _scb_S = scb_S, _scb_P = scb_P
                 (integrator, event_idx) -> begin
-                    _verbose && println("Shutdown line $event_idx at t = $(integrator.t)")
-
-                    if _failures !== nothing
-                        push!(_failures.t, integrator.t)
-                        push!(_failures.saveval, event_idx)
-                    end
-                    if _scb_S !== nothing
-                        _scb_S.affect!.saveiter += 1
-                        push!(_load_S.t, integrator.t)
-                        push!(_load_S.saveval, save_S_fun(integrator.u, integrator.t, integrator))
-                    end
-                    if _scb_P !== nothing
-                        _scb_P.affect!.saveiter += 1
-                        push!(_load_P.t, integrator.t)
-                        push!(_load_P.saveval, save_P_fun(integrator.u, integrator.t, integrator))
-                    end
-                    edge_p = integrator.p[2]
-                    edge_p[event_idx] = 0.0
-                    # all_failed_warnings(integrator)
-                    auto_dt_reset!(integrator)
+                    # _verbose && println("Shutdown line $event_idx at t = $(integrator.t)")
+                    #
+                    # if _failures !== nothing
+                    #     push!(_failures.t, integrator.t)
+                    #     push!(_failures.saveval, event_idx)
+                    # end
+                    # if _scb_S !== nothing
+                    #     _scb_S.affect!.saveiter += 1
+                    #     push!(_load_S.t, integrator.t)
+                    #     push!(_load_S.saveval, save_S_fun(integrator.u, integrator.t, integrator))
+                    # end
+                    # if _scb_P !== nothing
+                    #     _scb_P.affect!.saveiter += 1
+                    #     push!(_load_P.t, integrator.t)
+                    #     push!(_load_P.saveval, save_P_fun(integrator.u, integrator.t, integrator))
+                    # end
+                    # edge_p = integrator.p[2]
+                    # edge_p[event_idx] = 0.0
+                    # # all_failed_warnings(integrator)
+                    # auto_dt_reset!(integrator)
                     nothing
                 end
             end

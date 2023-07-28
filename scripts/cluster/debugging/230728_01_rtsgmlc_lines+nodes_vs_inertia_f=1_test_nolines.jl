@@ -1,12 +1,16 @@
+const ON_CLUSTER = occursin("login", gethostname())
+
 using Pkg
-Pkg.activate("/home/brandner/DynamicCascades.jl")
-Pkg.instantiate()
+PKG_DIR = ON_CLUSTER ? "/home/brandner/DynamicCascades.jl" : joinpath(@__DIR__, "..", "..", "..")
+Pkg.activate(PKG_DIR)
+# Pkg.instantiate()
 
 using LinearAlgebra
 print("Number of threads before setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
 BLAS.set_num_threads(1)
 print("Number of threads after setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
 
+using Revise
 using DynamicCascades
 using NetworkDynamics
 using Graphs
@@ -49,7 +53,7 @@ df_all_failures_nodes = DataFrame()
                        initial_fail = Int[i],
                        init_pert = :line,
                        tspan = (0, 500),
-                       trip_lines = :none,
+                       trip_lines = :dynamic,
                        trip_nodes = :dynamic,
                        trip_load_nodes = :none,
                        f_min = -freq_bound,
