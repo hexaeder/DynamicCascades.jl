@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --qos=priority
-#SBATCH --time=1-00:00:00
+#SBATCH --qos=medium
+#SBATCH --time=2-00:00:00
 #SBATCH --job-name=230728_01_rtsgmlc_nodes_vs_inertia_f=1.5_test2
 #SBATCH --output=230728_01_rtsgmlc_nodes_vs_inertia_f=1.5_test2.out
 #SBATCH --nodes=1
