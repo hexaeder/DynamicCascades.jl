@@ -46,7 +46,7 @@ df_all_failures_nodes = DataFrame()
     number_failures_nodes = Float64[]
     for i in 1:ne(network)
         sol = simulate(network;
-                       x_static = x_static
+                       x_static = x_static,
                        initial_fail = Int[i],
                        init_pert = :line,
                        tspan = (0, 500),
