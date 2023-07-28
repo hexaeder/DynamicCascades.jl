@@ -600,7 +600,7 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
 
             affect! = let _failures = failures, _verbose = verbose, _load_S = load_S, _load_P = load_P, _scb_S = scb_S, _scb_P = scb_P
                 (integrator, event_idx) -> begin
-                    # _verbose && println("Shutdown line $event_idx at t = $(integrator.t)")
+                    _verbose && println("Shutdown line $event_idx at t = $(integrator.t)")
                     #
                     # if _failures !== nothing
                     #     push!(_failures.t, integrator.t)
