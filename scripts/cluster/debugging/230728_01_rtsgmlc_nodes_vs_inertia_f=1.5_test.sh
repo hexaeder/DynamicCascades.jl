@@ -12,4 +12,4 @@
 module purge
 module load julia/1.8.2
 
-julia 230727_01_rtsgmlc_nodes_vs_inertia_f=1.5.jl
+julia 230727_01_rtsgmlc_nodes_vs_inertia_f=1.5_test.jl
