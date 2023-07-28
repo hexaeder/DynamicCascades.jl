@@ -635,13 +635,30 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
 
         ## dynamic node condition
         if trip_nodes == :dynamic
-            function node_condition_max(out, u, t, integrator)
-                out .= u[ω_state_idxs] .- ω_max
+            # function node_condition_max(out, u, t, integrator)
+            #     out .= u[ω_state_idxs] .- ω_max
+            # end
+            #
+            # function node_condition_min(out, u, t, integrator)
+            #     out .= ω_min .- u[ω_state_idxs]
+            # end
+
+            node_condition_max = let _network = network
+                (out, u, t, integrator) -> begin
+                    # upcrossing through zero triggers condition
+                    out .= u[ω_state_idxs] .- ω_max
+                    nothing
+                end
             end
 
-            function node_condition_min(out, u, t, integrator)
-                out .= ω_min .- u[ω_state_idxs]
+            node_condition_min = let _network = network
+                (out, u, t, integrator) -> begin
+                    # upcrossing through zero triggers condition
+                    out .= ω_min .- u[ω_state_idxs]
+                    nothing
+                end
             end
+
 
             affect! = let _failures_nodes = failures_nodes, _verbose = verbose
                 (integrator, event_idx) -> begin
