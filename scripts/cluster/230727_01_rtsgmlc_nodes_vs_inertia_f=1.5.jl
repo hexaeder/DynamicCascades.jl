@@ -60,6 +60,7 @@ df_all_failures = DataFrame()
         push!(number_failures, length(sol.failures_nodes.saveval))
     end
     df_all_failures[!, string(scale_inertia)] = number_failures
+    GC.gc()
 end
 # write failures for each node/line to .csv
 CSV.write(string(directory,"/all_failures.csv"), df_all_failures)
