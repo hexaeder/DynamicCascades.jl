@@ -49,7 +49,7 @@ df_all_failures_nodes = DataFrame()
     number_failures = Float64[]
     number_failures_nodes = Float64[]
     for i in 1:ne(network)
-        if i==3
+        if i==11
             continue
         end
         sol = simulate(network;
