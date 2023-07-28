@@ -245,8 +245,8 @@ function simulate(network;
     # sol = solve(prob, AutoVern9(Rodas5()); callback=cbs, progress=true, solverargs...); # small arefact
     # sol = solve(prob, Rodas5P(); callback=cbs, progress=true, solverargs...); # no artefact
     # sol = solve(prob, Rodas4(); callback=cbs, progress=true, solverargs...);
-    sol = solve(prob, Rodas4P(); callback=cbs, progress=true, solverargs...);
-    # sol = solve(prob, KenCarp4(); callback=cbs, progress=true, solverargs...);
+    # sol = solve(prob, Rodas4P(); callback=cbs, progress=true, solverargs...);
+    sol = solve(prob, KenCarp4(); callback=cbs, progress=true, solverargs...);
 
     container = SolutionContainer(network,
                                   initial_fail, failtime, trip_lines, trip_nodes, trip_load_nodes,
@@ -601,25 +601,25 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
             affect! = let _failures = failures, _verbose = verbose, _load_S = load_S, _load_P = load_P, _scb_S = scb_S, _scb_P = scb_P
                 (integrator, event_idx) -> begin
                     _verbose && println("Shutdown line $event_idx at t = $(integrator.t)")
-                    #
-                    # if _failures !== nothing
-                    #     push!(_failures.t, integrator.t)
-                    #     push!(_failures.saveval, event_idx)
-                    # end
-                    # if _scb_S !== nothing
-                    #     _scb_S.affect!.saveiter += 1
-                    #     push!(_load_S.t, integrator.t)
-                    #     push!(_load_S.saveval, save_S_fun(integrator.u, integrator.t, integrator))
-                    # end
-                    # if _scb_P !== nothing
-                    #     _scb_P.affect!.saveiter += 1
-                    #     push!(_load_P.t, integrator.t)
-                    #     push!(_load_P.saveval, save_P_fun(integrator.u, integrator.t, integrator))
-                    # end
-                    # edge_p = integrator.p[2]
-                    # edge_p[event_idx] = 0.0
-                    # # all_failed_warnings(integrator)
-                    # auto_dt_reset!(integrator)
+
+                    if _failures !== nothing
+                        push!(_failures.t, integrator.t)
+                        push!(_failures.saveval, event_idx)
+                    end
+                    if _scb_S !== nothing
+                        _scb_S.affect!.saveiter += 1
+                        push!(_load_S.t, integrator.t)
+                        push!(_load_S.saveval, save_S_fun(integrator.u, integrator.t, integrator))
+                    end
+                    if _scb_P !== nothing
+                        _scb_P.affect!.saveiter += 1
+                        push!(_load_P.t, integrator.t)
+                        push!(_load_P.saveval, save_P_fun(integrator.u, integrator.t, integrator))
+                    end
+                    edge_p = integrator.p[2]
+                    edge_p[event_idx] = 0.0
+                    # all_failed_warnings(integrator)
+                    auto_dt_reset!(integrator)
                     nothing
                 end
             end
