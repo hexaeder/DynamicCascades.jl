@@ -55,12 +55,11 @@ df_all_failures = DataFrame()
                        trip_load_nodes = :none,
                        f_min = -freq_bound,
                        f_max = freq_bound,
-                       solverargs = (;dtmax=0.01),
+                       solverargs = (;dtmax=0.01, save_everystep = false),
                        verbose = true);
         push!(number_failures, length(sol.failures_nodes.saveval))
     end
     df_all_failures[!, string(scale_inertia)] = number_failures
-    GC.gc()
 end
 # write failures for each node/line to .csv
 CSV.write(string(directory,"/all_failures.csv"), df_all_failures)
