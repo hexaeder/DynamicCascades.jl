@@ -61,8 +61,7 @@ df_all_failures_nodes = DataFrame()
                        trip_load_nodes = :none,
                        f_min = -freq_bound,
                        f_max = freq_bound,
-                       solverargs = (;dtmax=0.01),
-                       verbose = true);
+                       solverargs = (;dtmax=0.01, dtmin=0.0001, force_dtmin=true, save_everystep=false), verbose = true);
         push!(number_failures, length(sol.failures.saveval)-1) # `-1` as we don't want to count the initial failure
         push!(number_failures_nodes, length(sol.failures_nodes.saveval))
     end
