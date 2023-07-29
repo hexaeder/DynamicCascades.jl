@@ -1,7 +1,7 @@
 const ON_CLUSTER = occursin("login", gethostname())
 
 using Pkg
-PKG_DIR = ON_CLUSTER ? "/home/brandner/DynamicCascades.jl" : joinpath(@__DIR__, "..", "..", "..")
+PKG_DIR = ON_CLUSTER ? "/home/brandner/DynamicCascades.jl" : joinpath(@__DIR__, "..", "..")
 Pkg.activate(PKG_DIR)
 # Pkg.instantiate()
 
