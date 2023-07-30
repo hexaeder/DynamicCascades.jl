@@ -12,3 +12,5 @@
 /src/test_old.txt
 .username
 *scratch*
+
+/scripts/cluster/cluster_only

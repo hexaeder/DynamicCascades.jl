@@ -83,4 +83,4 @@ y = df_inertia_vs_failures.rel_failures
 scatter!(x, y, color = :blue)
 # axislegend()
 
-CairoMakie.save(string(directory,"/inertia_vs_number_line_failures.pdf"),fig)
+CairoMakie.save(string(directory,"/inertia_vs_number_node_failures.pdf"),fig)

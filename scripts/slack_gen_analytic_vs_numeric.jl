@@ -22,98 +22,106 @@ M = 1.0
 D = 0.5
 K = 1.0
 P0 = 0.0
-P1 = P_perturb = 0.5
+P1 = P_perturb = 1.0
 failtime = 1.0
 Z = 4*M*K - D^2
+main()
 
 ################################################################################
 ############################ numeric vs. analytic model ########################
 ################################################################################
 
-network = import_system(:nadir_sim; M=float(M)u"s^2", γ=float(D)u"s", K=K, tconst=0.1u"s")
-sol = simulate(network;
-    initial_fail = [1],
-    failtime = failtime,
-    init_pert = :power_perturbation,
-    P_perturb = P_perturb,
-    trip_lines = :none,
-    trip_nodes = :none,
-    trip_load_nodes = :none,
-    tspan = (0.0, 50.0),
-    solverargs = (; dtmax = 0.01));
+function main()
+    network = import_system(:nadir_sim; M=float(M)u"s^2", γ=float(D)u"s", K=K, tconst=0.1u"s")
+    sol = simulate(network;
+        initial_fail = [1],
+        failtime = failtime,
+        init_pert = :power_perturbation,
+        P_perturb = P_perturb,
+        trip_lines = :none,
+        trip_nodes = :none,
+        trip_load_nodes = :none,
+        tspan = (0.0, 50.0),
+        solverargs = (; dtmax = 0.01));
 
-# plot solution
-fig = Figure(resolution=(1800,1000), fontsize=35)
+    # plot solution
+    fig = Figure(resolution=(1800,1000), fontsize=35)
 
-# phase | flow #################################################################
-# fig[1,1] = ax = Axis(fig; xlabel="time t in s", ylabel="phase angle θ | apparent power flow in p.u.", title="Phase | Power flow")
-fig[1,1] = ax = Axis(fig; xlabel="time t [s]", ylabel="phase angle θ [rad]", title="Phase")
-# phase of gen
-t = sol.sol.t
-y_numeric = [sol.sol.u[i][1] for i in 1:length(sol.sol.t)]
-lines!(ax, t, y_numeric; label="numeric", linewidth=3)
-# # phase of slack
-# y = [sol.sol.u[i][3] for i in 1:length(sol.sol.t)]
-# lines!(ax, t, y; label="slack", linewidth=3)
+    # phase | flow #################################################################
+    # fig[1,1] = ax = Axis(fig; xlabel="time t in s", ylabel="phase angle θ | apparent power flow in p.u.", title="Phase | Power flow")
+    fig[1,1] = ax = Axis(fig; xlabel="time t [s]", ylabel="phase angle θ [rad]", title="Phase")
+    # phase of gen
+    t = sol.sol.t
+    y_numeric = [sol.sol.u[i][1] for i in 1:length(sol.sol.t)]
+    lines!(ax, t, y_numeric; label="numeric phase angle", linewidth=3)
+    # # phase of slack
+    # y = [sol.sol.u[i][3] for i in 1:length(sol.sol.t)]
+    # lines!(ax, t, y; label="slack", linewidth=3)
 
-# phase analytic solution
-y_analytic = [phase(t[i], failtime, M, D, K, P0, P1) for i in 1:length(sol.sol.t)]
-lines!(ax, t, y_analytic; label="analytic", linewidth=3)
+    # power flow numeric
+    t = sol.load_S.t
+    y_powerflow_numeric = [sol.load_S.saveval[i][1] for i in 1:length(sol.load_S.t)]
+    lines!(ax, t, y_powerflow_numeric; label="numeric power flow", linewidth=3, linestyle=:dash)
 
-# add parameters/coefficients to legend
-R_2 = round(R_squared(y_analytic, y_numeric), digits = 3)
-lines!(ax, [NaN], [NaN]; label="R^2=$R_2", color=:white, linewidth=3)
+    # phase analytic solution
+    t = sol.sol.t
+    y_analytic = [phase(t[i], failtime, M, D, K, P0, P1) for i in 1:length(sol.sol.t)]
+    lines!(ax, t, y_analytic; label="analytic phase angle", linewidth=3)
 
-# # power flow
-# t = sol.load_S.t
-# y = [sol.load_S.saveval[i][1] for i in 1:length(sol.load_S.t)]
-# lines!(ax, t, y; label="flow", linewidth=3)
-axislegend()
+    # power flow analytic
+    y_powerflow_analytic = [K * phase(t[i], failtime, M, D, K, P0, P1) for i in 1:length(sol.sol.t)]
+    lines!(ax, t, y_powerflow_analytic; label="analytic power flow", linewidth=3, linestyle=:dash)
+    # scatter!(ax, t, y_powerflow_analytic; label="power flow analytic", marker=:cross)
 
-# frequency ####################################################################
-fig[1,2] = ax = Axis(fig; xlabel="time t [s]", ylabel="ang. frequency ω [rad/s]", title="Frequency")
-# frequency of gen
-t = sol.sol.t
-y_numeric = [sol.sol.u[i][2] for i in 1:length(sol.sol.t)]
-lines!(ax, t, y_numeric; label="numeric", linewidth=3)
+    # add parameters/coefficients to legend
+    R_2 = round(R_squared(y_analytic, y_numeric), digits = 2)
+    lines!(ax, [NaN], [NaN]; label="R^2=$R_2", color=:white, linewidth=3)
+    axislegend()
+    fig
+    # frequency ####################################################################
+    fig[1,2] = ax = Axis(fig; xlabel="time t [s]", ylabel="ang. frequency ω [rad/s]", title="Frequency")
+    # frequency of gen
+    t = sol.sol.t
+    y_numeric = [sol.sol.u[i][2] for i in 1:length(sol.sol.t)]
+    lines!(ax, t, y_numeric; label="numeric", linewidth=3)
 
-# frequency analytic solution
-y_analytic = [frequency(t[i], failtime, M, D, K, P0, P1) for i in 1:length(sol.sol.t)]
-lines!(ax, t, y_analytic; label="analytic", linewidth=3)
+    # frequency analytic solution
+    y_analytic = [frequency(t[i], failtime, M, D, K, P0, P1) for i in 1:length(sol.sol.t)]
+    lines!(ax, t, y_analytic; label="analytic", linewidth=3)
 
-# # frequency of slack
-# t = sol.frequencies_load_nodes.t
-# y = [sol.frequencies_load_nodes.saveval[i][1] for i in 1:length(sol.frequencies_load_nodes.t)]
-# lines!(ax, t, y; label="slack", linewidth=3)
+    # # frequency of slack
+    # t = sol.frequencies_load_nodes.t
+    # y = [sol.frequencies_load_nodes.saveval[i][1] for i in 1:length(sol.frequencies_load_nodes.t)]
+    # lines!(ax, t, y; label="slack", linewidth=3)
 
-# add parameters/coefficients to legend
-R_2 = round(R_squared(y_analytic, y_numeric), digits = 3)
-lines!(ax, [NaN], [NaN]; label="R^2=$R_2", color=:white, linewidth=3)
-axislegend()
+    # add parameters/coefficients to legend
+    R_2 = round(R_squared(y_analytic, y_numeric), digits = 2)
+    lines!(ax, [NaN], [NaN]; label="R^2=$R_2", color=:white, linewidth=3)
+    axislegend()
 
-# RoCoF ########################################################################
-fig[2,2] = ax = Axis(fig; xlabel="time t [s]", ylabel="RoCoF [rad/s^2]", title="Rate of change of angular frequency")
-t = sol.sol.t
-y_numeric = [sol.sol(t[i], Val{1})[2] for i in 1:length(sol.sol.t)]
-lines!(ax, t, y_numeric; label="numeric", linewidth=3)
+    # RoCoF ########################################################################
+    fig[2,2] = ax = Axis(fig; xlabel="time t [s]", ylabel="RoCoF [rad/s^2]", title="Rate of change of angular frequency")
+    t = sol.sol.t
+    y_numeric = [sol.sol(t[i], Val{1})[2] for i in 1:length(sol.sol.t)]
+    lines!(ax, t, y_numeric; label="numeric", linewidth=3)
 
-# RocoF analytic solution
-y_analytic = [RocoF(t[i], failtime, M, D, K, P0, P1) for i in 1:length(sol.sol.t)]
-lines!(ax, t, y_analytic; label="analytic", linewidth=3)
+    # RocoF analytic solution
+    y_analytic = [RocoF(t[i], failtime, M, D, K, P0, P1) for i in 1:length(sol.sol.t)]
+    lines!(ax, t, y_analytic; label="analytic", linewidth=3)
 
-# add parameters/coefficients to legend
-R_2 = round(R_squared(y_analytic, y_numeric), digits = 3)
-lines!(ax, [NaN], [NaN]; label="R^2=$R_2", color=:white, linewidth=3)
-axislegend()
+    # add parameters/coefficients to legend
+    R_2 = round(R_squared(y_analytic, y_numeric), digits = 2)
+    lines!(ax, [NaN], [NaN]; label="R^2=$R_2", color=:white, linewidth=3)
+    axislegend()
 
-parameters = "Parameters: inertia M=$M [s^2], damping D=$D [s], coupling K=$K, power perturbation P_perturb=$P_perturb [p.u.]"
-supertitle = Label(fig[0, :], parameters)
-# sideinfo = Label(fig[3, 1:2], parameters)
-fig
+    parameters = "Parameters: inertia M=$M [s^2], damping D=$D [s], coupling K=$K, power perturbation P_perturb=$P_perturb [p.u.]"
+    supertitle = Label(fig[0, :], parameters)
+    # sideinfo = Label(fig[3, 1:2], parameters)
+    fig
 
-save(joinpath(PLOT_DIR, "nadir_sim_M=$M,D=$D,K=$K,P_perturb=$P_perturb.pdf"), fig)
-save(joinpath(PLOT_DIR, "nadir_sim_M=$M,D=$D,K=$K,P_perturb=$P_perturb.png"), fig)
-
+    save(joinpath(MA_DIR, "nadir_sim_M=$M,D=$D,K=$K,P_perturb=$P_perturb.pdf"), fig)
+    save(joinpath(MA_DIR, "nadir_sim_M=$M,D=$D,K=$K,P_perturb=$P_perturb.png"), fig)
+end
 
 ################################################################################
 
@@ -165,25 +173,23 @@ hm = Makie.heatmap!(ax, 0:0.1:6, 0:0.1:6, phase_nadir, colormap = Reverse(:deep)
 Colorbar(fig[:, end+1], hm, label="maximal absolute phase angle deviation")
 fig
 
-save(joinpath(PLOT_DIR, "heatmap_phase_K=$K,P_perturb=$P_perturb.pdf"), fig)
-save(joinpath(PLOT_DIR, "heatmap_phase_K=$K,P_perturb=$P_perturb.png"), fig)
+save(joinpath(MA_DIR, "heatmap_phase_K=$K,P_perturb=$P_perturb.pdf"), fig)
+save(joinpath(MA_DIR, "heatmap_phase_K=$K,P_perturb=$P_perturb.png"), fig)
 
 ################################# frequency ####################################
 fig = Figure(fontsize=30)
 fig[1,1] = ax = Axis(fig; xlabel="inertia M [s^2]", ylabel="damping D [s]",
                     title="Ang. frequency deviation, K=$K, P_perturb=$P_perturb [p.u.]",
                     titlesize=25)
-xs = range(start=0.0, step=0.1, stop = 6.0)
-ys = range(start=0.0, step=0.1, stop = 5.0)
+xs = range(start=0.0, step=0.05, stop = 1.0)
+ys = range(start=0.0, step=0.05, stop = 2.0)
 zs = [frequency_nadir(x, y, K, P0, P1) for x in xs, y in ys]
 hm = Makie.heatmap!(ax, xs, ys, zs, colormap = Reverse(:deep))
-Colorbar(fig[:, end+1], hm, label="maximal absolute ang. frequency dev.")
+Colorbar(fig[:, end+1], hm, label="maximal absolute ang. freq. dev.")
 fig
 
-# NOTE frequency_nadir(0.5, 1.0, K=1.0, P0=0.0, P1=0.5)
-
-save(joinpath(PLOT_DIR, "heatmap_frequency_K=$K,P_perturb=$P_perturb.pdf"), fig)
-save(joinpath(PLOT_DIR, "heatmap_frequency_K=$K,P_perturb=$P_perturb.png"), fig)
+save(joinpath(MA_DIR, "zoomed_heatmap_frequency_K=$K,P_perturb=$P_perturb.pdf"), fig)
+save(joinpath(MA_DIR, "zoomed_heatmap_frequency_K=$K,P_perturb=$P_perturb.png"), fig)
 
 ##################### border complex and real eigenvalues ######################
 fig = Figure(fontsize=30)

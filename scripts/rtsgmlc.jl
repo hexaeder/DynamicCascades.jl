@@ -65,7 +65,7 @@ function trip_all_lines(;damping = 0.1u"s")
             trip_lines = :dynamic,
             tspan = (0.0, 100.0),
             verbose = false)
-        terminated(sol) || @warn("i = $i did not termiante early")
+        terminated(sol) || @warn("i = $i did not terminate early")
         result = (; initial = i, t = sol.failures.t, line = sol.failures.saveval,
                   type=:dynamic, D=ustrip(damping), hittlimit=!terminated(sol))
         println(result)

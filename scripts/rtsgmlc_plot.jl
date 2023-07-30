@@ -3,6 +3,13 @@
 ![animation](rtsgmlc.mp4)
 =#
 # load used packages
+
+using LinearAlgebra
+print("Number of threads before setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
+BLAS.set_num_threads(1)
+print("Number of threads after setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
+
+
 using Revise
 using DynamicCascades
 using Graphs
@@ -21,7 +28,7 @@ using CairoMakie
 # GLMakie.activate!()#jl
 
 damping = 0.1u"s"
-scale_inertia = 1.0
+scale_inertia = 1.1
 network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.01u"s")
 # network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.11u"s")
 # network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.5u"s")
@@ -30,7 +37,7 @@ sol = simulate(network;
                # initial_fail = Int[37,73],
                # initial_fail = Int[27],
                # initial_fail = Int[27],
-               initial_fail = Int[22],
+               initial_fail = Int[27],
                # failtime=0.01,
                init_pert = :line,
                # P_perturb = 1.0,
@@ -41,19 +48,17 @@ sol = simulate(network;
                # tspan = (0, 0.4),
                # tspan = (0, 0.11),
                # tspan = (0, 0.08),
-               tspan = (0, 0.4),
+               tspan = (0, 10.0),
                terminate_steady_state=true,
-               trip_lines = :dynamic,
+               trip_lines = :none,
                trip_nodes = :dynamic,
                trip_load_nodes = :none,
-               # f_min = -0.3/(2π),
-               # f_max = 0.3/(2π),
-               f_min = -2.5/(2π),
-               f_max = 1.5/(2π),
-               # f_min = -2.5,
-               # f_max = 1.5,
-               solverargs = (;dtmax=0.01),
-               verbose = true);
+               # f_min = -1.0/(2π),
+               # f_max = 1.0/(2π),
+               f_min = -2.5,
+               f_max = 1.5,
+               solverargs = (;dtmax=0.01), verbose = true);
+               # solverargs = (;dtmax=0.01, dtmin=0.0001, force_dtmin=true, save_everystep=false), verbose = true);
                # solverargs = (;dtmax=0.0000001), verbose = true);
 
 # save(joinpath(PLOT_DIR, "rtsgmlc_scaleM=$scale_inertia.pdf"), fig)
@@ -207,8 +212,8 @@ for i in edges_to_fail
                    trip_lines = :dynamic,
                    trip_nodes = :dynamic,
                    trip_load_nodes = :none,
-                   f_min = -2.5/(2π),
-                   f_max = 1.5/(2π),
+                   f_min = -2.5,
+                   f_max = 1.5,
                    solverargs = (;dtmax=0.01), verbose = true);
     print("number of node failures "); print(length(sol.failures_nodes.saveval)); print("\n")
 end
