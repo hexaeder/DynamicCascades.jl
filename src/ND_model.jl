@@ -245,8 +245,8 @@ function simulate(network;
     # sol = solve(prob, AutoVern9(Rodas5()); callback=cbs, progress=true, solverargs...); # small arefact
     # sol = solve(prob, Rodas5P(); callback=cbs, progress=true, solverargs...); # no artefact
     # sol = solve(prob, Rodas4(); callback=cbs, progress=true, solverargs...);
-    sol = solve(prob, Rodas4P(); callback=cbs, progress=true, solverargs...);
-    # sol = solve(prob, KenCarp4(); callback=cbs, progress=true, solverargs...);
+    # sol = solve(prob, Rodas4P(); callback=cbs, progress=true, solverargs...);
+    sol = solve(prob, KenCarp4(); callback=cbs, progress=true, solverargs...);
 
     container = SolutionContainer(network,
                                   initial_fail, failtime, trip_lines, trip_nodes, trip_load_nodes,
