@@ -1,0 +1,2179 @@
+Number of threads before setting8
+Number of threads after setting1
+Scaling of inertia 0.2 
+ steady state 
+ [-0.06815754822775945, -5.93820010763394e-19, -0.06894330936389151, 0.0, -0.06869644483714187, -0.10695996980101007, -0.10779945140580531, -0.1440497639020523, 0.016686894876306382, -2.0494874033832226e-18, -0.08100200570848275, -0.06502946283284214, -0.09128706584675676, 0.010213851261937308, 0.04427644275643013, 0.08506726892746141, 1.4265307099459613e-18, 0.03296269905365274, -2.210854126284492e-18, 0.16392672093439545, 1.8318430779378754e-20, 0.16964005726762738, 1.3452335638564932e-18, 0.2426097831507573, 0.26267665282510133, 1.492144413969713e-18, 0.1546778044597291, 0.19533370659759702, 0.2961631863123328, -1.8418019581751937e-18, 0.38581152469706453, 0.0, 0.2431745383545119, 1.6027868597312595e-19, 0.07683805164224346, -0.11316031209801763, 5.426176825083403e-19, -0.1135283092548412, 0.0, -0.0689314354664692, -0.14705026589319642, -0.15306737683935812, -0.18937505081567138, -0.27725844627231855, 3.3826052764819837e-18, -0.26743448928751257, -0.10154264355327937, -0.13687334033097898, -0.001314398858147125, 0.035553192431249186, 0.10325837190029448, 0.0, 0.025152398607017182, 3.517951384753299e-19, 0.15975360534026564, -2.032417783674987e-18, 0.16708013276900135, -3.505279238466315e-19, 0.24039760923282694, 0.260187830897674, -6.3974454054457434e-21, 0.15595648165405782, 0.20332532140580137, 0.2931838826840899, 9.248900243859638e-20, 0.3830979152790627, 0.0, 0.2548234428356392, 1.6761261642551258e-18, 0.07370612437941548, -0.2744122686963891, 1.2410314846858315e-18, -0.27525030059547906, 0.0, -0.1984627873446887, -0.2848157446212332, -0.29450505772916047, -0.3201510010388186, -0.396937288571283, -9.23732967905807e-18, -0.3870830229574632, -0.21906647706235127, -0.2578376146790721, -0.10515532445257757, -0.0695653608862016, -0.009873422198291121, 6.865581705383475e-18, -0.05569020120195767, -6.092437130482511e-19, 0.11370735267596419, -1.1917678018148572e-18, 0.1181192198965523, 3.451831873834904e-19, 0.2033046945841378, 0.22871170070992883, -7.367811439071085e-19, 0.1050370843466506, 0.1489820846899858, 0.2655683554555695, 7.44012818866113e-20, 0.3555156567191113, 0.0, 0.1986149521202452, 3.5834644708311984e-21, -0.0030233716314904866, 0.20688737070216962] 
+ 
+Find steady state...
+Run simulation for trips on lines/nodes [1]
+Shutdown line 1 at t = 0.1
+Terminated on steady state at 4.041421162567513
+Find steady state...
+Run simulation for trips on lines/nodes [2]
+Shutdown line 2 at t = 0.1
+Terminated on steady state at 3.0699999999999785
+Find steady state...
+Run simulation for trips on lines/nodes [3]
+Shutdown line 3 at t = 0.1
+Terminated on steady state at 4.461443583783491
+Find steady state...
+Run simulation for trips on lines/nodes [4]
+Shutdown line 4 at t = 0.1
+Terminated on steady state at 4.592787124208391
+Find steady state...
+Run simulation for trips on lines/nodes [5]
+Shutdown line 5 at t = 0.1
+Terminated on steady state at 4.631596523042464
+Find steady state...
+Run simulation for trips on lines/nodes [6]
+Shutdown line 6 at t = 0.1
+Terminated on steady state at 3.6182777696187975
+Find steady state...
+Run simulation for trips on lines/nodes [7]
+Shutdown line 7 at t = 0.1
+Shutdown node 15 at t = 0.10735678501667084
+Shutdown node 16 at t = 0.10744556492520482
+Terminated on steady state at 0.10754556492520483
+Find steady state...
+Run simulation for trips on lines/nodes [8]
+Shutdown line 8 at t = 0.1
+Terminated on steady state at 4.590405118471706
+Find steady state...
+Run simulation for trips on lines/nodes [9]
+Shutdown line 9 at t = 0.1
+Terminated on steady state at 4.311558175547934
+Find steady state...
+Run simulation for trips on lines/nodes [10]
+Shutdown line 10 at t = 0.1
+Shutdown node 1 at t = 0.1436682183245853
+Shutdown node 2 at t = 0.14385108474048997
+Shutdown node 14 at t = 0.15691094063433414
+Shutdown node 13 at t = 0.1573805905436392
+Terminated on steady state at 0.1577934189304036
+Find steady state...
+Run simulation for trips on lines/nodes [11]
+Shutdown line 11 at t = 0.1
+Shutdown node 7 at t = 0.10394744594462287
+Shutdown node 2 at t = 0.1685375958959845
+Shutdown node 1 at t = 0.1685564026590671
+Shutdown node 13 at t = 0.17157153093060942
+Shutdown node 14 at t = 0.1716243895582089
+Terminated on steady state at 0.1717243895582089
+Find steady state...
+Run simulation for trips on lines/nodes [12]
+Shutdown line 12 at t = 0.1
+Shutdown node 7 at t = 0.11302584083133137
+Shutdown node 14 at t = 0.11948912608911141
+Shutdown node 13 at t = 0.11972939741565464
+Terminated on steady state at 0.12041818484467903
+Find steady state...
+Run simulation for trips on lines/nodes [13]
+Shutdown line 13 at t = 0.1
+Terminated on steady state at 3.730975685127296
+Find steady state...
+Run simulation for trips on lines/nodes [14]
+Shutdown line 14 at t = 0.1
+Terminated on steady state at 3.8321635532641087
+Find steady state...
+Run simulation for trips on lines/nodes [15]
+Shutdown line 15 at t = 0.1
+Terminated on steady state at 4.474080091535643
+Find steady state...
+Run simulation for trips on lines/nodes [16]
+Shutdown line 16 at t = 0.1
+Terminated on steady state at 4.654414920156079
+Find steady state...
+Run simulation for trips on lines/nodes [17]
+Shutdown line 17 at t = 0.1
+Shutdown node 14 at t = 0.11577275015992977
+Shutdown node 16 at t = 0.11696431816065023
+Shutdown node 15 at t = 0.1172846064164607
+Shutdown node 18 at t = 0.11743599755078578
+Terminated on steady state at 0.11743599755078578
+Find steady state...
+Run simulation for trips on lines/nodes [18]
+Shutdown line 18 at t = 0.1
+Terminated on steady state at 4.712946399977132
+Find steady state...
+Run simulation for trips on lines/nodes [19]
+Shutdown line 19 at t = 0.1
+Shutdown node 14 at t = 0.1071926214768201
+Shutdown node 16 at t = 0.10784476999598823
+Shutdown node 15 at t = 0.1081441692705441
+Shutdown node 18 at t = 0.10830478187603039
+Terminated on steady state at 0.10830478187603039
+Find steady state...
+Run simulation for trips on lines/nodes [20]
+Shutdown line 20 at t = 0.1
+Shutdown node 14 at t = 0.11325112033052542
+Shutdown node 16 at t = 0.114102901957467
+Shutdown node 15 at t = 0.11442978960311846
+Shutdown node 18 at t = 0.11458529307086254
+Terminated on steady state at 0.11479711130963521
+Find steady state...
+Run simulation for trips on lines/nodes [21]
+Shutdown line 21 at t = 0.1
+Terminated on steady state at 4.5355644946442375
+Find steady state...
+Run simulation for trips on lines/nodes [22]
+Shutdown line 22 at t = 0.1
+Shutdown node 23 at t = 0.10897646025903748
+Shutdown node 13 at t = 0.11043970688413528
+Terminated on steady state at 0.1118043627767725
+Find steady state...
+Run simulation for trips on lines/nodes [23]
+Shutdown line 23 at t = 0.1
+Shutdown node 13 at t = 0.10769073374599714
+Shutdown node 14 at t = 0.10980065941554897
+Terminated on steady state at 0.11035881057773468
+Find steady state...
+Run simulation for trips on lines/nodes [24]
+Shutdown line 24 at t = 0.1
+Shutdown node 13 at t = 0.11564683155969416
+Shutdown node 14 at t = 0.11731334266074311
+Shutdown node 23 at t = 0.11970690144679633
+Shutdown node 7 at t = 0.1200655856739642
+Terminated on steady state at 0.12108713694672152
+Find steady state...
+Run simulation for trips on lines/nodes [25]
+Shutdown line 25 at t = 0.1
+Shutdown node 16 at t = 0.10157492035243845
+Shutdown node 15 at t = 0.10189134244741177
+Shutdown node 18 at t = 0.10204460988074077
+Terminated on steady state at 0.10204460988074077
+Find steady state...
+Run simulation for trips on lines/nodes [26]
+Shutdown line 26 at t = 0.1
+Terminated on steady state at 4.07558629181227
+Find steady state...
+Run simulation for trips on lines/nodes [27]
+Shutdown line 27 at t = 0.1
+Shutdown node 21 at t = 0.10222957753251694
+Shutdown node 15 at t = 0.10386401676938986
+Shutdown node 16 at t = 0.10394111956066095
+Terminated on steady state at 0.10404111956066095
+Find steady state...
+Run simulation for trips on lines/nodes [28]
+Shutdown line 28 at t = 0.1
+Shutdown node 15 at t = 0.10683209842350044
+Shutdown node 16 at t = 0.10692073518535324
+Terminated on steady state at 0.10724533967169407
+Find steady state...
+Run simulation for trips on lines/nodes [29]
+Shutdown line 29 at t = 0.1
+Shutdown node 16 at t = 0.10128071755862834
+Shutdown node 15 at t = 0.10157048508307714
+Shutdown node 14 at t = 0.10173232515142011
+Terminated on steady state at 0.10173232515142011
+Find steady state...
+Run simulation for trips on lines/nodes [30]
+Shutdown line 30 at t = 0.1
+Terminated on steady state at 4.7169451918249825
+Find steady state...
+Run simulation for trips on lines/nodes [31]
+Shutdown line 31 at t = 0.1
+Shutdown node 16 at t = 0.103552243748575
+Shutdown node 15 at t = 0.10387192550668373
+Shutdown node 14 at t = 0.10404140835860637
+Shutdown node 18 at t = 0.10428362825794761
+Terminated on steady state at 0.1045175664301945
+Find steady state...
+Run simulation for trips on lines/nodes [32]
+Shutdown line 32 at t = 0.1
+Shutdown node 18 at t = 0.10756973640747504
+Terminated on steady state at 0.10766973640747504
+Find steady state...
+Run simulation for trips on lines/nodes [33]
+Shutdown line 33 at t = 0.1
+Shutdown node 18 at t = 0.10477396452245083
+Shutdown node 21 at t = 0.10482276624148827
+Terminated on steady state at 0.10482276624148827
+Find steady state...
+Run simulation for trips on lines/nodes [34]
+Shutdown line 34 at t = 0.1
+Shutdown node 16 at t = 0.10420472531923472
+Shutdown node 15 at t = 0.10452532926458426
+Shutdown node 18 at t = 0.10468232586983812
+Shutdown node 14 at t = 0.1046961287058643
+Terminated on steady state at 0.1046961287058643
+Find steady state...
+Run simulation for trips on lines/nodes [35]
+Shutdown line 35 at t = 0.1
+Shutdown node 16 at t = 0.10246041462496425
+Shutdown node 15 at t = 0.10278414315945889
+Shutdown node 18 at t = 0.10294192920367927
+Shutdown node 14 at t = 0.1029558019011371
+Terminated on steady state at 0.1029558019011371
+Find steady state...
+Run simulation for trips on lines/nodes [36]
+Shutdown line 36 at t = 0.1
+Shutdown node 21 at t = 0.10478958681784202
+Shutdown node 18 at t = 0.10703283674322109
+Terminated on steady state at 0.10713283674322109
+Find steady state...
+Run simulation for trips on lines/nodes [37]
+Shutdown line 37 at t = 0.1
+Shutdown node 21 at t = 0.10757561671306418
+Shutdown node 18 at t = 0.112429249036493
+Terminated on steady state at 0.112529249036493
+Find steady state...
+Run simulation for trips on lines/nodes [38]
+Shutdown line 38 at t = 0.1
+Terminated on steady state at 3.8806847530527864
+Find steady state...
+Run simulation for trips on lines/nodes [39]
+Shutdown line 39 at t = 0.1
+Terminated on steady state at 3.9530941563156445
+Find steady state...
+Run simulation for trips on lines/nodes [40]
+Shutdown line 40 at t = 0.1
+Terminated on steady state at 4.274060684174565
+Find steady state...
+Run simulation for trips on lines/nodes [41]
+Shutdown line 41 at t = 0.1
+Terminated on steady state at 4.860810707841669
+Find steady state...
+Run simulation for trips on lines/nodes [42]
+Shutdown line 42 at t = 0.1
+Terminated on steady state at 4.813609172917667
+Find steady state...
+Run simulation for trips on lines/nodes [43]
+Shutdown line 43 at t = 0.1
+Terminated on steady state at 4.731069579230162
+Find steady state...
+Run simulation for trips on lines/nodes [44]
+Shutdown line 44 at t = 0.1
+Terminated on steady state at 4.3399279604556
+Find steady state...
+Run simulation for trips on lines/nodes [45]
+Shutdown line 45 at t = 0.1
+Shutdown node 7 at t = 0.11232822734584286
+Shutdown node 39 at t = 0.11481109791583409
+Terminated on steady state at 0.11491109791583409
+Find steady state...
+Run simulation for trips on lines/nodes [46]
+Shutdown line 46 at t = 0.1
+Terminated on steady state at 4.669559675304679
+Find steady state...
+Run simulation for trips on lines/nodes [47]
+Shutdown line 47 at t = 0.1
+Terminated on steady state at 4.380970820249925
+Find steady state...
+Run simulation for trips on lines/nodes [48]
+Shutdown line 48 at t = 0.1
+Shutdown node 25 at t = 0.14534104281044322
+Shutdown node 26 at t = 0.14552718643499482
+Shutdown node 38 at t = 0.1568532809945258
+Shutdown node 37 at t = 0.15751122787912525
+Shutdown node 31 at t = 0.15968234678345922
+Shutdown node 7 at t = 0.16179929243175334
+Shutdown node 40 at t = 0.16218017395919646
+Shutdown node 39 at t = 0.16254437013147985
+Shutdown node 42 at t = 0.16269008303264107
+Terminated on steady state at 0.16269008303264107
+Find steady state...
+Run simulation for trips on lines/nodes [49]
+Shutdown line 49 at t = 0.1
+Shutdown node 31 at t = 0.16413901198457648
+Terminated on steady state at 4.156758340652933
+Find steady state...
+Run simulation for trips on lines/nodes [50]
+Shutdown line 50 at t = 0.1
+Shutdown node 31 at t = 0.110487706434538
+Shutdown node 37 at t = 0.14381566860048126
+Shutdown node 38 at t = 0.14415460663495144
+Shutdown node 26 at t = 0.1457834098019617
+Shutdown node 25 at t = 0.14584350634047524
+Shutdown node 40 at t = 0.14780545589011015
+Shutdown node 47 at t = 0.14806335577124735
+Shutdown node 39 at t = 0.14820207628705243
+Shutdown node 42 at t = 0.14829678770559016
+Terminated on steady state at 0.14839678770559014
+Find steady state...
+Run simulation for trips on lines/nodes [51]
+Shutdown line 51 at t = 0.1
+Shutdown node 31 at t = 0.1131531598163132
+Shutdown node 38 at t = 0.13117820780621753
+Shutdown node 37 at t = 0.1312077887236141
+Shutdown node 26 at t = 0.1348728299694419
+Shutdown node 25 at t = 0.13497800080161126
+Shutdown node 7 at t = 0.13517334901856348
+Shutdown node 47 at t = 0.1357091865059698
+Shutdown node 40 at t = 0.13580265357833873
+Shutdown node 39 at t = 0.13611954464185466
+Shutdown node 42 at t = 0.13627512593991473
+Terminated on steady state at 0.13627512593991473
+Find steady state...
+Run simulation for trips on lines/nodes [52]
+Shutdown line 52 at t = 0.1
+Shutdown node 38 at t = 0.11709827274744856
+Shutdown node 37 at t = 0.1214930903452732
+Shutdown node 31 at t = 0.12427910479468504
+Shutdown node 40 at t = 0.12512154518073984
+Shutdown node 39 at t = 0.12557344929372288
+Shutdown node 42 at t = 0.12562639719698102
+Terminated on steady state at 0.125726397196981
+Find steady state...
+Run simulation for trips on lines/nodes [53]
+Shutdown line 53 at t = 0.1
+Terminated on steady state at 5.084100185310733
+Find steady state...
+Run simulation for trips on lines/nodes [54]
+Shutdown line 54 at t = 0.1
+Shutdown node 38 at t = 0.1101162302641176
+Shutdown node 40 at t = 0.11134499572266496
+Shutdown node 39 at t = 0.11185206149232561
+Shutdown node 42 at t = 0.11186135420179913
+Terminated on steady state at 0.1120648384366474
+Find steady state...
+Run simulation for trips on lines/nodes [55]
+Shutdown line 55 at t = 0.1
+Shutdown node 37 at t = 0.12234325623579512
+Shutdown node 38 at t = 0.1230335128450906
+Terminated on steady state at 0.12426295800250074
+Find steady state...
+Run simulation for trips on lines/nodes [56]
+Shutdown line 56 at t = 0.1
+Shutdown node 38 at t = 0.10510277187238319
+Shutdown node 40 at t = 0.1057672598962751
+Shutdown node 39 at t = 0.10625909821372205
+Shutdown node 42 at t = 0.1062708414725492
+Terminated on steady state at 0.10647494970295271
+Find steady state...
+Run simulation for trips on lines/nodes [57]
+Shutdown line 57 at t = 0.1
+Shutdown node 38 at t = 0.1109143898124248
+Shutdown node 40 at t = 0.11272281983374832
+Shutdown node 39 at t = 0.1132432662283394
+Shutdown node 42 at t = 0.11325250948486902
+Terminated on steady state at 0.11346594194045366
+Find steady state...
+Run simulation for trips on lines/nodes [58]
+Shutdown line 58 at t = 0.1
+Shutdown node 37 at t = 0.11095238608160637
+Shutdown node 38 at t = 0.11395550804874537
+Shutdown node 31 at t = 0.11738891622184684
+Shutdown node 26 at t = 0.11929413065483795
+Shutdown node 25 at t = 0.11936463320432114
+Shutdown node 7 at t = 0.12175560076257481
+Shutdown node 47 at t = 0.12511050570555285
+Shutdown node 39 at t = 0.12590388091904045
+Terminated on steady state at 0.12600388091904044
+Find steady state...
+Run simulation for trips on lines/nodes [59]
+Shutdown line 59 at t = 0.1
+Shutdown node 47 at t = 0.10983453530248924
+Shutdown node 37 at t = 0.10994503471702384
+Shutdown node 38 at t = 0.11099627783071106
+Terminated on steady state at 0.11109627783071106
+Find steady state...
+Run simulation for trips on lines/nodes [60]
+Shutdown line 60 at t = 0.1
+Shutdown node 37 at t = 0.10753257131597777
+Shutdown node 38 at t = 0.10871172863524402
+Terminated on steady state at 0.11064353649723926
+Find steady state...
+Run simulation for trips on lines/nodes [61]
+Shutdown line 61 at t = 0.1
+Shutdown node 40 at t = 0.10151570202765108
+Shutdown node 39 at t = 0.10202346103096908
+Shutdown node 42 at t = 0.10203145877820194
+Terminated on steady state at 0.10224375854621706
+Find steady state...
+Run simulation for trips on lines/nodes [62]
+Shutdown line 62 at t = 0.1
+Terminated on steady state at 4.685199961441291
+Find steady state...
+Run simulation for trips on lines/nodes [63]
+Shutdown line 63 at t = 0.1
+Shutdown node 45 at t = 0.10220612286825163
+Shutdown node 39 at t = 0.10731842288837998
+Shutdown node 40 at t = 0.10739023302960189
+Terminated on steady state at 0.1074902330296019
+Find steady state...
+Run simulation for trips on lines/nodes [64]
+Shutdown line 64 at t = 0.1
+Shutdown node 7 at t = 0.11374362441029218
+Shutdown node 39 at t = 0.11422533284957184
+Terminated on steady state at 0.11432533284957185
+Find steady state...
+Run simulation for trips on lines/nodes [65]
+Shutdown line 65 at t = 0.1
+Shutdown node 40 at t = 0.10127376697572295
+Shutdown node 39 at t = 0.10173460928250506
+Shutdown node 38 at t = 0.10174294562083523
+Terminated on steady state at 0.1019843545126244
+Find steady state...
+Run simulation for trips on lines/nodes [66]
+Shutdown line 66 at t = 0.1
+Terminated on steady state at 4.647905903455981
+Find steady state...
+Run simulation for trips on lines/nodes [67]
+Shutdown line 67 at t = 0.1
+Shutdown node 42 at t = 0.1043454224041307
+Shutdown node 40 at t = 0.10485944577251512
+Shutdown node 39 at t = 0.10537596535959515
+Shutdown node 38 at t = 0.10539118959820283
+Terminated on steady state at 0.10559118959820284
+Find steady state...
+Run simulation for trips on lines/nodes [68]
+Shutdown line 68 at t = 0.1
+Shutdown node 42 at t = 0.10901101069329965
+Terminated on steady state at 0.10911101069329965
+Find steady state...
+Run simulation for trips on lines/nodes [69]
+Shutdown line 69 at t = 0.1
+Shutdown node 42 at t = 0.10486552315229646
+Shutdown node 45 at t = 0.10486696491672134
+Terminated on steady state at 0.10496696491672135
+Find steady state...
+Run simulation for trips on lines/nodes [70]
+Shutdown line 70 at t = 0.1
+Shutdown node 40 at t = 0.1035293958485477
+Shutdown node 39 at t = 0.10405060839921071
+Shutdown node 42 at t = 0.1040576693511872
+Shutdown node 38 at t = 0.1040659275684265
+Terminated on steady state at 0.10426592756842651
+Find steady state...
+Run simulation for trips on lines/nodes [71]
+Shutdown line 71 at t = 0.1
+Shutdown node 40 at t = 0.10232915438977719
+Shutdown node 39 at t = 0.10285650625491986
+Shutdown node 42 at t = 0.10286240098012973
+Shutdown node 38 at t = 0.10287257615059453
+Terminated on steady state at 0.10307257615059454
+Find steady state...
+Run simulation for trips on lines/nodes [72]
+Shutdown line 72 at t = 0.1
+Shutdown node 45 at t = 0.10473955505109761
+Shutdown node 42 at t = 0.10713455964384477
+Terminated on steady state at 0.10723455964384478
+Find steady state...
+Run simulation for trips on lines/nodes [73]
+Shutdown line 73 at t = 0.1
+Terminated on steady state at 4.787434149245049
+Find steady state...
+Run simulation for trips on lines/nodes [74]
+Shutdown line 74 at t = 0.1
+Terminated on steady state at 3.8512845597474823
+Find steady state...
+Run simulation for trips on lines/nodes [75]
+Shutdown line 75 at t = 0.1
+Terminated on steady state at 4.479578391098058
+Find steady state...
+Run simulation for trips on lines/nodes [76]
+Shutdown line 76 at t = 0.1
+Terminated on steady state at 4.354168029292611
+Find steady state...
+Run simulation for trips on lines/nodes [77]
+Shutdown line 77 at t = 0.1
+Terminated on steady state at 4.041773770090717
+Find steady state...
+Run simulation for trips on lines/nodes [78]
+Shutdown line 78 at t = 0.1
+Terminated on steady state at 4.5142876508081455
+Find steady state...
+Run simulation for trips on lines/nodes [79]
+Shutdown line 79 at t = 0.1
+Terminated on steady state at 3.992754096025146
+Find steady state...
+Run simulation for trips on lines/nodes [80]
+Shutdown line 80 at t = 0.1
+Shutdown node 63 at t = 0.11407831344639985
+Terminated on steady state at 0.11417831344639985
+Find steady state...
+Run simulation for trips on lines/nodes [81]
+Shutdown line 81 at t = 0.1
+Terminated on steady state at 4.36797459842931
+Find steady state...
+Run simulation for trips on lines/nodes [82]
+Shutdown line 82 at t = 0.1
+Terminated on steady state at 4.37978626748568
+Find steady state...
+Run simulation for trips on lines/nodes [83]
+Shutdown line 83 at t = 0.1
+Shutdown node 49 at t = 0.13737380859831305
+Shutdown node 50 at t = 0.13752911064728904
+Shutdown node 61 at t = 0.14428426106813505
+Shutdown node 62 at t = 0.14495320274314621
+Terminated on steady state at 0.14519180228646836
+Find steady state...
+Run simulation for trips on lines/nodes [84]
+Shutdown line 84 at t = 0.1
+Shutdown node 55 at t = 0.16413906631471903
+Terminated on steady state at 4.017664703789716
+Find steady state...
+Run simulation for trips on lines/nodes [85]
+Shutdown line 85 at t = 0.1
+Shutdown node 55 at t = 0.11040325937594102
+Shutdown node 61 at t = 0.12282113652771338
+Shutdown node 62 at t = 0.12353835269303495
+Shutdown node 64 at t = 0.12650571315342812
+Shutdown node 49 at t = 0.12666252194874528
+Shutdown node 50 at t = 0.12671936209574938
+Shutdown node 71 at t = 0.12687116488285125
+Shutdown node 66 at t = 0.12698847459969367
+Shutdown node 63 at t = 0.12711882632010404
+Terminated on steady state at 0.12711882632010404
+Find steady state...
+Run simulation for trips on lines/nodes [86]
+Shutdown line 86 at t = 0.1
+Shutdown node 55 at t = 0.11333008658339921
+Shutdown node 61 at t = 0.12414127514939811
+Shutdown node 62 at t = 0.12483942867868343
+Shutdown node 64 at t = 0.12748809292038613
+Shutdown node 71 at t = 0.12789495304681117
+Shutdown node 66 at t = 0.1279625963170788
+Shutdown node 63 at t = 0.12801069919812097
+Terminated on steady state at 0.12811069919812096
+Find steady state...
+Run simulation for trips on lines/nodes [87]
+Shutdown line 87 at t = 0.1
+Shutdown node 62 at t = 0.11318472863545592
+Shutdown node 61 at t = 0.11498197197141428
+Shutdown node 64 at t = 0.11688648129212188
+Shutdown node 66 at t = 0.11735700500689357
+Shutdown node 63 at t = 0.11746910558965387
+Terminated on steady state at 0.11766910558965388
+Find steady state...
+Run simulation for trips on lines/nodes [88]
+Shutdown line 88 at t = 0.1
+Shutdown node 61 at t = 0.11123471791227076
+Shutdown node 62 at t = 0.11219252816142528
+Terminated on steady state at 0.11408832635570537
+Find steady state...
+Run simulation for trips on lines/nodes [89]
+Shutdown line 89 at t = 0.1
+Shutdown node 62 at t = 0.10864689718954254
+Shutdown node 64 at t = 0.1099362528017516
+Shutdown node 66 at t = 0.11042396715662049
+Shutdown node 61 at t = 0.11048983322301821
+Terminated on steady state at 0.11048983322301821
+Find steady state...
+Run simulation for trips on lines/nodes [90]
+Shutdown line 90 at t = 0.1
+Shutdown node 61 at t = 0.1078177746643834
+Shutdown node 62 at t = 0.1088983508773446
+Terminated on steady state at 0.10942174470009934
+Find steady state...
+Run simulation for trips on lines/nodes [91]
+Shutdown line 91 at t = 0.1
+Shutdown node 61 at t = 0.10332760354419361
+Shutdown node 62 at t = 0.1049322967289632
+Shutdown node 71 at t = 0.10801466040110451
+Shutdown node 55 at t = 0.10845995479307109
+Shutdown node 50 at t = 0.11009114027190843
+Shutdown node 49 at t = 0.11012975138192968
+Shutdown node 64 at t = 0.11016474192647349
+Shutdown node 21 at t = 0.11055500290192667
+Shutdown node 66 at t = 0.11064167384609006
+Shutdown node 63 at t = 0.11070577000470197
+Terminated on steady state at 0.11080577000470197
+Find steady state...
+Run simulation for trips on lines/nodes [92]
+Shutdown line 92 at t = 0.1
+Shutdown node 62 at t = 0.10534026466505465
+Shutdown node 64 at t = 0.10659000320625285
+Shutdown node 66 at t = 0.10708577064194712
+Shutdown node 63 at t = 0.10726163781192304
+Terminated on steady state at 0.10726163781192304
+Find steady state...
+Run simulation for trips on lines/nodes [93]
+Shutdown line 93 at t = 0.1
+Shutdown node 61 at t = 0.10569838272670591
+Shutdown node 71 at t = 0.10833175382154825
+Shutdown node 64 at t = 0.11154099194343088
+Shutdown node 62 at t = 0.11169561181800536
+Shutdown node 66 at t = 0.11201187050180174
+Shutdown node 63 at t = 0.11216503902368694
+Terminated on steady state at 0.11216503902368694
+Find steady state...
+Run simulation for trips on lines/nodes [94]
+Shutdown line 94 at t = 0.1
+Shutdown node 61 at t = 0.10397338956960132
+Shutdown node 71 at t = 0.1044078540764195
+Shutdown node 62 at t = 0.10539050494274026
+Terminated on steady state at 0.10539050494274026
+Find steady state...
+Run simulation for trips on lines/nodes [95]
+Shutdown line 95 at t = 0.1
+Shutdown node 61 at t = 0.10253104372210052
+Shutdown node 62 at t = 0.1050394915076701
+Shutdown node 64 at t = 0.10799790748643945
+Shutdown node 66 at t = 0.10847446067639255
+Shutdown node 63 at t = 0.10859769617424586
+Terminated on steady state at 0.10879885810414246
+Find steady state...
+Run simulation for trips on lines/nodes [96]
+Shutdown line 96 at t = 0.1
+Shutdown node 64 at t = 0.10122638670608401
+Shutdown node 66 at t = 0.10171452757004144
+Shutdown node 63 at t = 0.10188143379408021
+Terminated on steady state at 0.10188143379408021
+Find steady state...
+Run simulation for trips on lines/nodes [97]
+Shutdown line 97 at t = 0.1
+Terminated on steady state at 6.586118970825859
+Find steady state...
+Run simulation for trips on lines/nodes [98]
+Shutdown line 98 at t = 0.1
+Shutdown node 69 at t = 0.10193302612857437
+Shutdown node 63 at t = 0.1088863186711988
+Shutdown node 64 at t = 0.10895392546427154
+Terminated on steady state at 0.10905392546427155
+Find steady state...
+Run simulation for trips on lines/nodes [99]
+Shutdown line 99 at t = 0.1
+Shutdown node 63 at t = 0.11353500678057743
+Terminated on steady state at 0.11363500678057743
+Find steady state...
+Run simulation for trips on lines/nodes [100]
+Shutdown line 100 at t = 0.1
+Shutdown node 64 at t = 0.10109258542860154
+Shutdown node 62 at t = 0.1015554273603369
+Shutdown node 63 at t = 0.10168625133544348
+Terminated on steady state at 0.10190117229229372
+Find steady state...
+Run simulation for trips on lines/nodes [101]
+Shutdown line 101 at t = 0.1
+Terminated on steady state at 4.316416528643571
+Find steady state...
+Run simulation for trips on lines/nodes [102]
+Shutdown line 102 at t = 0.1
+Shutdown node 64 at t = 0.10275673050716091
+Shutdown node 62 at t = 0.10328163994042165
+Shutdown node 66 at t = 0.10334216120274206
+Shutdown node 63 at t = 0.10341949929518286
+Terminated on steady state at 0.10361949929518287
+Find steady state...
+Run simulation for trips on lines/nodes [103]
+Shutdown line 103 at t = 0.1
+Shutdown node 66 at t = 0.10714905764718585
+Terminated on steady state at 0.10724905764718586
+Find steady state...
+Run simulation for trips on lines/nodes [104]
+Shutdown line 104 at t = 0.1
+Shutdown node 69 at t = 0.1043166975577883
+Shutdown node 66 at t = 0.1043306961613173
+Terminated on steady state at 0.1044306961613173
+Find steady state...
+Run simulation for trips on lines/nodes [105]
+Shutdown line 105 at t = 0.1
+Shutdown node 64 at t = 0.10383747120240729
+Shutdown node 66 at t = 0.10433603160015753
+Shutdown node 62 at t = 0.1043687864368098
+Terminated on steady state at 0.1044687864368098
+Find steady state...
+Run simulation for trips on lines/nodes [106]
+Shutdown line 106 at t = 0.1
+Shutdown node 64 at t = 0.10239374521892394
+Shutdown node 66 at t = 0.10289694038584414
+Shutdown node 62 at t = 0.10293224981741919
+Terminated on steady state at 0.1030322498174192
+Find steady state...
+Run simulation for trips on lines/nodes [107]
+Shutdown line 107 at t = 0.1
+Shutdown node 69 at t = 0.10473737294906052
+Shutdown node 66 at t = 0.10686385380657583
+Terminated on steady state at 0.10696385380657583
+Find steady state...
+Run simulation for trips on lines/nodes [108]
+Shutdown line 108 at t = 0.1
+Shutdown node 21 at t = 0.10857130060995643
+Shutdown node 18 at t = 0.11358671433003419
+Terminated on steady state at 0.11368671433003419
+Scaling of inertia 0.5 
+ steady state 
+ [0.23920502195844784, 1.2374675957613032e-17, 0.2384192608223158, 0.0, 0.23866612534906542, 0.20040260038519725, 0.199563118780402, 0.163312806284155, 0.3240494650625137, -3.486513642577675e-18, 0.22636056447772454, 0.24233310735336516, 0.21607550433945055, 0.31757642144814463, 0.35163901294263744, 0.39242983911366874, -1.1322166981562545e-17, 0.34032526923986006, -3.0196959856208143e-18, 0.4712892911206028, -5.594432078251441e-18, 0.4770026274538347, 1.512428456138639e-17, 0.5499723533369646, 0.5700392230113086, 1.5707996877854176e-18, 0.4620403746459364, 0.5026962767838042, 0.60352575649854, 3.0890826637237268e-18, 0.6931740948832719, 0.0, 0.5505371085407191, -1.1177909270430569e-17, 0.3842006218284508, 0.19420225808818972, -1.1094957688645873e-19, 0.19383426093136616, 0.0, 0.23843113471973815, 0.16031230429301097, 0.15429519334684924, 0.11798751937053599, 0.030104123913888798, 1.5936092906407266e-18, 0.03992808089869481, 0.205819926632928, 0.1704892298552284, 0.3060481713280603, 0.3429157626174566, 0.41062094208650185, 0.0, 0.33251496879322456, 1.6440202877139696e-18, 0.467116175526473, 9.202969583012158e-18, 0.47444270295520874, 8.93187576131032e-18, 0.5477601794190342, 0.5675504010838813, -4.573413729675364e-19, 0.4633190518402652, 0.5106878915920087, 0.6005464528702972, 0.0, 0.69046048546527, 0.0, 0.5621860130218465, 5.1175642857381374e-18, 0.3810686945656228, 0.03295030148981838, 7.150953304053976e-18, 0.0321122695907284, 0.0, 0.10889978284151877, 0.022546825564974247, 0.012857512457047027, -0.012788430852611126, -0.08957471838507558, -2.9556408655392194e-18, -0.07972045277125575, 0.0882960931238562, 0.04952495550713536, 0.20220724573362994, 0.23779720930000592, 0.2974891479879164, -8.241595588572297e-18, 0.25167236898424983, 5.89638324893332e-18, 0.42106992286217165, -4.0738128681970695e-19, 0.42548179008275977, 3.193513131479326e-18, 0.5106672647703452, 0.5360742708961362, -2.1037121675166217e-18, 0.41239965453285804, 0.45634465487619325, 0.5729309256417768, 0.0, 0.6628782269053187, 9.101457749012448e-19, 0.5059775223064525, 5.16420307179439e-19, 0.30433919855471697, 0.5142499408883769] 
+ 
+Find steady state...
+Run simulation for trips on lines/nodes [1]
+Shutdown line 1 at t = 0.1
+Terminated on steady state at 9.443592792370161
+Find steady state...
+Run simulation for trips on lines/nodes [2]
+Shutdown line 2 at t = 0.1
+Terminated on steady state at 6.819999999999899
+Find steady state...
+Run simulation for trips on lines/nodes [3]
+Shutdown line 3 at t = 0.1
+Terminated on steady state at 10.207119726787422
+Find steady state...
+Run simulation for trips on lines/nodes [4]
+Shutdown line 4 at t = 0.1
+Terminated on steady state at 10.169379731267345
+Find steady state...
+Run simulation for trips on lines/nodes [5]
+Shutdown line 5 at t = 0.1
+Terminated on steady state at 10.607334088425818
+Find steady state...
+Run simulation for trips on lines/nodes [6]
+Shutdown line 6 at t = 0.1
+Terminated on steady state at 7.77047702354694
+Find steady state...
+Run simulation for trips on lines/nodes [7]
+Shutdown line 7 at t = 0.1
+Shutdown node 15 at t = 0.12013415208725822
+Terminated on steady state at 0.12023415208725823
+Find steady state...
+Run simulation for trips on lines/nodes [8]
+Shutdown line 8 at t = 0.1
+Terminated on steady state at 10.402843355420533
+Find steady state...
+Run simulation for trips on lines/nodes [9]
+Shutdown line 9 at t = 0.1
+Terminated on steady state at 9.444722830312868
+Find steady state...
+Run simulation for trips on lines/nodes [10]
+Shutdown line 10 at t = 0.1
+Terminated on steady state at 10.649662254493936
+Find steady state...
+Run simulation for trips on lines/nodes [11]
+Shutdown line 11 at t = 0.1
+Shutdown node 7 at t = 0.1098993443762405
+Shutdown node 26 at t = 0.5819554859975347
+Shutdown node 25 at t = 0.5821210761152368
+Shutdown node 31 at t = 0.5861967182011742
+Shutdown node 38 at t = 0.5864715152746027
+Shutdown node 37 at t = 0.5874931432486368
+Shutdown node 47 at t = 0.593190551060444
+Shutdown node 39 at t = 0.5955326310917657
+Shutdown node 66 at t = 0.5955436343710659
+Shutdown node 40 at t = 0.5955926099301099
+Terminated on steady state at 0.5955926099301099
+Find steady state...
+  Activating project at `~/DynamicCascades.jl`
+[ Info: Import system RTS-GMLC
+[ Info: Import system RTS-GMLC
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+[ Info: Import system RTS-GMLC
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+Run simulation for trips on lines/nodes [12]
+Shutdown line 12 at t = 0.1
+Shutdown node 7 at t = 0.13453151951312967
+Shutdown node 14 at t = 0.15598715644358355
+Shutdown node 13 at t = 0.15632217855382066
+Terminated on steady state at 0.15722979080188781
+Find steady state...
+Run simulation for trips on lines/nodes [13]
+Shutdown line 13 at t = 0.1
+Terminated on steady state at 7.943662219314748
+Find steady state...
+Run simulation for trips on lines/nodes [14]
+Shutdown line 14 at t = 0.1
+Terminated on steady state at 8.505069458743073
+Find steady state...
+Run simulation for trips on lines/nodes [15]
+Shutdown line 15 at t = 0.1
+Terminated on steady state at 10.24729541012793
+Find steady state...
+Run simulation for trips on lines/nodes [16]
+Shutdown line 16 at t = 0.1
+Terminated on steady state at 10.618045656697108
+Find steady state...
+Run simulation for trips on lines/nodes [17]
+Shutdown line 17 at t = 0.1
+Terminated on steady state at 10.476738563202902
+Find steady state...
+Run simulation for trips on lines/nodes [18]
+Shutdown line 18 at t = 0.1
+Terminated on steady state at 10.90763453571585
+Find steady state...
+Run simulation for trips on lines/nodes [19]
+Shutdown line 19 at t = 0.1
+Shutdown node 14 at t = 0.118675003805228
+Shutdown node 16 at t = 0.12353110449015758
+Shutdown node 15 at t = 0.12407816234423807
+Terminated on steady state at 0.12429206269286139
+Find steady state...
+Run simulation for trips on lines/nodes [20]
+Shutdown line 20 at t = 0.1
+Terminated on steady state at 9.720059090426545
+Find steady state...
+Run simulation for trips on lines/nodes [21]
+Shutdown line 21 at t = 0.1
+Terminated on steady state at 10.341422188575278
+Find steady state...
+Run simulation for trips on lines/nodes [22]
+Shutdown line 22 at t = 0.1
+Shutdown node 23 at t = 0.12406721721157721
+Shutdown node 13 at t = 0.12793662946919152
+Terminated on steady state at 0.12806714223379848
+Find steady state...
+Run simulation for trips on lines/nodes [23]
+Shutdown line 23 at t = 0.1
+Shutdown node 13 at t = 0.12032577033078441
+Terminated on steady state at 0.12045509234817578
+Find steady state...
+Run simulation for trips on lines/nodes [24]
+Shutdown line 24 at t = 0.1
+Terminated on steady state at 11.02100359370017
+Find steady state...
+Run simulation for trips on lines/nodes [25]
+Shutdown line 25 at t = 0.1
+Shutdown node 16 at t = 0.1040140110523522
+Shutdown node 15 at t = 0.10465744678702533
+Terminated on steady state at 0.10486809064018221
+Find steady state...
+Run simulation for trips on lines/nodes [26]
+Shutdown line 26 at t = 0.1
+Terminated on steady state at 9.201537458450623
+Find steady state...
+Run simulation for trips on lines/nodes [27]
+Shutdown line 27 at t = 0.1
+Shutdown node 21 at t = 0.10565416805819788
+Shutdown node 15 at t = 0.10990775897004164
+Terminated on steady state at 0.11003591566148492
+Find steady state...
+Run simulation for trips on lines/nodes [28]
+Shutdown line 28 at t = 0.1
+Shutdown node 15 at t = 0.1195037095273304
+Terminated on steady state at 0.1196037095273304
+Find steady state...
+Run simulation for trips on lines/nodes [29]
+Shutdown line 29 at t = 0.1
+Shutdown node 16 at t = 0.10323789911757496
+Shutdown node 15 at t = 0.10381621596376138
+Terminated on steady state at 0.10402583323349845
+Find steady state...
+Run simulation for trips on lines/nodes [30]
+Shutdown line 30 at t = 0.1
+Terminated on steady state at 10.269530357491911
+Find steady state...
+Run simulation for trips on lines/nodes [31]
+Shutdown line 31 at t = 0.1
+Shutdown node 16 at t = 0.10967085556181992
+Shutdown node 15 at t = 0.11030237846521249
+Terminated on steady state at 0.11051318663503687
+Find steady state...
+Run simulation for trips on lines/nodes [32]
+Shutdown line 32 at t = 0.1
+Shutdown node 18 at t = 0.12424882494374859
+Terminated on steady state at 0.12434882494374859
+Find steady state...
+Run simulation for trips on lines/nodes [33]
+Shutdown line 33 at t = 0.1
+Shutdown node 18 at t = 0.11232947450791675
+Terminated on steady state at 0.11242947450791675
+Find steady state...
+Run simulation for trips on lines/nodes [34]
+Shutdown line 34 at t = 0.1
+Shutdown node 16 at t = 0.16387730301171569
+Shutdown node 15 at t = 0.16430829633783928
+Terminated on steady state at 0.1645249854651258
+Find steady state...
+Run simulation for trips on lines/nodes [35]
+Shutdown line 35 at t = 0.1
+Shutdown node 16 at t = 0.10510126378392796
+Shutdown node 15 at t = 0.10576818395924677
+Terminated on steady state at 0.10597642952954442
+Find steady state...
+Run simulation for trips on lines/nodes [36]
+Shutdown line 36 at t = 0.1
+Shutdown node 21 at t = 0.11320041766868966
+Shutdown node 18 at t = 0.11839762609560983
+Terminated on steady state at 0.11849762609560983
+Find steady state...
+Run simulation for trips on lines/nodes [37]
+Shutdown line 37 at t = 0.1
+Terminated on steady state at 10.390185461569011
+Find steady state...
+Run simulation for trips on lines/nodes [38]
+Shutdown line 38 at t = 0.1
+Terminated on steady state at 8.743860125169965
+Find steady state...
+Run simulation for trips on lines/nodes [39]
+Shutdown line 39 at t = 0.1
+Terminated on steady state at 8.737822230515459
+Find steady state...
+Run simulation for trips on lines/nodes [40]
+Shutdown line 40 at t = 0.1
+Terminated on steady state at 9.64197547998088
+Find steady state...
+Run simulation for trips on lines/nodes [41]
+Shutdown line 41 at t = 0.1
+Terminated on steady state at 10.587221328796568
+Find steady state...
+Run simulation for trips on lines/nodes [42]
+Shutdown line 42 at t = 0.1
+Terminated on steady state at 9.789831895699407
+Find steady state...
+Run simulation for trips on lines/nodes [43]
+Shutdown line 43 at t = 0.1
+Terminated on steady state at 10.707257923295748
+Find steady state...
+Run simulation for trips on lines/nodes [44]
+Shutdown line 44 at t = 0.1
+Terminated on steady state at 9.64231558634389
+Find steady state...
+Run simulation for trips on lines/nodes [45]
+Shutdown line 45 at t = 0.1
+Shutdown node 7 at t = 0.13224079251348328
+Shutdown node 14 at t = 0.1468979124964442
+Shutdown node 13 at t = 0.1481792329559366
+Terminated on steady state at 0.150332461907079
+Find steady state...
+Run simulation for trips on lines/nodes [46]
+Shutdown line 46 at t = 0.1
+Terminated on steady state at 10.50261031407128
+Find steady state...
+Run simulation for trips on lines/nodes [47]
+Shutdown line 47 at t = 0.1
+Terminated on steady state at 9.584990291840128
+Find steady state...
+Run simulation for trips on lines/nodes [48]
+Shutdown line 48 at t = 0.1
+Terminated on steady state at 10.850778452364425
+Find steady state...
+Run simulation for trips on lines/nodes [49]
+Shutdown line 49 at t = 0.1
+Shutdown node 31 at t = 0.260348451339139
+Terminated on steady state at 9.51144845133898
+Find steady state...
+Run simulation for trips on lines/nodes [50]
+Shutdown line 50 at t = 0.1
+Shutdown node 31 at t = 0.1260224664334746
+Shutdown node 37 at t = 0.20412631373232096
+Terminated on steady state at 0.20426813927539372
+Find steady state...
+Run simulation for trips on lines/nodes [51]
+Shutdown line 51 at t = 0.1
+Shutdown node 31 at t = 0.13322579146493746
+Shutdown node 37 at t = 0.1724972551655776
+Terminated on steady state at 0.17263608679485903
+Find steady state...
+Run simulation for trips on lines/nodes [52]
+Shutdown line 52 at t = 0.1
+Terminated on steady state at 10.616800893610774
+Find steady state...
+Run simulation for trips on lines/nodes [53]
+Shutdown line 53 at t = 0.1
+Terminated on steady state at 10.76759179057234
+Find steady state...
+Run simulation for trips on lines/nodes [54]
+Shutdown line 54 at t = 0.1
+Terminated on steady state at 11.095025101402447
+Find steady state...
+Run simulation for trips on lines/nodes [55]
+Shutdown line 55 at t = 0.1
+Terminated on steady state at 11.096476644708284
+Find steady state...
+Run simulation for trips on lines/nodes [56]
+Shutdown line 56 at t = 0.1
+Shutdown node 38 at t = 0.11257457926377976
+Shutdown node 40 at t = 0.12421602317810117
+Shutdown node 31 at t = 0.12434983674634104
+Shutdown node 39 at t = 0.12515567003017028
+Shutdown node 42 at t = 0.12517458451012012
+Terminated on steady state at 0.1253745845101201
+Find steady state...
+Run simulation for trips on lines/nodes [57]
+Shutdown line 57 at t = 0.1
+Shutdown node 38 at t = 0.13130516435176007
+Shutdown node 40 at t = 0.1333310471391416
+Shutdown node 42 at t = 0.13437096061370718
+Shutdown node 39 at t = 0.1344620283321213
+Terminated on steady state at 0.13456625238449843
+Find steady state...
+Run simulation for trips on lines/nodes [58]
+Shutdown line 58 at t = 0.1
+Shutdown node 37 at t = 0.1310286731647991
+Shutdown node 38 at t = 0.139194339309059
+Shutdown node 31 at t = 0.14609836943125645
+Shutdown node 26 at t = 0.15104401704664028
+Shutdown node 25 at t = 0.15115670151232097
+Shutdown node 40 at t = 0.15592336200178478
+Shutdown node 7 at t = 0.15616382073125099
+Shutdown node 39 at t = 0.15663345036330853
+Terminated on steady state at 0.1568440608687408
+Find steady state...
+Run simulation for trips on lines/nodes [59]
+Shutdown line 59 at t = 0.1
+Shutdown node 47 at t = 0.12633356808163165
+Shutdown node 37 at t = 0.1266222956544769
+Terminated on steady state at 0.1267564520727277
+Find steady state...
+Run simulation for trips on lines/nodes [60]
+Shutdown line 60 at t = 0.1
+Shutdown node 37 at t = 0.11947179482790468
+Shutdown node 38 at t = 0.1275430090139931
+Terminated on steady state at 0.12776104228251017
+Find steady state...
+Run simulation for trips on lines/nodes [61]
+Shutdown line 61 at t = 0.1
+Shutdown node 40 at t = 0.10385888004410442
+Shutdown node 42 at t = 0.10485454827599353
+Shutdown node 39 at t = 0.1049435872225594
+Terminated on steady state at 0.1050443230656027
+Find steady state...
+Run simulation for trips on lines/nodes [62]
+Shutdown line 62 at t = 0.1
+Terminated on steady state at 10.620741428833652
+Find steady state...
+Run simulation for trips on lines/nodes [63]
+Shutdown line 63 at t = 0.1
+Shutdown node 45 at t = 0.1055806981802492
+Shutdown node 39 at t = 0.11946234005009916
+Terminated on steady state at 0.11956234005009916
+Find steady state...
+Run simulation for trips on lines/nodes [64]
+Shutdown line 64 at t = 0.1
+Shutdown node 7 at t = 0.13370376442624102
+Shutdown node 14 at t = 0.14990726199883095
+Shutdown node 13 at t = 0.1513207036498866
+Terminated on steady state at 0.15247791628996651
+Find steady state...
+Run simulation for trips on lines/nodes [65]
+Shutdown line 65 at t = 0.1
+Shutdown node 40 at t = 0.10321985299486344
+Shutdown node 39 at t = 0.10418861965696083
+Shutdown node 38 at t = 0.10419302679859291
+Terminated on steady state at 0.10440916302464065
+Find steady state...
+Run simulation for trips on lines/nodes [66]
+Shutdown line 66 at t = 0.1
+Terminated on steady state at 10.490426558401706
+Find steady state...
+Run simulation for trips on lines/nodes [67]
+Shutdown line 67 at t = 0.1
+Shutdown node 42 at t = 0.11127024651364277
+Shutdown node 45 at t = 0.11276751590488704
+Terminated on steady state at 0.11343949145984128
+Find steady state...
+Run simulation for trips on lines/nodes [68]
+Shutdown line 68 at t = 0.1
+Shutdown node 46 at t = 0.15725494308222912
+Shutdown node 45 at t = 0.16321708513692093
+Shutdown node 42 at t = 0.16915306467284622
+Terminated on steady state at 0.1692530646728462
+Find steady state...
+Run simulation for trips on lines/nodes [69]
+Shutdown line 69 at t = 0.1
+Shutdown node 42 at t = 0.11266359991156566
+Shutdown node 45 at t = 0.11270790632345075
+Terminated on steady state at 0.11270790632345075
+Find steady state...
+Run simulation for trips on lines/nodes [70]
+Shutdown line 70 at t = 0.1
+Shutdown node 40 at t = 0.10970123712416929
+Shutdown node 42 at t = 0.1107068454696267
+Shutdown node 39 at t = 0.11079162175511786
+Shutdown node 38 at t = 0.11081525451657055
+Terminated on steady state at 0.11081525451657055
+Find steady state...
+Run simulation for trips on lines/nodes [71]
+Shutdown line 71 at t = 0.1
+Shutdown node 40 at t = 0.10476679325433641
+Shutdown node 42 at t = 0.10581237866128032
+Shutdown node 39 at t = 0.10590013332983422
+Shutdown node 38 at t = 0.10592566182566576
+Terminated on steady state at 0.10592566182566576
+Find steady state...
+Run simulation for trips on lines/nodes [72]
+Shutdown line 72 at t = 0.1
+Shutdown node 45 at t = 0.1127937049741135
+Shutdown node 42 at t = 0.11836985128869126
+Terminated on steady state at 0.11846985128869127
+Find steady state...
+Run simulation for trips on lines/nodes [73]
+Shutdown line 73 at t = 0.1
+Terminated on steady state at 10.155154785391883
+Find steady state...
+Run simulation for trips on lines/nodes [74]
+Shutdown line 74 at t = 0.1
+Terminated on steady state at 8.723247451463516
+Find steady state...
+Run simulation for trips on lines/nodes [75]
+Shutdown line 75 at t = 0.1
+Terminated on steady state at 10.117739309295894
+Find steady state...
+Run simulation for trips on lines/nodes [76]
+Shutdown line 76 at t = 0.1
+Terminated on steady state at 9.78946427972333
+Find steady state...
+Run simulation for trips on lines/nodes [77]
+Shutdown line 77 at t = 0.1
+Terminated on steady state at 9.060664382607518
+Find steady state...
+Run simulation for trips on lines/nodes [78]
+Shutdown line 78 at t = 0.1
+Terminated on steady state at 9.349473058267492
+Find steady state...
+Run simulation for trips on lines/nodes [79]
+Shutdown line 79 at t = 0.1
+Terminated on steady state at 8.786577523960462
+Find steady state...
+Run simulation for trips on lines/nodes [80]
+Shutdown line 80 at t = 0.1
+Shutdown node 63 at t = 0.14138865159469877
+Terminated on steady state at 0.14148865159469876
+Find steady state...
+Run simulation for trips on lines/nodes [81]
+Shutdown line 81 at t = 0.1
+Terminated on steady state at 10.080839545934104
+Find steady state...
+Run simulation for trips on lines/nodes [82]
+Shutdown line 82 at t = 0.1
+Terminated on steady state at 10.069980043935448
+Find steady state...
+Run simulation for trips on lines/nodes [83]
+Shutdown line 83 at t = 0.1
+Terminated on steady state at 10.598097370543476
+Find steady state...
+Run simulation for trips on lines/nodes [84]
+Shutdown line 84 at t = 0.1
+Shutdown node 55 at t = 0.2603482733075685
+Terminated on steady state at 9.501897400225412
+Find steady state...
+Run simulation for trips on lines/nodes [85]
+Shutdown line 85 at t = 0.1
+Shutdown node 55 at t = 0.12583164623676735
+Shutdown node 61 at t = 0.15584678349482825
+Terminated on steady state at 0.15649945092727796
+Find steady state...
+Run simulation for trips on lines/nodes [86]
+Shutdown line 86 at t = 0.1
+Shutdown node 55 at t = 0.13375352801471316
+Shutdown node 61 at t = 0.1499956785388774
+Terminated on steady state at 0.15112091979443867
+Find steady state...
+Run simulation for trips on lines/nodes [87]
+Shutdown line 87 at t = 0.1
+Terminated on steady state at 10.332829321562611
+Find steady state...
+Run simulation for trips on lines/nodes [88]
+Shutdown line 88 at t = 0.1
+Terminated on steady state at 10.302955124397759
+Find steady state...
+Run simulation for trips on lines/nodes [89]
+Shutdown line 89 at t = 0.1
+Shutdown node 62 at t = 0.12423447949254154
+Shutdown node 61 at t = 0.12815199132724958
+Terminated on steady state at 0.12879350122537425
+Find steady state...
+Run simulation for trips on lines/nodes [90]
+Shutdown line 90 at t = 0.1
+Shutdown node 61 at t = 0.12256164109790374
+Terminated on steady state at 0.12350722060820546
+Find steady state...
+Run simulation for trips on lines/nodes [91]
+Shutdown line 91 at t = 0.1
+Shutdown node 61 at t = 0.10858505251849693
+Shutdown node 62 at t = 0.11165996047809057
+Shutdown node 55 at t = 0.11908075893181377
+Shutdown node 50 at t = 0.12292234829722627
+Shutdown node 71 at t = 0.12294846684918379
+Shutdown node 49 at t = 0.12299149774618626
+Shutdown node 64 at t = 0.1230728455174136
+Shutdown node 66 at t = 0.1239684251338424
+Terminated on steady state at 0.12416842513384241
+Find steady state...
+Run simulation for trips on lines/nodes [92]
+Shutdown line 92 at t = 0.1
+Shutdown node 62 at t = 0.11365734794474516
+Shutdown node 64 at t = 0.1172652131547168
+Shutdown node 66 at t = 0.11818961235446139
+Terminated on steady state at 0.1183896123544614
+Find steady state...
+Run simulation for trips on lines/nodes [93]
+Shutdown line 93 at t = 0.1
+Shutdown node 61 at t = 0.11524762875537366
+Shutdown node 62 at t = 0.11982160348349528
+Terminated on steady state at 0.1214074174906803
+Find steady state...
+Run simulation for trips on lines/nodes [94]
+Shutdown line 94 at t = 0.1
+Shutdown node 61 at t = 0.10943214753867474
+Terminated on steady state at 0.11032432418453685
+Find steady state...
+Run simulation for trips on lines/nodes [95]
+Shutdown line 95 at t = 0.1
+Shutdown node 61 at t = 0.1063732824794991
+Shutdown node 62 at t = 0.10946169059572568
+Terminated on steady state at 0.11001754360333069
+Find steady state...
+Run simulation for trips on lines/nodes [96]
+Shutdown line 96 at t = 0.1
+Shutdown node 64 at t = 0.10310189321276166
+Shutdown node 66 at t = 0.10402388128209342
+Terminated on steady state at 0.10422388128209342
+Find steady state...
+Run simulation for trips on lines/nodes [97]
+Shutdown line 97 at t = 0.1
+Terminated on steady state at 14.693061696822793
+Find steady state...
+Run simulation for trips on lines/nodes [98]
+Shutdown line 98 at t = 0.1
+Shutdown node 69 at t = 0.10487626478372643
+Shutdown node 63 at t = 0.12327009433501843
+Terminated on steady state at 0.12338410284287946
+Find steady state...
+Run simulation for trips on lines/nodes [99]
+Shutdown line 99 at t = 0.1
+Shutdown node 63 at t = 0.14048263792329058
+Shutdown node 64 at t = 0.1412150915452122
+Terminated on steady state at 0.1412150915452122
+Find steady state...
+Run simulation for trips on lines/nodes [100]
+Shutdown line 100 at t = 0.1
+Shutdown node 64 at t = 0.10275353617652377
+Shutdown node 62 at t = 0.1037114126490542
+Shutdown node 63 at t = 0.10404210495576437
+Terminated on steady state at 0.10425300080389042
+Find steady state...
+Run simulation for trips on lines/nodes [101]
+Shutdown line 101 at t = 0.1
+Terminated on steady state at 9.679536910376452
+Find steady state...
+Run simulation for trips on lines/nodes [102]
+Shutdown line 102 at t = 0.1
+Shutdown node 64 at t = 0.10696830713741196
+Shutdown node 62 at t = 0.10804443522561614
+Shutdown node 63 at t = 0.10836667853119322
+Terminated on steady state at 0.1085746270727596
+Find steady state...
+Run simulation for trips on lines/nodes [103]
+Shutdown line 103 at t = 0.1
+Shutdown node 70 at t = 0.14687073461366218
+Shutdown node 69 at t = 0.1502353494203464
+Shutdown node 66 at t = 0.15479222691983077
+Terminated on steady state at 0.15489222691983076
+Find steady state...
+Run simulation for trips on lines/nodes [104]
+Shutdown line 104 at t = 0.1
+Shutdown node 69 at t = 0.11115058029184861
+Shutdown node 66 at t = 0.11122759586773552
+Terminated on steady state at 0.11132759586773552
+Find steady state...
+Run simulation for trips on lines/nodes [105]
+Shutdown line 105 at t = 0.1
+Shutdown node 64 at t = 0.11116555849345496
+Shutdown node 66 at t = 0.11208671386984244
+Shutdown node 62 at t = 0.11225129841977101
+Terminated on steady state at 0.11225129841977101
+Find steady state...
+Run simulation for trips on lines/nodes [106]
+Shutdown line 106 at t = 0.1
+Shutdown node 64 at t = 0.10492761075480181
+Shutdown node 66 at t = 0.105891537690047
+Shutdown node 62 at t = 0.10606356334616436
+Terminated on steady state at 0.10606356334616436
+Find steady state...
+Run simulation for trips on lines/nodes [107]
+Shutdown line 107 at t = 0.1
+Shutdown node 69 at t = 0.11278598109871754
+Shutdown node 66 at t = 0.11770826904196739
+Terminated on steady state at 0.1178082690419674
+Find steady state...
+Run simulation for trips on lines/nodes [108]
+Shutdown line 108 at t = 0.1
+Terminated on steady state at 10.613961815283488
+Scaling of inertia 0.8 
+ steady state 
+ [-0.1828276447200667, 2.9932685129535876e-18, -0.18361340585619879, 0.0, -0.18336654132944913, -0.22163006629331733, -0.22246954789811257, -0.2587198603943595, -0.09798320161600088, -1.245443266313436e-18, -0.19567210220079, -0.1796995593251494, -0.20595716233906403, -0.10445624523036996, -0.07039365373587715, -0.02960282756484585, 0.0, -0.08170739743865454, -4.5484075671646265e-18, 0.049256624442088184, 0.0, 0.05496996077532011, 5.793038684919948e-18, 0.12793968665845, 0.14800655633279403, -1.9440434496517314e-17, 0.04000770796742184, 0.08066361010528977, 0.1814930898200255, 5.6533708471971325e-18, 0.27114142820475734, 0.0, 0.12850444186220464, 5.907958202337857e-19, -0.037832044850063785, -0.22783040859032486, -2.2664551276447525e-18, -0.22819840574714845, 0.0, -0.18360153195877646, -0.2617203623855036, -0.2677374733316653, -0.30404514730797855, -0.39192854276462574, -2.7680800369624603e-18, -0.38210458577981976, -0.2162127400455866, -0.25154343682328617, -0.11598449535045437, -0.07911690406105808, -0.011411724592012791, 1.8341482977889888e-18, -0.08951769788529007, -1.7479384096359096e-18, 0.0450835088479584, 0.0, 0.052410036276694105, -2.5331468359820414e-18, 0.12572751274051966, 0.14551773440536675, -3.2592039070628207e-19, 0.04128638516175056, 0.0886552249134941, 0.17851378619178265, 0.0, 0.2684278187867555, 0.0, 0.1401533463433319, 7.296147230260643e-19, -0.040963972112891774, -0.3890823651886964, 3.80616671815433e-18, -0.38992039708778636, 0.0, -0.31313288383699595, -0.3994858411135405, -0.4091751542214678, -0.4348210975311259, -0.5116073850635904, 5.172570537889553e-18, -0.5017531194497706, -0.3337365735546586, -0.37250771117137943, -0.2198254209448849, -0.18423545737850897, -0.12454351869059846, 4.34963821285152e-19, -0.170360297694265, -2.7202033159796612e-18, -0.0009627438163430917, 0.0, 0.003449123404245023, 7.784963909073796e-19, 0.08863459809183052, 0.11404160421762155, 2.4799586834597556e-18, -0.009633012145656688, 0.03431198819767852, 0.15089825896326223, 0.0, 0.240845560226804, 3.630649535335714e-19, 0.08394485562793791, -7.42915006080669e-20, -0.1176934681237978, 0.09221727420986234] 
+ 
+Find steady state...
+Run simulation for trips on lines/nodes [1]
+Shutdown line 1 at t = 0.1
+Terminated on steady state at 14.385685372453306
+Find steady state...
+Run simulation for trips on lines/nodes [2]
+Shutdown line 2 at t = 0.1
+Terminated on steady state at 9.54999999999984
+Find steady state...
+Run simulation for trips on lines/nodes [3]
+Shutdown line 3 at t = 0.1
+Terminated on steady state at 16.649223022769014
+Find steady state...
+Run simulation for trips on lines/nodes [4]
+Shutdown line 4 at t = 0.1
+Terminated on steady state at 14.982268898632485
+Find steady state...
+Run simulation for trips on lines/nodes [5]
+Shutdown line 5 at t = 0.1
+Terminated on steady state at 16.129852063235983
+Find steady state...
+Run simulation for trips on lines/nodes [6]
+Shutdown line 6 at t = 0.1
+Terminated on steady state at 11.581544395473735
+Find steady state...
+Run simulation for trips on lines/nodes [7]
+Shutdown line 7 at t = 0.1
+Terminated on steady state at 16.197390421654912
+Find steady state...
+Run simulation for trips on lines/nodes [8]
+Shutdown line 8 at t = 0.1
+Terminated on steady state at 15.634873450420939
+Find steady state...
+Run simulation for trips on lines/nodes [9]
+Shutdown line 9 at t = 0.1
+Terminated on steady state at 14.136361548478098
+Find steady state...
+Run simulation for trips on lines/nodes [10]
+Shutdown line 10 at t = 0.1
+Terminated on steady state at 16.192997105144105
+Find steady state...
+Run simulation for trips on lines/nodes [11]
+Shutdown line 11 at t = 0.1
+Shutdown node 7 at t = 0.11588956854081522
+Shutdown node 26 at t = 0.5844149589660134
+Shutdown node 25 at t = 0.5848574071677115
+Shutdown node 38 at t = 0.5925498630895697
+Shutdown node 37 at t = 0.5929240322925271
+Shutdown node 31 at t = 0.5935901365580761
+Shutdown node 47 at t = 0.6008107478174373
+Shutdown node 66 at t = 0.6045197477624269
+Shutdown node 40 at t = 0.604570435121641
+Terminated on steady state at 0.604570435121641
+Find steady state...
+Run simulation for trips on lines/nodes [12]
+Shutdown line 12 at t = 0.1
+Shutdown node 7 at t = 0.16005710140843768
+Shutdown node 14 at t = 0.19658704891023987
+Shutdown node 13 at t = 0.1968098000601646
+Terminated on steady state at 0.19748901846568565
+Find steady state...
+Run simulation for trips on lines/nodes [13]
+Shutdown line 13 at t = 0.1
+Terminated on steady state at 12.335271271538634
+Find steady state...
+Run simulation for trips on lines/nodes [14]
+Shutdown line 14 at t = 0.1
+Terminated on steady state at 13.04637834939594
+Find steady state...
+Run simulation for trips on lines/nodes [15]
+Shutdown line 15 at t = 0.1
+Terminated on steady state at 15.29792346882156
+Find steady state...
+Run simulation for trips on lines/nodes [16]
+Shutdown line 16 at t = 0.1
+Terminated on steady state at 16.358373278696636
+Find steady state...
+Run simulation for trips on lines/nodes [17]
+Shutdown line 17 at t = 0.1
+Terminated on steady state at 16.227453634097643
+Find steady state...
+Run simulation for trips on lines/nodes [18]
+Shutdown line 18 at t = 0.1
+Terminated on steady state at 16.767821645400264
+Find steady state...
+Run simulation for trips on lines/nodes [19]
+Shutdown line 19 at t = 0.1
+Shutdown node 14 at t = 0.13299496216368384
+Shutdown node 16 at t = 0.14340467195705253
+Shutdown node 15 at t = 0.14412584246815685
+Terminated on steady state at 0.1443324005200693
+Find steady state...
+Run simulation for trips on lines/nodes [20]
+Shutdown line 20 at t = 0.1
+Terminated on steady state at 15.182990982551132
+Find steady state...
+Run simulation for trips on lines/nodes [21]
+Shutdown line 21 at t = 0.1
+Terminated on steady state at 15.724304010584843
+Find steady state...
+Run simulation for trips on lines/nodes [22]
+Shutdown line 22 at t = 0.1
+Shutdown node 23 at t = 0.1428853462104166
+Shutdown node 13 at t = 0.1514306857661029
+Terminated on steady state at 0.15211039941375426
+Find steady state...
+Run simulation for trips on lines/nodes [23]
+Shutdown line 23 at t = 0.1
+Shutdown node 13 at t = 0.13510140059802145
+Terminated on steady state at 0.13606725346813506
+Find steady state...
+Run simulation for trips on lines/nodes [24]
+Shutdown line 24 at t = 0.1
+Terminated on steady state at 16.044003786081415
+Find steady state...
+Run simulation for trips on lines/nodes [25]
+Shutdown line 25 at t = 0.1
+Shutdown node 16 at t = 0.10655291584396645
+Shutdown node 15 at t = 0.10750281276863446
+Terminated on steady state at 0.1077195628659617
+Find steady state...
+Run simulation for trips on lines/nodes [26]
+Shutdown line 26 at t = 0.1
+Terminated on steady state at 14.293629596372536
+Find steady state...
+Run simulation for trips on lines/nodes [27]
+Shutdown line 27 at t = 0.1
+Shutdown node 21 at t = 0.109186321836418
+Shutdown node 15 at t = 0.11629132366013928
+Terminated on steady state at 0.11639132366013928
+Find steady state...
+Run simulation for trips on lines/nodes [28]
+Shutdown line 28 at t = 0.1
+Terminated on steady state at 16.201268456423236
+Find steady state...
+Run simulation for trips on lines/nodes [29]
+Shutdown line 29 at t = 0.1
+Shutdown node 16 at t = 0.10523913402880801
+Shutdown node 15 at t = 0.10608536653597254
+Terminated on steady state at 0.10628536653597255
+Find steady state...
+Run simulation for trips on lines/nodes [30]
+Shutdown line 30 at t = 0.1
+Terminated on steady state at 15.14462199317302
+Find steady state...
+Run simulation for trips on lines/nodes [31]
+Shutdown line 31 at t = 0.1
+Shutdown node 18 at t = 0.11848901059257962
+Shutdown node 21 at t = 0.12060677086535787
+Terminated on steady state at 0.12060677086535787
+Find steady state...
+Run simulation for trips on lines/nodes [32]
+Shutdown line 32 at t = 0.1
+Terminated on steady state at 16.776148911686867
+Find steady state...
+Run simulation for trips on lines/nodes [33]
+Shutdown line 33 at t = 0.1
+Shutdown node 18 at t = 0.12047232921746347
+Terminated on steady state at 0.12057232921746347
+Find steady state...
+Run simulation for trips on lines/nodes [34]
+Shutdown line 34 at t = 0.1
+Terminated on steady state at 16.415860043066473
+Find steady state...
+Run simulation for trips on lines/nodes [35]
+Shutdown line 35 at t = 0.1
+Shutdown node 16 at t = 0.10784562724606593
+Shutdown node 15 at t = 0.10882579042372492
+Terminated on steady state at 0.10902832759333536
+Find steady state...
+Run simulation for trips on lines/nodes [36]
+Shutdown line 36 at t = 0.1
+Shutdown node 21 at t = 0.12650696991880941
+Shutdown node 18 at t = 0.13381554761748077
+Terminated on steady state at 0.13391554761748076
+Find steady state...
+Run simulation for trips on lines/nodes [37]
+Shutdown line 37 at t = 0.1
+Terminated on steady state at 14.643447941914381
+Find steady state...
+Run simulation for trips on lines/nodes [38]
+Shutdown line 38 at t = 0.1
+Terminated on steady state at 13.18514203470883
+Find steady state...
+Run simulation for trips on lines/nodes [39]
+Shutdown line 39 at t = 0.1
+Terminated on steady state at 12.779999999999772
+Find steady state...
+Run simulation for trips on lines/nodes [40]
+Shutdown line 40 at t = 0.1
+Terminated on steady state at 14.035966624780807
+Find steady state...
+Run simulation for trips on lines/nodes [41]
+Shutdown line 41 at t = 0.1
+Terminated on steady state at 15.77939466889383
+Find steady state...
+Run simulation for trips on lines/nodes [42]
+Shutdown line 42 at t = 0.1
+Terminated on steady state at 14.523491158712934
+Find steady state...
+Run simulation for trips on lines/nodes [43]
+Shutdown line 43 at t = 0.1
+Terminated on steady state at 15.80979928449071
+Find steady state...
+Run simulation for trips on lines/nodes [44]
+Shutdown line 44 at t = 0.1
+Terminated on steady state at 15.393569284641858
+Find steady state...
+Run simulation for trips on lines/nodes [45]
+Shutdown line 45 at t = 0.1
+Shutdown node 7 at t = 0.15835668694452049
+Shutdown node 14 at t = 0.18991614406515142
+Shutdown node 13 at t = 0.19319906613164337
+Terminated on steady state at 0.19388277899963838
+Find steady state...
+Run simulation for trips on lines/nodes [46]
+Shutdown line 46 at t = 0.1
+Terminated on steady state at 14.824733874975287
+Find steady state...
+Run simulation for trips on lines/nodes [47]
+Shutdown line 47 at t = 0.1
+Terminated on steady state at 14.8764509560674
+Find steady state...
+Run simulation for trips on lines/nodes [48]
+Shutdown line 48 at t = 0.1
+Terminated on steady state at 17.013296399828715
+Find steady state...
+Run simulation for trips on lines/nodes [49]
+Shutdown line 49 at t = 0.1
+Shutdown node 31 at t = 0.356556951241709
+Terminated on steady state at 14.971237955696962
+Find steady state...
+Run simulation for trips on lines/nodes [50]
+Shutdown line 50 at t = 0.1
+Shutdown node 31 at t = 0.14220098970087344
+Shutdown node 25 at t = 0.2704718908779559
+Shutdown node 26 at t = 0.27053778591638433
+Shutdown node 37 at t = 0.27935631013812645
+Shutdown node 38 at t = 0.2808762934140316
+Shutdown node 47 at t = 0.2847672538951278
+Shutdown node 7 at t = 0.2893642890136712
+Shutdown node 66 at t = 0.2894364735560159
+Terminated on steady state at 0.2895364735560159
+Find steady state...
+Run simulation for trips on lines/nodes [51]
+Shutdown line 51 at t = 0.1
+Shutdown node 31 at t = 0.15482240042036266
+Shutdown node 38 at t = 2.5260816922665854
+Shutdown node 37 at t = 2.5282932606321245
+Shutdown node 26 at t = 2.535754938789388
+Shutdown node 25 at t = 2.535946649367571
+Shutdown node 7 at t = 2.53730504062413
+Shutdown node 47 at t = 2.5415127091189964
+Shutdown node 39 at t = 2.5438695125194997
+Terminated on steady state at 2.5439695125195
+Find steady state...
+Run simulation for trips on lines/nodes [52]
+Shutdown line 52 at t = 0.1
+Terminated on steady state at 16.337416923119143
+Find steady state...
+Run simulation for trips on lines/nodes [53]
+Shutdown line 53 at t = 0.1
+Terminated on steady state at 15.987947321481366
+Find steady state...
+Run simulation for trips on lines/nodes [54]
+Shutdown line 54 at t = 0.1
+Terminated on steady state at 16.737029128073004
+Find steady state...
+Run simulation for trips on lines/nodes [55]
+Shutdown line 55 at t = 0.1
+Terminated on steady state at 16.38734453137886
+Find steady state...
+Run simulation for trips on lines/nodes [56]
+Shutdown line 56 at t = 0.1
+Shutdown node 38 at t = 0.12057314959588594
+Shutdown node 40 at t = 0.12788227599957075
+Shutdown node 42 at t = 0.12925644316388515
+Shutdown node 39 at t = 0.12935707710917763
+Terminated on steady state at 0.1295570771091776
+Find steady state...
+Run simulation for trips on lines/nodes [57]
+Shutdown line 57 at t = 0.1
+Terminated on steady state at 15.082002051330013
+Find steady state...
+Run simulation for trips on lines/nodes [58]
+Shutdown line 58 at t = 0.1
+Terminated on steady state at 16.820971299662222
+Find steady state...
+Run simulation for trips on lines/nodes [59]
+Shutdown line 59 at t = 0.1
+Shutdown node 47 at t = 0.14674878050149368
+Shutdown node 37 at t = 0.14818893194276422
+Terminated on steady state at 0.15061713861397588
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+[ Info: Import system RTS-GMLC
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+┌ Warning: Interrupted. Larger maxiters is needed. If you are using an integrator for non-stiff ODEs or an automatic switching algorithm (the default), you may want to consider using a method for stiff equations. See the solver pages for more details (e.g. https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems).
+└ @ SciMLBase ~/.julia/packages/SciMLBase/QqtZA/src/integrator_interface.jl:504
+[ Info: Import system RTS-GMLC
+Find steady state...
+Run simulation for trips on lines/nodes [60]
+Shutdown line 60 at t = 0.1
+Shutdown node 37 at t = 0.1324053547631301
+Shutdown node 38 at t = 0.13889626735014748
+Terminated on steady state at 0.14517959436215547
+Find steady state...
+Run simulation for trips on lines/nodes [61]
+Shutdown line 61 at t = 0.1
+Shutdown node 40 at t = 0.10629052391879483
+Shutdown node 42 at t = 0.10774329665647002
+Shutdown node 39 at t = 0.10792821511125798
+Terminated on steady state at 0.10792821511125798
+Find steady state...
+Run simulation for trips on lines/nodes [62]
+Shutdown line 62 at t = 0.1
+Terminated on steady state at 16.242947450106936
+Find steady state...
+Run simulation for trips on lines/nodes [63]
+Shutdown line 63 at t = 0.1
+Shutdown node 45 at t = 0.1090404822799353
+Shutdown node 39 at t = 0.13354197077825594
+Terminated on steady state at 0.13364197077825593
+Find steady state...
+Run simulation for trips on lines/nodes [64]
+Shutdown line 64 at t = 0.1
+Shutdown node 7 at t = 0.16006598329203134
+Shutdown node 14 at t = 0.19546467427149392
+Shutdown node 13 at t = 0.19830597449801107
+Terminated on steady state at 0.1994819384976354
+Find steady state...
+Run simulation for trips on lines/nodes [65]
+Shutdown line 65 at t = 0.1
+Shutdown node 40 at t = 0.10520940303326437
+Shutdown node 38 at t = 0.10665986400642606
+Shutdown node 39 at t = 0.10666319950648312
+Terminated on steady state at 0.1068764653831026
+Find steady state...
+Run simulation for trips on lines/nodes [66]
+Shutdown line 66 at t = 0.1
+Terminated on steady state at 15.449769355915777
+Find steady state...
+Run simulation for trips on lines/nodes [67]
+Shutdown line 67 at t = 0.1
+Shutdown node 42 at t = 0.11880823730927463
+Shutdown node 45 at t = 0.12090086561437462
+Terminated on steady state at 0.12090086561437462
+Find steady state...
+Run simulation for trips on lines/nodes [68]
+Shutdown line 68 at t = 0.1
+Terminated on steady state at 18.49606242141102
+Find steady state...
+Run simulation for trips on lines/nodes [69]
+Shutdown line 69 at t = 0.1
+Shutdown node 42 at t = 0.12126680561262557
+Terminated on steady state at 0.12136680561262557
+Find steady state...
+Run simulation for trips on lines/nodes [70]
+Shutdown line 70 at t = 0.1
+Terminated on steady state at 16.75494874884788
+Find steady state...
+Run simulation for trips on lines/nodes [71]
+Shutdown line 71 at t = 0.1
+Shutdown node 40 at t = 0.10727170255689239
+Shutdown node 42 at t = 0.108792704061725
+Shutdown node 39 at t = 0.10897105602589557
+Terminated on steady state at 0.10897105602589557
+Find steady state...
+Run simulation for trips on lines/nodes [72]
+Shutdown line 72 at t = 0.1
+Shutdown node 45 at t = 0.12314393702396087
+Shutdown node 42 at t = 0.1314691805998796
+Terminated on steady state at 0.1315691805998796
+Find steady state...
+Run simulation for trips on lines/nodes [73]
+Shutdown line 73 at t = 0.1
+Terminated on steady state at 14.828157130123397
+Find steady state...
+Run simulation for trips on lines/nodes [74]
+Shutdown line 74 at t = 0.1
+Terminated on steady state at 12.705138891756583
+Find steady state...
+Run simulation for trips on lines/nodes [75]
+Shutdown line 75 at t = 0.1
+Terminated on steady state at 15.700762969880921
+Find steady state...
+Run simulation for trips on lines/nodes [76]
+Shutdown line 76 at t = 0.1
+Terminated on steady state at 14.584361024705258
+Find steady state...
+Run simulation for trips on lines/nodes [77]
+Shutdown line 77 at t = 0.1
+Terminated on steady state at 13.305283343174178
+Find steady state...
+Run simulation for trips on lines/nodes [78]
+Shutdown line 78 at t = 0.1
+Terminated on steady state at 14.255204858326845
+Find steady state...
+Run simulation for trips on lines/nodes [79]
+Shutdown line 79 at t = 0.1
+Terminated on steady state at 13.067441274932353
+Find steady state...
+Run simulation for trips on lines/nodes [80]
+Shutdown line 80 at t = 0.1
+Shutdown node 50 at t = 0.18685395730350146
+Shutdown node 49 at t = 0.18713929693587775
+Shutdown node 61 at t = 0.19230014427553213
+Shutdown node 55 at t = 0.19381592519943341
+Shutdown node 62 at t = 0.19466465240355366
+Shutdown node 64 at t = 0.1972517350770292
+Shutdown node 71 at t = 0.19893246140813528
+Shutdown node 66 at t = 0.19921934040489223
+Terminated on steady state at 0.1994193404048922
+Find steady state...
+Run simulation for trips on lines/nodes [81]
+Shutdown line 81 at t = 0.1
+Terminated on steady state at 15.882798728187106
+Find steady state...
+Run simulation for trips on lines/nodes [82]
+Shutdown line 82 at t = 0.1
+Terminated on steady state at 15.233648716612088
+Find steady state...
+Run simulation for trips on lines/nodes [83]
+Shutdown line 83 at t = 0.1
+Terminated on steady state at 16.72295529067283
+Find steady state...
+Run simulation for trips on lines/nodes [84]
+Shutdown line 84 at t = 0.1
+Shutdown node 55 at t = 0.356556948160047
+Terminated on steady state at 14.332236685901904
+Find steady state...
+Run simulation for trips on lines/nodes [85]
+Shutdown line 85 at t = 0.1
+Shutdown node 55 at t = 0.14192388356726554
+Shutdown node 61 at t = 0.18270518389075321
+Shutdown node 62 at t = 0.18508769152801838
+Terminated on steady state at 0.1853291797509783
+Find steady state...
+Run simulation for trips on lines/nodes [86]
+Shutdown line 86 at t = 0.1
+Shutdown node 55 at t = 0.15589025719614424
+Shutdown node 61 at t = 0.19756595932047966
+Shutdown node 62 at t = 0.19980212311995826
+Shutdown node 50 at t = 0.2108988746185242
+Shutdown node 49 at t = 0.21099730513021137
+Shutdown node 64 at t = 0.21111161963412986
+Shutdown node 71 at t = 0.21165624546381992
+Shutdown node 66 at t = 0.21238902072781465
+Terminated on steady state at 0.21258902072781463
+Find steady state...
+Run simulation for trips on lines/nodes [87]
+Shutdown line 87 at t = 0.1
+Terminated on steady state at 15.87714424927923
+Find steady state...
+Run simulation for trips on lines/nodes [88]
+Shutdown line 88 at t = 0.1
+Terminated on steady state at 14.78735485092422
+Find steady state...
+Run simulation for trips on lines/nodes [89]
+Shutdown line 89 at t = 0.1
+Terminated on steady state at 16.17681056365474
+Find steady state...
+Run simulation for trips on lines/nodes [90]
+Shutdown line 90 at t = 0.1
+Terminated on steady state at 16.29704224939622
+Find steady state...
+Run simulation for trips on lines/nodes [91]
+Shutdown line 91 at t = 0.1
+Shutdown node 61 at t = 0.11399682768659797
+Shutdown node 62 at t = 0.11878446859076448
+Shutdown node 64 at t = 0.1284275581645262
+Shutdown node 66 at t = 0.1297152167711666
+Terminated on steady state at 0.12991521677116658
+Find steady state...
+Run simulation for trips on lines/nodes [92]
+Shutdown line 92 at t = 0.1
+Shutdown node 62 at t = 0.12241342069138739
+Shutdown node 64 at t = 0.12385939132446257
+Shutdown node 66 at t = 0.1251581313462102
+Terminated on steady state at 0.12535813134621018
+Find steady state...
+Run simulation for trips on lines/nodes [93]
+Shutdown line 93 at t = 0.1
+Shutdown node 61 at t = 0.12630431082204682
+Shutdown node 71 at t = 0.14192769714233894
+Shutdown node 62 at t = 0.14947018604845327
+Shutdown node 64 at t = 0.14957038922434054
+Shutdown node 66 at t = 0.15079867291675975
+Terminated on steady state at 0.15099867291675972
+Find steady state...
+Run simulation for trips on lines/nodes [94]
+Shutdown line 94 at t = 0.1
+Shutdown node 61 at t = 0.1151670423621137
+Shutdown node 71 at t = 0.11757749265195093
+Shutdown node 62 at t = 0.11921687774207226
+Terminated on steady state at 0.11980237316902886
+Find steady state...
+Run simulation for trips on lines/nodes [95]
+Shutdown line 95 at t = 0.1
+Shutdown node 61 at t = 0.11027266519444309
+Shutdown node 62 at t = 0.11726590079579227
+Shutdown node 55 at t = 0.1273236017004431
+Terminated on steady state at 0.1288688786175564
+Find steady state...
+Run simulation for trips on lines/nodes [96]
+Shutdown line 96 at t = 0.1
+Shutdown node 64 at t = 0.10501998053568476
+Shutdown node 66 at t = 0.10634753314042585
+Terminated on steady state at 0.10654753314042585
+Find steady state...
+Run simulation for trips on lines/nodes [97]
+Shutdown line 97 at t = 0.1
+Terminated on steady state at 22.22493599853247
+Find steady state...
+Run simulation for trips on lines/nodes [98]
+Shutdown line 98 at t = 0.1
+Shutdown node 69 at t = 0.10787456035661505
+Shutdown node 63 at t = 0.1390023055669847
+Terminated on steady state at 0.1391023055669847
+Find steady state...
+Run simulation for trips on lines/nodes [99]
+Shutdown line 99 at t = 0.1
+Shutdown node 50 at t = 0.18889837430726256
+Shutdown node 49 at t = 0.18918277134232497
+Shutdown node 61 at t = 0.19558124931504073
+Shutdown node 55 at t = 0.19765318607452514
+Shutdown node 62 at t = 0.19853921266863755
+Shutdown node 64 at t = 0.20152648392746877
+Shutdown node 71 at t = 0.2032076001370246
+Shutdown node 66 at t = 0.20350839885112473
+Terminated on steady state at 0.2037083988511247
+Find steady state...
+Run simulation for trips on lines/nodes [100]
+Shutdown line 100 at t = 0.1
+Shutdown node 64 at t = 0.10444114025533267
+Shutdown node 62 at t = 0.10586656423555153
+Shutdown node 63 at t = 0.10644030762824315
+Terminated on steady state at 0.10644030762824315
+Find steady state...
+Run simulation for trips on lines/nodes [101]
+Shutdown line 101 at t = 0.1
+Terminated on steady state at 14.3392422567805
+Find steady state...
+Run simulation for trips on lines/nodes [102]
+Shutdown line 102 at t = 0.1
+Shutdown node 64 at t = 0.1119473840245831
+Shutdown node 62 at t = 0.11352985017330669
+Shutdown node 63 at t = 0.11404155769773676
+Shutdown node 66 at t = 0.11412948571576254
+Terminated on steady state at 0.11422948571576254
+Find steady state...
+Run simulation for trips on lines/nodes [103]
+Shutdown line 103 at t = 0.1
+Shutdown node 70 at t = 0.21167755032230418
+Shutdown node 69 at t = 0.22867823903855197
+Shutdown node 66 at t = 0.2354238026263342
+Terminated on steady state at 0.23552380262633418
+Find steady state...
+Run simulation for trips on lines/nodes [104]
+Shutdown line 104 at t = 0.1
+Shutdown node 69 at t = 0.11853742684187293
+Shutdown node 66 at t = 0.11875021803960266
+Terminated on steady state at 0.11885021803960266
+Find steady state...
+Run simulation for trips on lines/nodes [105]
+Shutdown line 105 at t = 0.1
+Terminated on steady state at 15.766109837746235
+Find steady state...
+Run simulation for trips on lines/nodes [106]
+Shutdown line 106 at t = 0.1
+Shutdown node 64 at t = 0.1075497793690223
+Shutdown node 66 at t = 0.10893786317684047
+Terminated on steady state at 0.10913786317684047
+Find steady state...
+Run simulation for trips on lines/nodes [107]
+Shutdown line 107 at t = 0.1
+Shutdown node 69 at t = 0.12312616560303086
+Shutdown node 66 at t = 0.13047488954930817
+Terminated on steady state at 0.13057488954930815
+Find steady state...
+Run simulation for trips on lines/nodes [108]
+Shutdown line 108 at t = 0.1
+Terminated on steady state at 14.646706720159088
+44434.231788 seconds (43.21 G allocations: 2.970 TiB, 1.13% gc time, 0.07% compilation time)
