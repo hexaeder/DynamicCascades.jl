@@ -49,7 +49,7 @@ x = df_inertia_vs_failures.scale_inertia_values
 y = df_inertia_vs_failures.rel_failures
 
 # scatter!(x, y, color = :blue, label = "Test")
-scatterlines!(x, y, color = :blue, linewidth=2)
+lines!(x, y, color = :blue)
 # axislegend()
 
 CairoMakie.save(string(MA_DIR,"/rtsgmlc_inertia_vs_number_line_failures.pdf"),fig)
@@ -80,8 +80,7 @@ function distinct_colors(color_map, values)
 end
 
 
-# color_map = ColorSchemes.plasma
-color_map = ColorSchemes.cividis
+color_map = ColorSchemes.plasma
 # color_map = :blues
 
 # Generate distinct colors based on the ang_freq_bounds
@@ -125,7 +124,7 @@ for (i, dir, ang_freq) in zip(1:length(line_colors),directories, ang_freq_bounds
     x = df_inertia_vs_failures_nodes.scale_inertia_values
     y_nodes = df_inertia_vs_failures_nodes.rel_failures
 
-    scatterlines!(x, y_nodes, label = "$ang_freq", color = line_colors[i])
+    lines!(x, y_nodes, label = "$ang_freq", color = line_colors[i])
 end
 
 axislegend(position = :rt)
@@ -152,22 +151,16 @@ CairoMakie.save(string(MA_DIR,"/rtsgmlc_inertia_vs_number_node_failures.pdf"),fi
 # ang_freq_bounds = [0.16, 0.32, 0.48, 0.64, 0.80, 0.95, 1.27, 1.59, 1.91]
 
 # lower bounds
-directories = [
-            "/results_plotting/line+node_failures/20230728_013105.412inertia_vs_line+node_failures_f_bound=0.48"
-            ]
-ang_freq_bounds = [0.48]
-
-# lower bounds
-directories = [
-            "/results_plotting/line+node_failures/20230728_013046.031inertia_vs_line+node_failures_f_bound=0.16",
-            "/results_plotting/line+node_failures/20230728_013105.59inertia_vs_line+node_failures_f_bound=0.32",
-            "/results_plotting/line+node_failures/20230728_013105.412inertia_vs_line+node_failures_f_bound=0.48"
-            ]
-ang_freq_bounds = [0.16, 0.32, 0.48]
+# directories = [
+#             "/results_plotting/line+node_failures/20230728_013046.031inertia_vs_line+node_failures_f_bound=0.16",
+#             "/results_plotting/line+node_failures/20230728_013105.59inertia_vs_line+node_failures_f_bound=0.32",
+#             "/results_plotting/line+node_failures/20230728_013105.412inertia_vs_line+node_failures_f_bound=0.48"
+#             ]
+# ang_freq_bounds = [0.16, 0.32, 0.48]
 
 # # larger bounds
 directories = [
-            # "/results_plotting/line+node_failures/20230730_082824.996inertia_vs_line+node_failures_f_bound=0.64",
+            "/results_plotting/line+node_failures/20230730_082824.996inertia_vs_line+node_failures_f_bound=0.64",
             # "/results_plotting/line+node_failures/20230730_083925.633inertia_vs_line+node_failures_f_bound=0.8",
             "/results_plotting/line+node_failures/20230730_084103.401inertia_vs_line+node_failures_f_bound=0.95",
             "/results_plotting/line+node_failures/20230730_083925.569inertia_vs_line+node_failures_f_bound=1.27",
@@ -176,17 +169,14 @@ directories = [
             ]
 ang_freq_bounds = [0.64, 0.95, 1.27,  1.91]
 
+
 norm_values = (ang_freq_bounds .- minimum(ang_freq_bounds)) ./ (maximum(ang_freq_bounds) - minimum(ang_freq_bounds))
 
-# color_map = ColorSchemes.plasma
-color_map = ColorSchemes.cividis
+color_map = ColorSchemes.plasma
 # color_map = :blues
 
 # Generate distinct colors based on the ang_freq_bounds
 line_colors = distinct_colors(color_map, ang_freq_bounds)
-
-# NOTE uncomment for 0.48
-# line_colors =[:blue]
 
 # plot data
 fig = Figure(fontsize = 28)
@@ -240,30 +230,18 @@ for (i, dir, ang_freq) in zip(1:length(line_colors),directories, ang_freq_bounds
     y_nodes = df_inertia_vs_failures_nodes.rel_failures
     y_lines = df_inertia_vs_failures_lines.rel_failures
 
-    scatterlines!(x, y_nodes, label = "$ang_freq", color = line_colors[i])
-    scatterlines!(x, y_lines, color = line_colors[i], linestyle=:dash )
+    lines!(x, y_nodes, label = "$ang_freq", color = line_colors[i])
+    lines!(x, y_lines, color = line_colors[i], linestyle=:dash )
 end
-# lines!([NaN], [NaN]; label="Lines dashed", color=:black, linewidth=3, linestyle=:dash)
+lines!([NaN], [NaN]; label="Lines dashed", color=:black, linewidth=3, linestyle=:dash)
 
-# low bounds
-# text!(16.0, 0.3, text = "node failures: solid lines ___ \n line failures: dashed lines -----", align = (:center, :center), textsize=25)
-# axislegend(position = :rt)
-
-# large bounds
-text!(9.0, 0.004, text = "node failures: solid lines ___ \n line failures: dashed lines -----", align = (:center, :center), textsize=25)
 axislegend(position = :rb)
-
-# 0.48
-# text!(15.0, 0.01, text = "node failures: solid lines ___ \n line failures: dashed lines -----", align = (:center, :center), textsize=25)
-# axislegend(position = :rt)
-
 # ylims!(-0.0005, 0.1)
 # xlims!(0, 5)
 fig
 
 # CairoMakie.save(string(MA_DIR,"/rtsgmlc_inertia_vs_number_line+node_failures_low_bounds.pdf"),fig)
 CairoMakie.save(string(MA_DIR,"/rtsgmlc_inertia_vs_number_line+node_failures_large_bounds.pdf"),fig)
-# CairoMakie.save(string(MA_DIR,"/rtsgmlc_inertia_vs_number_line+node_failures_0.48.pdf"),fig)
 
 
 ######################### plot singe line failures #############################

@@ -42,8 +42,7 @@ sol = simulate(network;
     solverargs = (; dtmax = 0.01));
 
 # plot solution
-fig = Figure(resolution=(1800,500), fontsize=35)
-# fig = Figure(fontsize=35)
+fig = Figure(resolution=(1800,1000), fontsize=35)
 
 # phase | flow #################################################################
 # fig[1,1] = ax = Axis(fig; xlabel="time t in s", ylabel="phase angle θ | apparent power flow in p.u.", title="Phase | Power flow")
@@ -51,35 +50,29 @@ fig[1,1] = ax = Axis(fig; xlabel="time t [s]", ylabel="phase angle θ [rad]", ti
 # phase of gen
 t = sol.sol.t
 y_numeric = [sol.sol.u[i][1] for i in 1:length(sol.sol.t)]
-# lines!(ax, t, y_numeric; label="numeric phase angle", color=:purple, linewidth=3)
-lines!(ax, t, y_numeric; label="numeric phase", linewidth=3)
+lines!(ax, t, y_numeric; label="numeric phase angle", linewidth=3)
 # # phase of slack
 # y = [sol.sol.u[i][3] for i in 1:length(sol.sol.t)]
 # lines!(ax, t, y; label="slack", linewidth=3)
 
-# phase analytic solution
-t = sol.sol.t
-y_analytic = [phase(t[i], failtime, M, D, K, P0, P1) for i in 1:length(sol.sol.t)]
-# lines!(ax, t, y_analytic; label="analytic phase angle", color=:orange, linewidth=3)
-lines!(ax, t, y_analytic; label="analytic phase", linewidth=3)
-
 # power flow numeric
 t = sol.load_S.t
 y_powerflow_numeric = [sol.load_S.saveval[i][1] for i in 1:length(sol.load_S.t)]
-# lines!(ax, t, y_powerflow_numeric; label="numeric power flow", color=:purple, linewidth=3, linestyle=:dash)
-lines!(ax, t, y_powerflow_numeric; label="numeric flow", color=:red, linewidth=3, linestyle=:dash)
+lines!(ax, t, y_powerflow_numeric; label="numeric power flow", linewidth=3, linestyle=:dash)
+
+# phase analytic solution
+t = sol.sol.t
+y_analytic = [phase(t[i], failtime, M, D, K, P0, P1) for i in 1:length(sol.sol.t)]
+lines!(ax, t, y_analytic; label="analytic phase angle", linewidth=3)
 
 # power flow analytic
-t = sol.sol.t
 y_powerflow_analytic = [K * phase(t[i], failtime, M, D, K, P0, P1) for i in 1:length(sol.sol.t)]
-# lines!(ax, t, y_powerflow_analytic; label="analytic power flow", color=:pink, linewidth=3, linestyle=:dash)
-lines!(ax, t, y_powerflow_analytic; label="analytic flow", color=:black, linewidth=3, linestyle=:dash)
+lines!(ax, t, y_powerflow_analytic; label="analytic power flow", linewidth=3, linestyle=:dash)
 # scatter!(ax, t, y_powerflow_analytic; label="power flow analytic", marker=:cross)
 
 # add parameters/coefficients to legend
-R_2 = round(R_squared(y_analytic, y_numeric), digits = 3)
+R_2 = round(R_squared(y_analytic, y_numeric), digits = 2)
 lines!(ax, [NaN], [NaN]; label="R^2=$R_2", color=:white, linewidth=3)
-ylims!(-1, 20)
 axislegend()
 fig
 # frequency ####################################################################
@@ -99,31 +92,32 @@ lines!(ax, t, y_analytic; label="analytic", linewidth=3)
 # lines!(ax, t, y; label="slack", linewidth=3)
 
 # add parameters/coefficients to legend
-R_2 = round(R_squared(y_analytic, y_numeric), digits = 3)
+R_2 = round(R_squared(y_analytic, y_numeric), digits = 2)
 lines!(ax, [NaN], [NaN]; label="R^2=$R_2", color=:white, linewidth=3)
 axislegend()
 
-# # RoCoF ########################################################################
-# fig[2,2] = ax = Axis(fig; xlabel="time t [s]", ylabel="RoCoF [rad/s^2]", title="Rate of change of angular frequency")
-# t = sol.sol.t
-# y_numeric = [sol.sol(t[i], Val{1})[2] for i in 1:length(sol.sol.t)]
-# lines!(ax, t, y_numeric; label="numeric", linewidth=3)
-#
-# # RocoF analytic solution
-# y_analytic = [RocoF(t[i], failtime, M, D, K, P0, P1) for i in 1:length(sol.sol.t)]
-# lines!(ax, t, y_analytic; label="analytic", linewidth=3)
-#
-# # add parameters/coefficients to legend
-# R_2 = round(R_squared(y_analytic, y_numeric), digits = 3)
-# lines!(ax, [NaN], [NaN]; label="R^2=$R_2", color=:white, linewidth=3)
+# RoCoF ########################################################################
+fig[2,2] = ax = Axis(fig; xlabel="time t [s]", ylabel="RoCoF [rad/s^2]", title="Rate of change of angular frequency")
+t = sol.sol.t
+y_numeric = [sol.sol(t[i], Val{1})[2] for i in 1:length(sol.sol.t)]
+lines!(ax, t, y_numeric; label="numeric", linewidth=3)
+
+# RocoF analytic solution
+y_analytic = [RocoF(t[i], failtime, M, D, K, P0, P1) for i in 1:length(sol.sol.t)]
+lines!(ax, t, y_analytic; label="analytic", linewidth=3)
+
+# add parameters/coefficients to legend
+R_2 = round(R_squared(y_analytic, y_numeric), digits = 2)
+lines!(ax, [NaN], [NaN]; label="R^2=$R_2", color=:white, linewidth=3)
 axislegend()
 
-# parameters = "Parameters: inertia M=$M [s^2], damping D=$D [s], coupling K=$K, power perturbation P_perturb=$P_perturb [p.u.]"
-# supertitle = Label(fig[0, :], parameters)
+parameters = "Parameters: inertia M=$M [s^2], damping D=$D [s], coupling K=$K, power perturbation P_perturb=$P_perturb [p.u.]"
+supertitle = Label(fig[0, :], parameters)
 # sideinfo = Label(fig[3, 1:2], parameters)
 fig
 
 save(joinpath(MA_DIR, "nadir_sim_M=$M,D=$D,K=$K,P_perturb=$P_perturb.pdf"), fig)
+
 
 ################################################################################
 ################### Testing if nadirs are computed correctly ###################
@@ -162,24 +156,24 @@ save(joinpath(PLOT_DIR, "test_frequency_nadir_M=$M,D=$D,K=$K,P_perturb=$P_pertur
 ################################################################################
 # phase nadir
 fig = Figure(fontsize = 30)
-ax = Axis(fig[1, 1]; xlabel="inertia I [s^2]", ylabel="max. absolute phase deviation ΔΘ", xticks=1:1:12)
+ax = Axis(fig[1, 1]; xlabel="inertia M", ylabel="phase nadir", xticks=1:1:12)
 x = range(0.0, 12, length=1200)
 D_values = [0.1, 0.5, 1.0, 2.0, 3.0]
 for D in D_values
     y = phase_nadir.(x, D, K, P0, P1)
-    lines!(ax, x, y; label="D=$D", linewidth=4)
+    lines!(ax, x, y; label="D=$D")
 end
 axislegend()
 fig
 save(joinpath(MA_DIR, "phase_nadir_different_dampings.pdf"), fig)
 
 fig = Figure(fontsize = 30)
-ax = Axis(fig[1, 1]; xlabel="damping D", ylabel="max. absolute phase deviation ΔΘ", xticks=1:1:12)
+ax = Axis(fig[1, 1]; xlabel="damping D", ylabel="phase nadir", xticks=1:1:12)
 x = range(0.0, 12, length=1200)
 M_values = [0.1, 0.5, 1.0, 2.0, 3.0]
 for M in M_values
     y = phase_nadir.(M, x, K, P0, P1)
-    lines!(ax, x, y; label="M=$M", linewidth=4)
+    lines!(ax, x, y; label="M=$M")
 end
 axislegend()
 fig
@@ -187,24 +181,24 @@ save(joinpath(MA_DIR, "phase_nadir_different_inertia.pdf"), fig)
 
 # frequency nadir
 fig = Figure(fontsize = 30)
-ax = Axis(fig[1, 1]; xlabel="inertia I [s^2]", ylabel="max. absolute frequency deviation Δf", xticks=1:1:12)
+ax = Axis(fig[1, 1]; xlabel="inertia M", ylabel="frequency nadir", xticks=1:1:12)
 x = range(0.0, 12, length=1200)
 D_values = [0.1, 0.5, 1.0, 2.0]
 for D in D_values
     y = frequency_nadir.(x, D, K, P0, P1)
-    lines!(ax, x, y; label="D=$D", linewidth=4)
+    lines!(ax, x, y; label="D=$D")
 end
 axislegend()
 fig
 save(joinpath(MA_DIR, "frequency_nadir_different_dampings.pdf"), fig)
 
 fig = Figure(fontsize = 30)
-ax = Axis(fig[1, 1]; xlabel="damping D", ylabel="max. absolute frequency deviation Δf", xticks=1:1:12)
+ax = Axis(fig[1, 1]; xlabel="damping D", ylabel="frequency nadir", xticks=1:1:12)
 x = range(0.0, 12, length=1200)
 M_values = [0.1, 0.5, 1.0, 2.0, 3.0]
 for M in M_values
     y = frequency_nadir.(M, x, K, P0, P1)
-    lines!(ax, x, y; label="M=$M", linewidth=4)
+    lines!(ax, x, y; label="M=$M")
 end
 axislegend()
 fig
@@ -249,12 +243,12 @@ save(joinpath(MA_DIR, "zoomed_heatmap_frequency_K=$K,P_perturb=$P_perturb.png"),
 
 ##################### border complex and real eigenvalues ######################
 fig = Figure(fontsize=30)
-ax = Axis(fig[1, 1]; xlabel="inertia I [s^2]", ylabel="damping D [s]",
+ax = Axis(fig[1, 1]; xlabel="inertia M [s^2]", ylabel="damping D [s]",
                     title="Complex (oscillating) vs. real eigenvalues (overdamped), K=$K",
                     titlesize=20)
 x = range(0.0, 6, length=600)
 y = border_complex_real.(x, K)
-lines!(ax, x, y, linewidth=4)
+lines!(ax, x, y)
 fig
 save(joinpath(MA_DIR, "complex_vs_real_eigenvalues_K=$K.pdf"), fig)
 save(joinpath(MA_DIR, "complex_vs_real_eigenvalues_K=$K.png"), fig)
