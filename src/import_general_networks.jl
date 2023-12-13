@@ -36,6 +36,10 @@ function import_system(::Val{:wattsstrogatz}; N=20, k=4, β=0.5, graph_seed=123,
     return g
 end
 
+"""
+Generates parameters for Erdős–Rényi and Watts-Strogatz-graph, includes distribution for power injections.
+    NOTE: `positions` might not fit to Erdős–Rényi-graph
+"""
 function set_params_general_neworks!(g, distr_seed, N, M, γ, τ, K, μ, σ)
     set_prop!(g, :NodeProps, [:n, :P, :_M])
     set_prop!(g, :EdgeProps, [:src, :dst, :X, :rating])
@@ -66,7 +70,6 @@ function set_params_general_neworks!(g, distr_seed, N, M, γ, τ, K, μ, σ)
     set_prop!(g, 1:nv(g), :Q, 0.0)
 
     balance_power!(g)
-
     # set_prop!(g, 1:nv(g), :pos, spring(g; C=5.0))
     angles = range(0, stop=2π, length=nv(g)+1)[1:end-1]
     posx = cos.(angles)

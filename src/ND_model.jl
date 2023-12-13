@@ -179,6 +179,7 @@ function steadystate(network; project=false, verbose=false, tol=1e-7, zeroidx=no
         @warn "Steadystate: θ ∈ $ex, consider using project=true flag!"
     end
     residuum = issteadystate(network, x_static; ndp=(nd, p))
+    println(residuum)
     @assert residuum < tol "No steady state found $residuum"
 
     return x_static
@@ -241,7 +242,7 @@ function simulate(network;
     end
 
     verbose && println("Run simulation for trips on lines/nodes $(initial_fail)")
-    # sol = solve(prob, AutoTsit5(Rosenbrock23()); callback=cbs, progress=true, solverargs...); # larger artefact
+    #sol = solve(prob, Vern6(); callback=cbs, progress=true, solverargs...); # larger artefact
     # sol = solve(prob, AutoVern9(Rodas5()); callback=cbs, progress=true, solverargs...); # small arefact
     # sol = solve(prob, Rodas5P(); callback=cbs, progress=true, solverargs...); # no artefact
     # sol = solve(prob, Rodas4(); callback=cbs, progress=true, solverargs...);
@@ -586,6 +587,7 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
                 (out, u, t, integrator) -> begin
                     # upcrossing through zero triggers condition
                     calculate_apparent_power!(_current_load, u, integrator.p, t, integrator.f.f, _network)
+                    # calculate_active_power(_current_load, u, integrator.p, t, integrator.f.f, _network)
                     out .= _current_load .- _rating
                     nothing
                 end

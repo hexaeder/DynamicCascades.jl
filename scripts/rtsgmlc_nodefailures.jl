@@ -84,6 +84,6 @@ fig[0,:] = Colorbar(fig, height=25, vertical=false,
                      colormap=Makie.ColorScheme([colorant"yellow", colorant"red"]), label="line load relative to rating")
 
 fig[1,:] = Colorbar(fig, height=25, vertical=false,
-                     colormap=ColorSchemes.diverging_bkr_55_10_c35_n256, label="node frequency deviation in hz")
+                     colormap=ColorSchemes.diverging_bkr_55_10_c35_n256, label="node frequency deviation [Hz]")
 
 save(joinpath(PLOT_DIR, "rts_cascade_nodes3.pdf"), fig)

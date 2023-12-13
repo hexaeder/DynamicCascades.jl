@@ -18,6 +18,6 @@ cascades = groupby(df, :initial_fault)
 
 for c in cascades
     initial = c.initial_fault[1]
-    p = cascadeplot(rts96, initial, c.t, c.fault);
+    p = cascadeplot(rts96, initial, c.t, c.fault); # NOTE: `cascadeplot` probably deprecated
     draw(PNG("cascade_fault_$initial.png", 26cm, 26cm), p)
 end

@@ -138,18 +138,18 @@ CairoMakie.save(string(MA_DIR,"/rtsgmlc_inertia_vs_number_node_failures.pdf"),fi
 ############################### node + line failures ###########################
 
 # all bounds
-# directories = [
-#             "/results_plotting/line+node_failures/20230728_013046.031inertia_vs_line+node_failures_f_bound=0.16",
-#             "/results_plotting/line+node_failures/20230728_013105.59inertia_vs_line+node_failures_f_bound=0.32",
-#             "/results_plotting/line+node_failures/20230728_013105.412inertia_vs_line+node_failures_f_bound=0.48",
-#             "/results_plotting/line+node_failures/20230730_082824.996inertia_vs_line+node_failures_f_bound=0.64",
-#             "/results_plotting/line+node_failures/20230730_083925.633inertia_vs_line+node_failures_f_bound=0.8",
-#             "/results_plotting/line+node_failures/20230730_084103.401inertia_vs_line+node_failures_f_bound=0.95",
-#             "/results_plotting/line+node_failures/20230730_083925.569inertia_vs_line+node_failures_f_bound=1.27",
-#             "/results_plotting/line+node_failures/20230730_083925.646inertia_vs_line+node_failures_f_bound=1.59",
-#             "/results_plotting/line+node_failures/20230730_083955.126inertia_vs_line+node_failures_f_bound=1.91"
-#             ]
-# ang_freq_bounds = [0.16, 0.32, 0.48, 0.64, 0.80, 0.95, 1.27, 1.59, 1.91]
+directories = [
+            "/results_plotting/line+node_failures/20230728_013046.031inertia_vs_line+node_failures_f_bound=0.16",
+            "/results_plotting/line+node_failures/20230728_013105.59inertia_vs_line+node_failures_f_bound=0.32",
+            "/results_plotting/line+node_failures/20230728_013105.412inertia_vs_line+node_failures_f_bound=0.48",
+            "/results_plotting/line+node_failures/20230730_082824.996inertia_vs_line+node_failures_f_bound=0.64",
+            "/results_plotting/line+node_failures/20230730_083925.633inertia_vs_line+node_failures_f_bound=0.8",
+            "/results_plotting/line+node_failures/20230730_084103.401inertia_vs_line+node_failures_f_bound=0.95",
+            "/results_plotting/line+node_failures/20230730_083925.569inertia_vs_line+node_failures_f_bound=1.27",
+            "/results_plotting/line+node_failures/20230730_083925.646inertia_vs_line+node_failures_f_bound=1.59",
+            "/results_plotting/line+node_failures/20230730_083955.126inertia_vs_line+node_failures_f_bound=1.91"
+            ]
+ang_freq_bounds = [0.16, 0.32, 0.48, 0.64, 0.80, 0.95, 1.27, 1.59, 1.91]
 
 # lower bounds
 directories = [
@@ -245,13 +245,22 @@ for (i, dir, ang_freq) in zip(1:length(line_colors),directories, ang_freq_bounds
 end
 # lines!([NaN], [NaN]; label="Lines dashed", color=:black, linewidth=3, linestyle=:dash)
 
+# all bounds
+# text!(9.0, 0.5, text = "node failures: solid lines ___ \n line failures: dashed lines -----", align = (:center, :center), textsize=25)
+# axislegend(position = :rt)
+
+# all bounds zoomed in
+text!(9.0, 0.08, text = "node failures: solid lines ___ \n line failures: dashed lines -----", align = (:center, :center), textsize=25)
+axislegend(position = :rt)
+ylims!(-0.0005, 0.1)
+
 # low bounds
 # text!(16.0, 0.3, text = "node failures: solid lines ___ \n line failures: dashed lines -----", align = (:center, :center), textsize=25)
 # axislegend(position = :rt)
 
 # large bounds
-text!(9.0, 0.004, text = "node failures: solid lines ___ \n line failures: dashed lines -----", align = (:center, :center), textsize=25)
-axislegend(position = :rb)
+# text!(9.0, 0.004, text = "node failures: solid lines ___ \n line failures: dashed lines -----", align = (:center, :center), textsize=25)
+# axislegend(position = :rb)
 
 # 0.48
 # text!(15.0, 0.01, text = "node failures: solid lines ___ \n line failures: dashed lines -----", align = (:center, :center), textsize=25)
@@ -262,9 +271,10 @@ axislegend(position = :rb)
 fig
 
 # CairoMakie.save(string(MA_DIR,"/rtsgmlc_inertia_vs_number_line+node_failures_low_bounds.pdf"),fig)
-CairoMakie.save(string(MA_DIR,"/rtsgmlc_inertia_vs_number_line+node_failures_large_bounds.pdf"),fig)
+# CairoMakie.save(string(MA_DIR,"/rtsgmlc_inertia_vs_number_line+node_failures_large_bounds.pdf"),fig)
 # CairoMakie.save(string(MA_DIR,"/rtsgmlc_inertia_vs_number_line+node_failures_0.48.pdf"),fig)
-
+# CairoMakie.save(string(MA_DIR,"/rtsgmlc_inertia_vs_number_line+node_failures_all_bounds.pdf"),fig)
+CairoMakie.save(string(MA_DIR,"/rtsgmlc_inertia_vs_number_line+node_failures_all_bounds_zoomed_in.pdf"),fig)
 
 ######################### plot singe line failures #############################
 directory = "/home/vollmich/.julia/dev/MA_data/results_NB/20230722_145359.186inertia_vs_line_failures"
