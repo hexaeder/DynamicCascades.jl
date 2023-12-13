@@ -1,6 +1,4 @@
-using Pkg
-Pkg.activate("/home/brandner/DynamicCascades.jl")
-Pkg.instantiate()
+using Revise
 
 using LinearAlgebra
 print("Number of threads before setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
@@ -40,8 +38,8 @@ nd, = nd_model(network0)
 ω_state_idxs = idx_containing(nd, "ω")
 gen_node_idxs = map(s -> parse(Int, String(s)[4:end]), nd.syms[ω_state_idxs])
 
-scale_inertia_values = [0.2, 1.0, 2.1, 3.0, 4.0, 5.0, 7.2, 11.0, 15.0, 21.0]
-# scale_inertia_values = [0.2, 1.1] # varying parameter
+# scale_inertia_values = [0.2, 1.0, 2.1, 3.0, 4.0, 5.0, 7.2, 11.0, 15.0, 21.0]
+scale_inertia_values = [0.2, 1.0] # varying parameter
 df_all_failures = DataFrame()
 df_all_failures_nodes = DataFrame()
 @time for scale_inertia in scale_inertia_values
@@ -51,7 +49,7 @@ df_all_failures_nodes = DataFrame()
     number_failures = Float64[]
     number_failures_nodes = Float64[]
     # for i in 1:ne(network)
-    for i in 1:5 # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODOREMOVE
+    for i in 1:2 # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODOREMOVE
         sol = simulate(network;
                        initial_fail = Int[i],
                        init_pert = :line,
@@ -79,7 +77,7 @@ CSV.write(string(directory,"/all_failures_nodes.csv"), df_all_failures_nodes)
 #lines
 df_all_failures = DataFrame(CSV.File(string(directory,"/all_failures.csv")))
 rel_number_failures = Float64[]
-network = import_system(:rtsgmlc; damping, tconst = 0.01u"s")
+network = import_system(:wattsstrogatz; N=N, k=4, β=0.7, M=(1 * 1u"s^2"), graph_seed=124, distr_seed=1230, K=1, γ=1u"s", τ=1u"s", σ=1.0) # TODO selbes network wie oben, nicht neu genenerieren
 for scale_inertia in scale_inertia_values
     number_failures = df_all_failures[!, string(scale_inertia)]
     push!(rel_number_failures, mean(number_failures)/(ne(network)-1))

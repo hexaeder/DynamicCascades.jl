@@ -1,5 +1,5 @@
 ################################################################################
-network = import_system(:wattsstrogatz; N=N, k=4, β=0.7, M=2.1u"s^2", graph_seed=124, distr_seed=1230, K=1, γ=1u"s", τ=1u"s", σ=1.0)
+network = import_system(:wattsstrogatz; N=N, k=4, β=0.7, M=1.0u"s^2", graph_seed=124, distr_seed=1230, K=1, γ=1u"s", τ=1u"s", σ=1.0)
 x_static = steadystate(network)
 
 savegraph("graph.lg", network)
