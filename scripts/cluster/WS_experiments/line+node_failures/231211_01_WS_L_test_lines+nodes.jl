@@ -1,3 +1,6 @@
+# using Pkg
+# Pkg.activate("/home/vollmich/.julia/dev/DynamicCascades")
+
 using Revise
 
 using LinearAlgebra
@@ -22,8 +25,11 @@ using CSV
 # params
 freq_bound = round(0.1/(2*π), digits=2) # narrow bounds
 # freq_bound = round(0.5/(2*π), digits=2) # wide bounds
-N = 20
 
+N = 20
+# N = ARGS[1]
+
+println(N)
 
 # create folder
 t=now()
