@@ -45,3 +45,17 @@ hyperparameter = collect(Iterators.product(lines, gen_τs, slack_τs, load_τs))
 
 
 ################################################################################
+
+#SBATCH --qos=priority
+#SBATCH --time=1-00:00:00
+#SBATCH --job-name=231214_01_WS_C_test_lines+nodes_jarray
+#SBATCH --output=231214_01_WS_C_test_lines+nodes_jarray.out
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --array=1-2
+
+
+#bl SBATCH --nodes=1
+#bl SBATCH --mail-type=begin        # send email when job begins
+#bl SBATCH --mail-type=end          # send email when job ends
+#bl SBATCH --mail-user=brandner@pik-potsdam.de
