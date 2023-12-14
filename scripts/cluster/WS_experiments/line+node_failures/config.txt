@@ -1,0 +1,11 @@
+ArrayTaskID   SampleName        Sex
+1             Bobby             M
+2             Ben               M
+3             Amelia            F
+4             George            M
+5             Arthur            M
+6             Betty             F
+7             Julia             F
+8             Fred              M
+9             Steve             M
+10            Emily             F

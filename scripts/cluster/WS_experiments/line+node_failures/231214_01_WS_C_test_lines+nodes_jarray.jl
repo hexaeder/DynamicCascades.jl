@@ -1,4 +1,6 @@
-using Revise
+using Pkg
+Pkg.activate("/home/brandner/DynamicCascades.jl")
+Pkg.instantiate()
 
 using LinearAlgebra
 print("Number of threads before setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
