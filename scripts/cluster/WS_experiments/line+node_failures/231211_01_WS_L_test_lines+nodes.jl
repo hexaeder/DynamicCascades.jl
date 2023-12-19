@@ -1,3 +1,5 @@
+# This script includes pre- and postprocessing
+
 # using Pkg
 # Pkg.activate("/home/vollmich/.julia/dev/DynamicCascades")
 
@@ -27,9 +29,6 @@ freq_bound = round(0.1/(2*π), digits=2) # narrow bounds
 # freq_bound = round(0.5/(2*π), digits=2) # wide bounds
 
 N = 20
-# N = ARGS[1]
-
-println(N)
 
 # create folder
 t=now()
@@ -45,7 +44,8 @@ nd, = nd_model(network0)
 gen_node_idxs = map(s -> parse(Int, String(s)[4:end]), nd.syms[ω_state_idxs])
 
 # scale_inertia_values = [0.2, 1.0, 2.1, 3.0, 4.0, 5.0, 7.2, 11.0, 15.0, 21.0]
-scale_inertia_values = [0.2, 1.0] # varying parameter
+# scale_inertia_values = [0.2, 1.0] # varying parameter
+scale_inertia_values = [1.0] # varying parameter
 df_all_failures = DataFrame()
 df_all_failures_nodes = DataFrame()
 @time for scale_inertia in scale_inertia_values
@@ -55,7 +55,7 @@ df_all_failures_nodes = DataFrame()
     number_failures = Float64[]
     number_failures_nodes = Float64[]
     # for i in 1:ne(network)
-    for i in 1:2 # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODOREMOVE
+    for i in 1:2 # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO REMOVE
         sol = simulate(network;
                        initial_fail = Int[i],
                        init_pert = :line,

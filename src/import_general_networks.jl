@@ -7,7 +7,7 @@ using NetworkLayout
 
 Creates Erdős–Rényi-graph.
 """
-function import_system(::Val{:erdosrenyi}; N=20, p=0.25, graph_seed=123, μ=0.0, σ=1.0, distr_seed=1234, K=5.0, M=1u"s^2", γ=0.1u"s", τ=0.01u"s")
+function import_system(::Val{:erdosrenyi}; N=20, p=0.25, graph_seed=123, μ=0.0, σ=1.0, distr_seed=1234, K=5.0, α=0.7, M=1u"s^2", γ=0.1u"s", τ=0.01u"s")
     @info "Import system Erdős–Rényi"
     if graph_seed !== nothing
         g = MetaGraph(erdos_renyi(N, p, seed=graph_seed))
@@ -15,7 +15,7 @@ function import_system(::Val{:erdosrenyi}; N=20, p=0.25, graph_seed=123, μ=0.0,
         g = MetaGraph(erdos_renyi(N, p))
     end
 
-    set_params_general_neworks!(g, distr_seed, N, M, γ, τ, K, μ, σ)
+    set_params_general_neworks!(g, distr_seed, N, M, γ, τ, K, α, μ, σ)
     return g
 end
 
@@ -24,7 +24,7 @@ end
 
 Creates Watts-Strogatz-graph.
 """
-function import_system(::Val{:wattsstrogatz}; N=20, k=4, β=0.5, graph_seed=123, μ=0.0, σ=1.0, distr_seed=1234, K=5.0, M=1u"s^2",  γ=0.1u"s", τ=0.01u"s")
+function import_system(::Val{:wattsstrogatz}; N=20, k=4, β=0.5, graph_seed=123, μ=0.0, σ=1.0, distr_seed=1234, K=5.0, α=0.7, M=1u"s^2",  γ=0.1u"s", τ=0.01u"s")
     @info "Import system Watts-Strogatz"
     if graph_seed !== nothing
         g = MetaGraph(watts_strogatz(N, k, β, seed=graph_seed))
@@ -32,7 +32,7 @@ function import_system(::Val{:wattsstrogatz}; N=20, k=4, β=0.5, graph_seed=123,
         g = MetaGraph(watts_strogatz(N, k, β))
     end
 
-    set_params_general_neworks!(g, distr_seed, N, M, γ, τ, K, μ, σ)
+    set_params_general_neworks!(g, distr_seed, N, M, γ, τ, K, α, μ, σ)
     return g
 end
 
@@ -40,7 +40,7 @@ end
 Generates parameters for Erdős–Rényi and Watts-Strogatz-graph, includes distribution for power injections.
     NOTE: `positions` might not fit to Erdős–Rényi-graph
 """
-function set_params_general_neworks!(g, distr_seed, N, M, γ, τ, K, μ, σ)
+function set_params_general_neworks!(g, distr_seed, N, M, γ, τ, K, α, μ, σ)
     set_prop!(g, :NodeProps, [:n, :P, :_M])
     set_prop!(g, :EdgeProps, [:src, :dst, :X, :rating])
 
@@ -54,7 +54,7 @@ function set_params_general_neworks!(g, distr_seed, N, M, γ, τ, K, μ, σ)
 
     set_prop!(g, edges(g), :R, 0.0)
     set_prop!(g, edges(g), :X, 1/K)
-    set_prop!(g, edges(g), :rating, 1.0)
+    set_prop!(g, edges(g), :rating, α*K)
 
     d = Distributions.Normal(μ, σ)
     if distr_seed !== nothing

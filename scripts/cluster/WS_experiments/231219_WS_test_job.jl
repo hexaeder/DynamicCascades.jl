@@ -1,6 +1,22 @@
+# TODO adapt and include `@assert VERSION == v"1.6.0-rc2"
+
+const ON_YOGA = occursin("Yoga", gethostname())
+
+@info "Initialize environment on main process"
+
+PKG_DIR = ON_YOGA ? abspath(@__DIR__, "..", "..", "..", "..") : "/home/brandner/DynamicCascades.jl"
 using Pkg
-Pkg.activate("/home/brandner/DynamicCascades.jl")
-Pkg.instantiate()
+Pkg.activate(PKG_DIR)
+
+if ON_YOGA
+    using Revise
+else # if on PIK-HPC or Pool
+    #= TODO execute this in seperate script that is executed before this script.
+    Otherwise `Pkg.instantiate()` is executed for every job.=#
+    Pkg.instantiate()
+    # Pkg.precompile()
+end
+
 
 using LinearAlgebra
 print("Number of threads before setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
@@ -21,11 +37,11 @@ using Dates
 using DataFrames
 using CSV
 
-# params
+# read in params from `ARGS`
 freq_bound = round(0.1/(2*π), digits=2) # narrow bounds
 # freq_bound = round(0.5/(2*π), digits=2) # wide bounds
 N = 20
-
+# N = ARGS[1]
 
 # create folder
 t=now()
@@ -39,6 +55,11 @@ network0 = import_system(:wattsstrogatz; N=N, k=4, β=0.7, graph_seed=124, distr
 nd, = nd_model(network0)
 ω_state_idxs = idx_containing(nd, "ω")
 gen_node_idxs = map(s -> parse(Int, String(s)[4:end]), nd.syms[ω_state_idxs])
+
+
+# SIMULATION ###################################################################
+
+# TODO change inertia value of graph
 
 # scale_inertia_values = [0.2, 1.0, 2.1, 3.0, 4.0, 5.0, 7.2, 11.0, 15.0, 21.0]
 scale_inertia_values = [0.2, 1.0] # varying parameter
@@ -75,6 +96,10 @@ end
 CSV.write(string(directory,"/all_failures.csv"), df_all_failures)
 CSV.write(string(directory,"/all_failures_nodes.csv"), df_all_failures_nodes)
 
+
+
+# POSTPROCESSING ###############################################################
+
 # calculate relative number of failures
 #lines
 df_all_failures = DataFrame(CSV.File(string(directory,"/all_failures.csv")))
@@ -96,6 +121,9 @@ for scale_inertia in scale_inertia_values
 end
 df_inertia_vs_failures_nodes = DataFrame("scale_inertia_values" => scale_inertia_values, "rel_failures" => rel_number_failures)
 CSV.write(string(directory,"/inertia_vs_failures_nodes.csv"), df_inertia_vs_failures_nodes)
+
+
+# PLOTTING #####################################################################
 
 # load data
 df_inertia_vs_failures = DataFrame(CSV.File(string(directory,"/inertia_vs_failures.csv")))

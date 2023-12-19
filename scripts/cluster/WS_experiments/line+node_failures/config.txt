@@ -1,3 +1,0 @@
-ArrayTaskID   SampleName        Sex
-1             Bobby             M
-2             Ben               M

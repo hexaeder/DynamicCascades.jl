@@ -14,3 +14,4 @@
 *scratch*
 
 /scripts/cluster/cluster_only
+/scripts/cluster/WS_experiments/WS_pipeline_tryout.jl

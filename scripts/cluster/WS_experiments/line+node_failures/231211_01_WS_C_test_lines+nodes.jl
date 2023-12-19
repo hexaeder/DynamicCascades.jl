@@ -1,3 +1,5 @@
+# This script includes pre- and postprocessing 
+
 using Pkg
 Pkg.activate("/home/brandner/DynamicCascades.jl")
 Pkg.instantiate()
