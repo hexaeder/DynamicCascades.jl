@@ -6,7 +6,7 @@
 
 
 # Specify the path to the config file
-config=config.csv
+config=231219_WS_test_config.csv
 
 # extract parameters for the current $SLURM_ARRAY_TASK_ID
 # ENHANCEMENT
@@ -38,7 +38,7 @@ echo "This is array task ${SLURM_ARRAY_TASK_ID}, with parameters \n
     gamma=${gamma},\n
     alpha=${alpha},\n
     init_pert=${init_pert},\n
-    sigma=${simga},\n
+    sigma=${sigma},\n
     mu=${mu}." >> output.txt
 
 # module purge
