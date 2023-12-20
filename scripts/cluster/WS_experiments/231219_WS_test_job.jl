@@ -4,7 +4,7 @@ const ON_YOGA = occursin("Yoga", gethostname())
 
 @info "Initialize environment on main process"
 
-PKG_DIR = ON_YOGA ? abspath(@__DIR__, "..", "..", "..", "..") : "/home/brandner/DynamicCascades.jl"
+PKG_DIR = ON_YOGA ? abspath(@__DIR__, "..", "..", "..") : "/home/brandner/DynamicCascades.jl"
 using Pkg
 Pkg.activate(PKG_DIR)
 
@@ -16,6 +16,20 @@ else # if on PIK-HPC or Pool
     Pkg.instantiate()
     # Pkg.precompile()
 end
+
+N = ARGS[1]
+k = ARGS[2]
+β = ARGS[3]
+inertia = ARGS[4]
+= ARGS[5]
+= ARGS[6]
+= ARGS[7]
+= ARGS[8]
+= ARGS[9]
+= ARGS[10]
+= ARGS[11]
+= ARGS[12]
+= ARGS[13]
 
 
 using LinearAlgebra
