@@ -2,6 +2,8 @@ using DataFrames
 using Dates
 
 # PARAMETERS ###################################################################
+# Experiment name
+exp_name = "WS_testrun_231221_01"
 k = [4, 10]
 # beta = [0.1, 0.5, 0.9]
 beta = [0.1, 0.5]
@@ -57,7 +59,7 @@ df_hpe = DataFrame(map(idx -> getindex.(hyperparam_ensemble, idx), eachindex(fir
 df_hpe = hcat(DataFrame(ArrayTaskID = 1:length(hyperparam_ensemble)), df_hpe)
 
 # add columns `graph_seed`, `distr_seed` and `filepath` filled with `nan` to df
-df_hpe[!, :graph_seed] .= 1; df_hpe[!, :distr_seed] .= 1; df_hpe[!, :filepath] .= "filepath"
+df_hpe[!, :graph_seed] .= 1; df_hpe[!, :distr_seed] .= 1; df_hpe[!, :filepath] .= "<filepath>"
 
 
 function get_network_args(df_hpe::DataFrame, task_id::Int)
@@ -95,9 +97,8 @@ function string_network_args(df_hpe::DataFrame, task_id::Int)
     return "failure_mode=$failure_mode,freq_bound=$freq_bound,N=$N,k=$k,β=$β,graph_seed=$graph_seed,μ=$μ,σ=$σ,distr_seed=$distr_seed,K=$K,α=$α,M=$M,γ=$γ,τ=$τ,init_pert=$init_pert"
 end
 
-string_network_args(df_hpe, task_id)
 
-""" Generation of networks """
+# GENERATION OF NETWORKS
 task_id = 1
 # Loop over each ArrayTaskID:
 while task_id <= length(df_hpe.ArrayTaskID)
@@ -114,34 +115,31 @@ while task_id <= length(df_hpe.ArrayTaskID)
     try
         steadystate(network) # test if steady state exists
 
-        # save/overwrite filepath, graph_seed, distr_seed in df
+        # Save/overwrite filepath, graph_seed, distr_seed in df
         df_hpe[task_id,:graph_seed] = graph_seed; df_hpe[task_id,:distr_seed] = distr_seed
         N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,failure_mode,init_pert = get_network_args(df_hpe, task_id)
-        df_hpe[task_id,:filepath] = folder/"failure_mode=$failure_mode,freq_bound=$freq_bound,k=$k,β=$β" + seeds
+
+        # Create paths
+        t=now()
+        datetime = Dates.format(t, "yyyymmdd_HHMMSS.s")
+        dir_params = "failure_mode=$failure_mode,freq_bound=$freq_bound,k=$k,β=$β,"
+        dir_path = joinpath(@__DIR__, exp_name, string(dir_params,datetime))
+        graph_params = "graph_seed=$graph_seed,distr_seed=$distr_seed,failure_mode=$failure_mode,freq_bound=$freq_bound,k=$k,β=$β,"
+        filepath = joinpath(dir_path, "graphs", string(graph_params,datetime,".lg"))
+
+        # Assign filepath to df
+        df_hpe[task_id,:filepath] = filepath
 
         # save grid with parameter configuration if last steady state for last inertia value exists
         if ((task_id-1) % length(inertia_values)) == (length(inertia_values) - 1)
 
-            println("Save network for jobs with ArrayTaskIDs $(task_id-length(inertia_values)+1) to $task_id.")
-
-
-            # TODO create folder if not already existing
-
-            t=now()
-            datetime = Dates.format(t, "yyyymmdd_HHMMSS.s")
-
-            directory_params = "failure_mode=$failure_mode,freq_bound=$freq_bound,k=$k,β=$β"
-
-            # create folder
-            folder = string(directory_params, "/",datetime,"WS_inertia_vs_line+node_failures_f_bound=$freq_bound")
-            directory = string(RESULTS_DIR,folder)
-            mkpath(directory)
-
-
+            # create folder if not already existing
             isdir(dir) || mkdir(dir)
 
-            # TODO save network
-            folder/"failure_mode=$failure_mode,freq_bound=$freq_bound,k=$k,β=$β" + seeds
+            # save network
+            println("Save network for jobs with ArrayTaskIDs $(task_id-length(inertia_values)+1) to $task_id.")
+            savegraph(filepath, network)
+
             graph_seed += 1; distr_seed += 1
         end
         task_id += 1
@@ -156,37 +154,5 @@ while task_id <= length(df_hpe.ArrayTaskID)
     end
 end
 
-##############
-sdir(dir) || mkdir(dir)
-
-for i in [0.2, 1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0, 15.0, 20.0]
-    println("i $i \n")
-    network = import_system(:wattsstrogatz; N=100, k=4, β=0.7, M=(i * 1u"s^2"), graph_seed=124, distr_seed=1230, K=K, γ=(gamma * 1u"s"), τ=(tau * 1u"s"), μ=mu, σ=sigma)
-    savegraph("/home/vollmich/Desktop/delete_soon/test_graphs/test_graph$i.lg", network)
-    # x_static = steadystate(network)
-end
-################
-
-""" loop over parameter configurations """
-# loop over all parameter configurations of β,freq_bounds,failure_modes,k
-    # loop over `N_ensemble_size` grids and generate grid
-        # for this grid loop over all `inertia_values`
-            # if steady state for all inertia value (maybe check by relaxation)
-                # in newly added columns change `nan` to
-                    # graph_seed
-                    # distr_seed
-                    # grid file path (don't save the same grids with different inertia_values)
-            # else
-                # generate new grid by changing seeds
-                # graph_seed += 1
-                # distr_seed += 1
-
-
-# Design choice: looping over ArrayTaskID vs over parameter configurations
-#  - To read the data out I will be looping over ArrayTastID as well.
-#  - => I can use the same code.
-#  - Looping over ArrayTastID seems to be more natural!
-
-
 # Save to CSV
-CSV.write(joinpath(@__DIR__, "config.csv"), df_hpe)
+CSV.write(joinpath(@__DIR__, exp_name, string(exp_name, "_config.csv")), df_hpe)
