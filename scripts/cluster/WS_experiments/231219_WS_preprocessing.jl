@@ -1,5 +1,38 @@
-using DataFrames
+const ON_YOGA = occursin("Yoga", gethostname())
+
+@info "Initialize environment on main process"
+
+PKG_DIR = ON_YOGA ? abspath(@__DIR__, "..", "..", "..") : "/home/brandner/DynamicCascades.jl"
+using Pkg
+Pkg.activate(PKG_DIR)
+
+if ON_YOGA
+    using Revise
+else # if on PIK-HPC or Pool
+    #= TODO execute this in seperate script that is executed before this script.
+    Otherwise `Pkg.instantiate()` is executed for every job.=#
+    Pkg.instantiate()
+    # Pkg.precompile()
+end
+
+
+using LinearAlgebra
+print("Number of threads before setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
+BLAS.set_num_threads(1)
+print("Number of threads after setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
+
+using DynamicCascades
+using NetworkDynamics
+using Graphs
+using MetaGraphs
+using Unitful
+using Statistics
+using DynamicCascades: PLOT_DIR # TODO Probably remove
 using Dates
+using DataFrames
+using CSV
+
+
 
 # PARAMETERS ###################################################################
 # Experiment name
@@ -24,9 +57,9 @@ inertia_values = [0.2, 5.0, 7.3]
 
 # constant parameters
 N_ensemble_size = 2 # 100
-N_nodes = 100
+N_nodes = 20 # TODO
 
-K = 2 # coupling K
+K = 6 # coupling K
 gamma = 1 # damping swing equation nodes γ
 tau = 1 # time constant τ
 
@@ -98,6 +131,9 @@ function string_network_args(df_hpe::DataFrame, task_id::Int)
 end
 
 
+# network = import_system_wrapper(df_hpe, 5)
+# steadystate(network)
+
 # GENERATION OF NETWORKS
 task_id = 1
 # Loop over each ArrayTaskID:
@@ -106,7 +142,7 @@ while task_id <= length(df_hpe.ArrayTaskID)
     parameter), generate a new network:=#
     if ((task_id-1) % length(inertia_values)) == 0
         string = string_network_args(df_hpe, task_id)
-        println("Generate new network for ArrayTaskID=$task_id for the parameters $string"
+        println("Generate new network for ArrayTaskID=$task_id for the parameters $string")
         network = import_system_wrapper(df_hpe, task_id)
     end
     #= Check for every inertia value of a single parameter configuration if steady
