@@ -33,6 +33,9 @@ using CSV
 # Experiment name
 save_graph_and_filepath = false
 exp_name = "WS_testrun_N_G=2_"
+exp_path = joinpath(@__DIR__, string(exp_name, datetime))
+ispath(exp_path) || mkdir(exp_path)
+
 # k = [4, 10]
 k = [4]
 beta = [0.1, 0.5, 0.9]
@@ -197,9 +200,6 @@ for task_id in df_hpe.ArrayTaskID
     N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,failure_mode,init_pert = get_network_args(df_hpe, task_id)
 
     # Create paths and directories
-    exp_path = joinpath(@__DIR__, string(exp_name, datetime))
-    ispath(exp_path) || mkdir(exp_path)
-
     if save_graph_and_filepath == true
 
         graph_combinations_path = joinpath(exp_path, "k=$k,beta=$β")
