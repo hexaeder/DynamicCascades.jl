@@ -33,6 +33,8 @@ using CSV
 # Experiment name
 save_graph_and_filepath = false
 exp_name = "WS_testrun_N_G=2_"
+t=now()
+datetime = Dates.format(t, "yyyymmdd_HHMMSS.s")
 exp_path = joinpath(@__DIR__, string(exp_name, datetime))
 ispath(exp_path) || mkdir(exp_path)
 
@@ -139,8 +141,6 @@ function string_metagraph_args(df_hpe::DataFrame, task_id::Int)
 end
 
 # GENERATION OF NETWORKS
-t=now()
-datetime = Dates.format(t, "yyyymmdd_HHMMSS.s")
 number_of_task_ids_between_graphs = length(inertia_values) * length(freq_bounds) * length(failure_modes)
 
 graph_seed = 0; distr_seed = 0
