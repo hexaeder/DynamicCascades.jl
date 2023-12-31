@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --qos=medium
-#SBATCH --time=3-00:00:00
+#SBATCH --qos=short
+#SBATCH --time=1-00:00:00
 #SBATCH --job-name=test_job
 #SBATCH --account=icone
 #SBATCH --output=test-%x-%j-%N.out
