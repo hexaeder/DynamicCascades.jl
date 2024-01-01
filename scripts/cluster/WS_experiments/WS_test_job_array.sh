@@ -6,7 +6,7 @@
 #SBATCH --account=icone
 #SBATCH --output=%x-%A_%a-%N.out
 #SBATCH --error=%x-%A_%a-%N.err
-#SBATCH --workdir=/p/projects/coen/brandner
+#SBATCH --workdir=/home/brandner/MA_data/results_NB
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --array=1-72
