@@ -135,12 +135,8 @@ failure_mode_frequ_bound = joinpath(failure_mode_string, "trip_lines=$trip_lines
 ispath(failure_mode_frequ_bound) || mkdir(failure_mode_frequ_bound)
 
 # write results to file
-t=now()
-datetime = Dates.format(t, "yyyymmdd_HHMMSS.s")
-
 # TODO Hier string_network_args() verwenden
-filename = 
-"/trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound,N=$N,k=$k,β=$β,graph_seed=$graph_seed,μ=$μ,σ=$σ,distr_seed=$distr_seed,K=$K,α=$α,M=$inertia,γ=$γ,τ=$τ,init_pert=$init_pert.csv"
+filename = "/trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound,N=$N,k=$k,β=$β,graph_seed=$graph_seed,μ=$μ,σ=$σ,distr_seed=$distr_seed,K=$K,α=$α,M=$inertia,γ=$γ,τ=$τ,init_pert=$init_pert.csv"
 CSV.write(string(failure_mode_frequ_bound, filename), df_failures)
 
 
