@@ -11,7 +11,7 @@
 
 echo "Check whether new commits need to be pulled"
 echo ""
-/usr/bin/git/git pull
+/usr/bin/git pull
 
 
 module purge
