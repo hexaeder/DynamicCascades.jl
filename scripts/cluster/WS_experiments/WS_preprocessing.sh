@@ -11,11 +11,13 @@
 
 echo "Check whether new commits need to be pulled"
 echo ""
-which git
-# /usr/bin/git pull
+module load git
+git pull
+
 
 
 module purge
 module load julia/1.8.2
 
-julia WS_preprocessing.jl
+julia test_job.jl
+# julia WS_preprocessing.jl
