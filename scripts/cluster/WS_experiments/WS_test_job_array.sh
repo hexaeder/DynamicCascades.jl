@@ -11,6 +11,12 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --array=1-72
 
+cd /home/brandner/DynamicCascades.jl/scripts/cluster/WS_experiments
+
+module purge
+module load julia/1.8.2
+
+julia WS_job.jl $SLURM_ARRAY_TASK_ID
 
 
 # # Specify the path to the config file
@@ -48,8 +54,3 @@
 #     init_pert=${init_pert},\n
 #     sigma=${sigma},\n
 #     mu=${mu}." >> output.txt
-
-module purge
-module load julia/1.8.2
-
-julia WS_job.jl $SLURM_ARRAY_TASK_ID
