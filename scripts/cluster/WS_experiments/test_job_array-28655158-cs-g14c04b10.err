@@ -1,5 +1,0 @@
-[ Info: Initialize environment on main process
-  Activating project at `~/DynamicCascades.jl`
-[ Info: Import system Watts-Strogatz
-┌ Warning: Steadystate: θ ∈ (2.990652587417032, 3.8013083814259145), consider using project=true flag!
-└ @ DynamicCascades ~/DynamicCascades.jl/src/ND_model.jl:179
