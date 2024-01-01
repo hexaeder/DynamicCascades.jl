@@ -4,14 +4,15 @@
 #SBATCH --time=1-00:00:00
 #SBATCH --job-name=test_preprocessing
 #SBATCH --account=icone
-#SBATCH --output=%x-%j-%N.out
+#SBATCH --output=bla.out
 
 
-# For having seperate error file #SBATCH --error=%x-%j-%N.err
+
 
 echo "Check whether new commits need to be pulled"
 echo ""
-/usr/bin/git pull
+which git
+# /usr/bin/git pull
 
 
 module purge
