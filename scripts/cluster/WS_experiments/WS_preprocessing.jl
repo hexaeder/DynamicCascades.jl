@@ -143,6 +143,8 @@ end
 # GENERATION OF NETWORKS
 number_of_task_ids_between_graphs = length(inertia_values) * length(freq_bounds) * length(failure_modes)
 
+
+# TODO TODO TODO HIER WEITER entweder hier oder im loop `global graph_seed`
 graph_seed = 0; distr_seed = 0
 # Loop over each ArrayTaskID:
 for task_id in df_hpe.ArrayTaskID
@@ -151,7 +153,7 @@ for task_id in df_hpe.ArrayTaskID
     ensemble, generate a new network. The order of parameters in `hyperparam` is
     relevant for this.=#
     if ((task_id-1) % number_of_task_ids_between_graphs) == 0
-        graph_seed += 1; distr_seed += 1
+        global graph_seed += 1; global distr_seed += 1
         df_hpe[task_id,:graph_seed] = graph_seed; df_hpe[task_id,:distr_seed] = distr_seed
         string_args = string_metagraph_args(df_hpe, task_id)
         println("Generate new MetaGraph:ArrayTaskID=$task_id with parameters $string_args")
@@ -182,12 +184,12 @@ for task_id in df_hpe.ArrayTaskID
                     error("Tried $max_trials different values for `graph_seed` and `distr_seed`. Exiting...")
                 end
 
-                N,k,β,graph_seed,μ,σ,distr_seed,K,_,_,γ,τ,_,_,_ = get_network_args(df_hpe, task_id)
+                N,k,β,graph_seed_,μ,σ,distr_seed_,K,_,_,γ,τ,_,_,_ = get_network_args(df_hpe, task_id)
                 M = ustrip(u"s^2", get_prop(network, 1, :_M))
-                @warn "No static solution found: ArrayTaskID=$task_id with parameters N=$N,k=$k,β=$β,graph_seed=$graph_seed,μ=$μ,σ=$σ,distr_seed=$distr_seed,K=$K,M=$M,γ=$γ,τ=$τ."
+                @warn "No static solution found: ArrayTaskID=$task_id with parameters N=$N,k=$k,β=$β,graph_seed=$graph_seed_,μ=$μ,σ=$σ,distr_seed=$distr_seed_,K=$K,M=$M,γ=$γ,τ=$τ."
 
                 # generate new grid by increasing seeds by one
-                graph_seed += 1; distr_seed += 1
+                global graph_seed += 1; global distr_seed += 1
                 df_hpe[task_id,:graph_seed] = graph_seed; df_hpe[task_id,:distr_seed] = distr_seed
                 string_args = string_network_args(df_hpe, task_id)
                 println("Generate new network with changed seeds for ArrayTaskID=$task_id with parameters $string_args")
@@ -197,7 +199,7 @@ for task_id in df_hpe.ArrayTaskID
     end
     df_hpe[task_id,:graph_seed] = graph_seed; df_hpe[task_id,:distr_seed] = distr_seed
 
-    N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,failure_mode,init_pert = get_network_args(df_hpe, task_id)
+    N,k,β,graph_seed_,μ,σ,distr_seed_,K,α,M,γ,τ,freq_bound,failure_mode,init_pert = get_network_args(df_hpe, task_id)
 
     # Create paths and directories
     if save_graph_and_filepath == true
@@ -208,7 +210,7 @@ for task_id in df_hpe.ArrayTaskID
         graph_folder_path = joinpath(graph_combinations_path, "graphs")
         ispath(graph_folder_path) || mkdir(graph_folder_path)
 
-        graph_params = "graph_seed=$graph_seed,distr_seed=$distr_seed,k=$k,beta=$β"
+        graph_params = "graph_seed=$graph_seed_,distr_seed=$distr_seed_,k=$k,beta=$β"
         filepath = joinpath(graph_folder_path, string(graph_params,".lg"))
 
         # Assign filepath to df
