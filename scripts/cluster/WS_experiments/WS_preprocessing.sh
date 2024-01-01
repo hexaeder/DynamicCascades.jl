@@ -11,8 +11,7 @@
 
 echo "Check whether new commits need to be pulled"
 echo ""
-module load git
-git pull
+/home/brandner/DynamicCascades.jl/scripts/cluster/WS_experiments/slurm_git.sh
 
 
 
