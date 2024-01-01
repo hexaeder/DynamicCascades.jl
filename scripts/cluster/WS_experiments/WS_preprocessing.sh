@@ -1,9 +1,5 @@
 #!/bin/bash
 
-echo "Check whether new commits need to be pulled"
-echo ""
-git pull
-
 #SBATCH --qos=short
 #SBATCH --time=1-00:00:00
 #SBATCH --job-name=test_preprocessing
@@ -13,6 +9,9 @@ git pull
 
 # For having seperate error file #SBATCH --error=%x-%j-%N.err
 
+echo "Check whether new commits need to be pulled"
+echo ""
+/usr/bin/git/git pull
 
 
 module purge
