@@ -8,13 +8,6 @@
 #SBATCH --error=%x-%j-%N.err
 
 
-# # TODO This is more complicated as this requires internet.
-# echo "Check whether new commits need to be pulled"
-# module load git
-# git pull
-
-
-
 module purge
 module load julia/1.8.2
 

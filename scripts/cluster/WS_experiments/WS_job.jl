@@ -37,11 +37,11 @@ using DataFrames
 using CSV
 
 
-exp_name_date = "WS_testrun_N_G=100_heute"
+exp_name_date = "WS_testrun_N_G=2_20240101_183724.014"
 
 # read in SLURM_ARRAY_TASK_ID from `ARGS`
-# task_id = parse(Int64, ARGS[1])
-task_id = 1
+task_id = parse(Int64, ARGS[1])
+# task_id = 1
 
 # load config file
 df_config = DataFrame(CSV.File(joinpath(@__DIR__, exp_name_date, "config.csv")))
@@ -78,7 +78,7 @@ network = import_system(:wattsstrogatz; N=N, k=k, β=β, M=(inertia * 1u"s^2"), 
     distr_seed=distr_seed, K=K, α=α, γ=(γ * 1u"s"), τ=(τ * 1u"s"), σ=σ)
 
 # Find numer of (potentially failing) generator nodes.
-if [get_prop(network,i,:type) for i in 1:nv(network0)] == [:gen for i in 1:nv(network)]
+if [get_prop(network,i,:type) for i in 1:nv(network)] == [:gen for i in 1:nv(network)]
     # This is the case for WS networks where initially all nodes are swing equation nodes.
     nr_gen_nodes = nv(network)
 else
