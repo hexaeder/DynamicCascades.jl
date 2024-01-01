@@ -2,13 +2,13 @@
 
 #SBATCH --qos=short
 #SBATCH --time=0-00:30:00
-#SBATCH --job-name=test_preprocessing
+#SBATCH --job-name=test_job_array
 #SBATCH --account=icone
 #SBATCH --output=%x-%j-%N.out
 #SBATCH --error=%x-%j-%N.err
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --array=1
+#SBATCH --array=1-72
 
 
 

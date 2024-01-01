@@ -110,9 +110,6 @@ for i in 1:4
     push!(number_failures_lines, length(sol.failures.saveval)-1) # `-1` as we don't want to count the initial failure
     push!(number_failures_nodes, length(sol.failures_nodes.saveval))
 end
-df_all_failures_lines[!, :number_failures_lines] = number_failures_lines
-df_all_failures_nodes[!, :number_failures_nodes] = number_failures_nodes
-
 df_failures = DataFrame()
 df_failures[!, :number_failures_lines] = number_failures_lines
 df_failures[!, :number_failures_nodes] = number_failures_nodes
@@ -142,7 +139,8 @@ t=now()
 datetime = Dates.format(t, "yyyymmdd_HHMMSS.s")
 
 # TODO Hier string_network_args() verwenden
-filename = "/failure_mode=$failure_mode,freq_bound=$freq_bound,N=$N,k=$k,β=$β,graph_seed=$graph_seed,μ=$μ,σ=$σ,distr_seed=$distr_seed,K=$K,α=$α,M=$M,γ=$γ,τ=$τ,init_pert=$init_pert.csv"
+filename = 
+"/trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound,N=$N,k=$k,β=$β,graph_seed=$graph_seed,μ=$μ,σ=$σ,distr_seed=$distr_seed,K=$K,α=$α,M=$inertia,γ=$γ,τ=$τ,init_pert=$init_pert.csv"
 CSV.write(string(failure_mode_frequ_bound, filename), df_failures)
 
 

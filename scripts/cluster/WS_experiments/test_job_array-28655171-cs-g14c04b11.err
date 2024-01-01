@@ -1,0 +1,13 @@
+[ Info: Initialize environment on main process
+  Activating project at `~/DynamicCascades.jl`
+[ Info: Import system Watts-Strogatz
+┌ Warning: Steadystate: θ ∈ (-0.5374416181063681, 1.844100378794466), consider using project=true flag!
+└ @ DynamicCascades ~/DynamicCascades.jl/src/ND_model.jl:179
+┌ Warning: Did not reach steady state! (lines dynamic, nodes dynamic, load nodes none)
+└ @ DynamicCascades ~/DynamicCascades.jl/src/ND_model.jl:260
+┌ Warning: Did not reach steady state! (lines dynamic, nodes dynamic, load nodes none)
+└ @ DynamicCascades ~/DynamicCascades.jl/src/ND_model.jl:260
+┌ Warning: Did not reach steady state! (lines dynamic, nodes dynamic, load nodes none)
+└ @ DynamicCascades ~/DynamicCascades.jl/src/ND_model.jl:260
+┌ Warning: Did not reach steady state! (lines dynamic, nodes dynamic, load nodes none)
+└ @ DynamicCascades ~/DynamicCascades.jl/src/ND_model.jl:260

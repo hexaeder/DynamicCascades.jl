@@ -1,0 +1,20 @@
+Number of threads before setting8
+Number of threads after setting1
+Find steady state...
+7.964406911753485e-11
+Run simulation for trips on lines/nodes [1]
+Shutdown line 1 at t = 0.1
+Terminated on steady state at 5.086556554204042
+Run simulation for trips on lines/nodes [2]
+Shutdown line 2 at t = 0.1
+Terminated on steady state at 4.679999999999945
+Run simulation for trips on lines/nodes [3]
+Shutdown line 3 at t = 0.1
+Shutdown node 18 at t = 0.1719993023169365
+Shutdown node 1 at t = 0.18443243665468365
+Terminated on steady state at 5.124432436654619
+Run simulation for trips on lines/nodes [4]
+Shutdown line 4 at t = 0.1
+Shutdown node 27 at t = 0.13860625234925159
+Shutdown node 1 at t = 0.1393206274020333
+Terminated on steady state at 5.089257222729414

@@ -1,0 +1,33 @@
+[ Info: Initialize environment on main process
+  Activating project at `~/DynamicCascades.jl`
+ERROR: LoadError: SystemError: close: Stale file handle
+Stacktrace:
+  [1] systemerror(p::String, errno::Int32; extrainfo::Nothing)
+    @ Base ./error.jl:176
+  [2] #systemerror#80
+    @ ./error.jl:175 [inlined]
+  [3] systemerror
+    @ ./error.jl:175 [inlined]
+  [4] close(s::IOStream)
+    @ Base ./iostream.jl:63
+  [5] open(::Pkg.API.var"#280#281"{Vector{Pkg.Types.PackageSpec}}, ::String, ::Vararg{String}; kwargs::Base.Pairs{Symbol, Union{}, Tuple{}, NamedTuple{(), Tuple{}}})
+    @ Base ./io.jl:386
+  [6] open
+    @ ./io.jl:381 [inlined]
+  [7] save_precompile_state()
+    @ Pkg.API /p/system/packages/julia/1.8.2/share/julia/stdlib/v1.8/Pkg/src/API.jl:1446
+  [8] precompile(ctx::Pkg.Types.Context, pkgs::Vector{String}; internal_call::Bool, strict::Bool, warn_loaded::Bool, already_instantiated::Bool, kwargs::Base.Pairs{Symbol, Union{}, Tuple{}, NamedTuple{(), Tuple{}}})
+    @ Pkg.API /p/system/packages/julia/1.8.2/share/julia/stdlib/v1.8/Pkg/src/API.jl:1376
+  [9] _auto_precompile(ctx::Pkg.Types.Context; warn_loaded::Bool, already_instantiated::Bool)
+    @ Pkg /p/system/packages/julia/1.8.2/share/julia/stdlib/v1.8/Pkg/src/Pkg.jl:736
+ [10] instantiate(ctx::Pkg.Types.Context; manifest::Nothing, update_registry::Bool, verbose::Bool, platform::Base.BinaryPlatforms.Platform, allow_build::Bool, allow_autoprecomp::Bool, kwargs::Base.Pairs{Symbol, Union{}, Tuple{}, NamedTuple{(), Tuple{}}})
+    @ Pkg.API /p/system/packages/julia/1.8.2/share/julia/stdlib/v1.8/Pkg/src/API.jl:1546
+ [11] instantiate
+    @ /p/system/packages/julia/1.8.2/share/julia/stdlib/v1.8/Pkg/src/API.jl:1499 [inlined]
+ [12] #instantiate#284
+    @ /p/system/packages/julia/1.8.2/share/julia/stdlib/v1.8/Pkg/src/API.jl:1498 [inlined]
+ [13] instantiate()
+    @ Pkg.API /p/system/packages/julia/1.8.2/share/julia/stdlib/v1.8/Pkg/src/API.jl:1498
+ [14] top-level scope
+    @ ~/DynamicCascades.jl/scripts/cluster/WS_experiments/WS_job.jl:16
+in expression starting at /home/brandner/DynamicCascades.jl/scripts/cluster/WS_experiments/WS_job.jl:11
