@@ -6,17 +6,19 @@
 #SBATCH --account=icone
 #SBATCH --output=%x-%A_%a-%N.out
 #SBATCH --error=%x-%A_%a-%N.err
-#SBATCH --workdir=/home/brandner/MA_data/results_NB/WS_testrun_N_G=2_20240101_183724.014
+#SBATCH --workdir=/home/brandner/MA_data/results_NB/WS_testrun_N_G=2_20240102_173754.851
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --array=1-72
+
+exp_name_date="WS_testrun_N_G=2_20240102_173754.851"
 
 cd /home/brandner/DynamicCascades.jl/scripts/cluster/WS_experiments
 
 module purge
 module load julia/1.8.2
 
-julia WS_job.jl $SLURM_ARRAY_TASK_ID
+julia WS_job.jl $SLURM_ARRAY_TASK_ID $exp_name_date
 
 # # Specify the path to the config file
 # config=231219_WS_test_config.csv

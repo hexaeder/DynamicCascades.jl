@@ -37,7 +37,8 @@ using DataFrames
 using CSV
 
 
-exp_name_date = "WS_testrun_N_G=2_20240101_183724.014"
+# exp_name_date = "WS_testrun_N_G=2_20240101_183724.014"
+exp_name_date = ARGS[2]
 
 # read in SLURM_ARRAY_TASK_ID from `ARGS`
 task_id = parse(Int64, ARGS[1])
