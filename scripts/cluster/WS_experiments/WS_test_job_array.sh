@@ -18,9 +18,6 @@ module load julia/1.8.2
 
 julia WS_job.jl $SLURM_ARRAY_TASK_ID
 
-sleep 5 # wait for slurm to get the job status into its database
-sacct --format=JobID,JobName,Submit,Start,End,State,Partition,ReqTRES%30,CPUTime,Elapsed,MaxRSS,NodeList%30 --units=M -j $SLURM_JOBID > out.txt
-
 # # Specify the path to the config file
 # config=231219_WS_test_config.csv
 

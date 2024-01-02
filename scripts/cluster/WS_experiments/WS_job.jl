@@ -47,10 +47,11 @@ task_id = parse(Int64, ARGS[1])
 df_config = DataFrame(CSV.File(joinpath(@__DIR__, exp_name_date, "config.csv")))
 
 # read in parameters from df_config
+# TODO use get_network_args function
 inertia = df_config[task_id,:inertia_values]
 freq_bound = df_config[task_id,:freq_bounds]
-trip_lines = Symbol(eval(Meta.parse(df_config[task_id,:failure_modes]))[1])
-trip_nodes = Symbol(eval(Meta.parse(df_config[task_id,:failure_modes]))[2])
+trip_lines = Symbol(eval(Meta.parse(string(df_config[task_id,:failure_modes])))[1])
+trip_nodes = Symbol(eval(Meta.parse(string(df_config[task_id,:failure_modes])))[2])
 β = df_config[task_id,:beta]
 k = df_config[task_id,:k]
 N = df_config[task_id,:N_nodes]
@@ -63,6 +64,7 @@ init_pert = Symbol(df_config[task_id,:init_pert])
 μ = df_config[task_id,:mu]
 graph_seed = df_config[task_id,:graph_seed]
 distr_seed = df_config[task_id,:distr_seed]
+ensemble_element=df_config[task_id,:ensemble_element]
 
 # Alternative of loading graphs that have been generated during postprocessing
 # filepath_graph = df_config[task_id,:filepath]
@@ -93,7 +95,7 @@ end
 number_failures_lines = Float64[]
 number_failures_nodes = Float64[]
 x_static = steadystate(network; verbose=true)
-# for i in 1:ne(network)
+# for i in 1:ne(network) TODO TODO #################################################################################################################### TODO
 for i in 1:4
     sol = simulate(network;
                    x_static=x_static,
@@ -136,7 +138,7 @@ ispath(failure_mode_frequ_bound) || mkdir(failure_mode_frequ_bound)
 
 # write results to file
 # TODO Hier string_network_args() verwenden
-filename = "/trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound,N=$N,k=$k,β=$β,graph_seed=$graph_seed,μ=$μ,σ=$σ,distr_seed=$distr_seed,K=$K,α=$α,M=$inertia,γ=$γ,τ=$τ,init_pert=$init_pert.csv"
+filename = "/trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound,N=$N,k=$k,β=$β,graph_seed=$graph_seed,μ=$μ,σ=$σ,distr_seed=$distr_seed,K=$K,α=$α,M=$inertia,γ=$γ,τ=$τ,init_pert=$init_pert,ensemble_element=$ensemble_element.csv"
 CSV.write(string(failure_mode_frequ_bound, filename), df_failures)
 
 

@@ -95,48 +95,62 @@ df_hpe = DataFrame(map(idx -> getindex.(hyperparam_ensemble, idx), eachindex(fir
 # add "ArrayTaskID" as first column of df
 df_hpe = hcat(DataFrame(ArrayTaskID = 1:length(hyperparam_ensemble)), df_hpe)
 
-# add columns `graph_seed`, `distr_seed` and `filepath` filled with `nan` to df
+# add columns `graph_seed`, `distr_seed` and `filepath` to df
 df_hpe[!, :graph_seed] .= 0; df_hpe[!, :distr_seed] .= 0; df_hpe[!, :filepath] .= "<filepath>"
 
 
-function get_network_args(df_hpe::DataFrame, task_id::Int)
-    N=df_hpe[task_id,:N_nodes]
-    k=df_hpe[task_id,:k]
-    β=df_hpe[task_id,:beta]
-    graph_seed=df_hpe[task_id,:graph_seed]
-    μ=df_hpe[task_id,:mu]
-    σ=df_hpe[task_id,:sigma]
-    distr_seed=df_hpe[task_id,:distr_seed]
-    K=df_hpe[task_id,:K]
-    α=df_hpe[task_id,:alpha]
-    M=df_hpe[task_id,:inertia_values]*1u"s^2"
-    γ=df_hpe[task_id,:gamma]*1u"s"
-    τ=df_hpe[task_id,:tau]*1u"s"
-    freq_bound=df_hpe[task_id,:freq_bounds]
-    failure_mode=df_hpe[task_id,:failure_modes]
-    init_pert=df_hpe[task_id,:init_pert]
+df_hpe[!, :ensemble_element] = vcat([fill(i, length(hyperparam)) for i in 1:N_ensemble_size]...)
 
-    return N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,failure_mode,init_pert
+
+
+function get_network_args(df::DataFrame, task_id::Int)
+    N=df[task_id,:N_nodes]
+    k=df[task_id,:k]
+    β=df[task_id,:beta]
+    graph_seed=df[task_id,:graph_seed]
+    μ=df[task_id,:mu]
+    σ=df[task_id,:sigma]
+    distr_seed=df[task_id,:distr_seed]
+    K=df[task_id,:K]
+    α=df[task_id,:alpha]
+    M=df[task_id,:inertia_values]*1u"s^2"
+    γ=df[task_id,:gamma]*1u"s"
+    τ=df[task_id,:tau]*1u"s"
+    freq_bound=df[task_id,:freq_bounds]
+    trip_lines=Symbol(eval(Meta.parse(string(df[1,:failure_modes])))[1])
+    trip_nodes=Symbol(eval(Meta.parse(string(df[1,:failure_modes])))[2])
+    failure_mode=df[task_id,:failure_modes]
+    init_pert=df[task_id,:init_pert]
+    ensemble_element=df[task_id,:ensemble_element]
+
+    return N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element
+end
+
+function get_network_args_stripped(df::DataFrame, task_id::Int)
+    N,k,β,graph_seed,μ,σ,distr_seed,K,α,M_,γ_,τ_,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args(df, task_id)
+    M = ustrip(u"s^2", M_)
+    τ = ustrip(u"s", τ_)
+    γ = ustrip(u"s", γ_)
+    return N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element
 end
 
 #= NOTE Could be written as `import_system_wrapper(df_hpe::DataFrame, task_id::Int)`
 using multiple dispatch, however not useful here in a script.=#
 # TODO Change function name?
 function import_system_wrapper(df_hpe::DataFrame, task_id::Int)
-    N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,_,_,_ = get_network_args(df_hpe, task_id)
+    N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,_,_,_,_,_ = get_network_args(df_hpe, task_id)
     return import_system(:wattsstrogatz; N=N, k=k, β=β, graph_seed=graph_seed,
         μ=μ, σ=σ, distr_seed=distr_seed, K=K, α=α, M=M, γ=γ, τ=τ)
 end
 
 function string_network_args(df_hpe::DataFrame, task_id::Int)
-    N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,failure_mode,init_pert = get_network_args(df_hpe, task_id)
-    trip_lines = failure_mode[1]; trip_nodes = failure_mode[2]
-    return "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound,N=$N,k=$k,β=$β,graph_seed=$graph_seed,μ=$μ,σ=$σ,distr_seed=$distr_seed,K=$K,α=$α,M=$M,γ=$γ,τ=$τ,init_pert=$init_pert"
+    N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_hpe, task_id)
+    return "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound,N=$N,k=$k,β=$β,graph_seed=$graph_seed,μ=$μ,σ=$σ,distr_seed=$distr_seed,K=$K,α=$α,M=$M,γ=$γ,τ=$τ,init_pert=$init_pert,ensemble_element=$ensemble_element"
 end
 
 
 function string_metagraph_args(df_hpe::DataFrame, task_id::Int)
-    N,k,β,graph_seed,μ,σ,distr_seed,K,_,M,γ,τ,_,_,_ = get_network_args(df_hpe, task_id)
+    N,k,β,graph_seed,μ,σ,distr_seed,K,_,M,γ,τ,_,_,_,_ = get_network_args_stripped(df_hpe, task_id)
     return "N=$N,k=$k,β=$β,graph_seed=$graph_seed,μ=$μ,σ=$σ,distr_seed=$distr_seed,K=$K,M=$M,γ=$γ,τ=$τ"
 end
 
@@ -177,14 +191,14 @@ for task_id in df_hpe.ArrayTaskID
                 trial_counter = 1 # reset trial_counter
                 steady_state_for_all_inertia_values = true
 
-            # If a there is at least one inertia value for which no steady state exists
+            # If a there is at least one inertia value for which no steady state exists:
             catch
                 trial_counter += 1
                 if trial_counter > max_trials
                     error("Tried $max_trials different values for `graph_seed` and `distr_seed`. Exiting...")
                 end
 
-                N,k_,β,graph_seed_,μ,σ,distr_seed_,K_,_,_,γ,τ,_,_,_ = get_network_args(df_hpe, task_id)
+                N,k_,β,graph_seed_,μ,σ,distr_seed_,K_,_,_,γ,τ,_,_,_,_,_ = get_network_args_stripped(df_hpe, task_id)
                 M = ustrip(u"s^2", get_prop(network, 1, :_M))
                 @warn "No static solution found: ArrayTaskID=$task_id with parameters N=$N,k=$k_,β=$β,graph_seed=$graph_seed_,μ=$μ,σ=$σ,distr_seed=$distr_seed_,K=$K_,M=$M,γ=$γ,τ=$τ."
 
@@ -199,7 +213,7 @@ for task_id in df_hpe.ArrayTaskID
     end
     df_hpe[task_id,:graph_seed] = graph_seed; df_hpe[task_id,:distr_seed] = distr_seed
 
-    N,k_,β,graph_seed_,μ,σ,distr_seed_,K_,α,M,γ,τ,freq_bound,failure_mode,_ = get_network_args(df_hpe, task_id)
+    N,k_,β,graph_seed_,μ,σ,distr_seed_,K_,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,_,ensemble_element = get_network_args_stripped(df_hpe, task_id)
 
     # Create paths and directories
     if save_graph_and_filepath == true
@@ -210,7 +224,7 @@ for task_id in df_hpe.ArrayTaskID
         graph_folder_path = joinpath(graph_combinations_path, "graphs")
         ispath(graph_folder_path) || mkdir(graph_folder_path)
 
-        graph_params = "graph_seed=$graph_seed_,distr_seed=$distr_seed_,k=$k_,beta=$β"
+        graph_params = "graph_seed=$graph_seed_,distr_seed=$distr_seed_,k=$k_,beta=$β,ensemble_element=$ensemble_element"
         filepath = joinpath(graph_folder_path, string(graph_params,".lg"))
 
         # Assign filepath to df
@@ -220,16 +234,12 @@ for task_id in df_hpe.ArrayTaskID
         savegraph(filepath, network)
     end
 
-
     # Create directories for results
     exp_data = joinpath(RESULTS_DIR, string(exp_name, datetime))
     ispath(exp_data) || mkdir(exp_data)
 
     graph_combinations_path = joinpath(exp_data, "k=$k_,beta=$β")
     ispath(graph_combinations_path) || mkdir(graph_combinations_path)
-
-    trip_lines = df_hpe[task_id,:failure_modes][1]
-    trip_nodes = df_hpe[task_id,:failure_modes][2]
 
     failure_mode_string = joinpath(graph_combinations_path, "trip_lines=$trip_lines,trip_nodes=$trip_nodes")
     ispath(failure_mode_string) || mkdir(failure_mode_string)
