@@ -22,6 +22,7 @@ print("Number of threads before setting"); print(LinearAlgebra.BLAS.get_num_thre
 BLAS.set_num_threads(1)
 print("Number of threads after setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
 
+# TODO check and remove
 using DynamicCascades
 using NetworkDynamics
 using Graphs
@@ -44,7 +45,7 @@ task_id = parse(Int64, ARGS[1])
 # task_id = 1
 
 # load config file
-df_config = DataFrame(CSV.File(joinpath(@__DIR__, exp_name_date, "config.csv")))
+df_config = DataFrame(CSV.File(joinpath(RESULTS_DIR, exp_name_date, "config.csv")))
 
 # read in parameters from df_config
 # TODO use get_network_args function
