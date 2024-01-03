@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --qos=short
+#SBATCH --qos=priority
 #SBATCH --time=0-04:00:00
 #SBATCH --job-name=test_preprocessing
 #SBATCH --account=icone
