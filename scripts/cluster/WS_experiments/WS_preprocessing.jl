@@ -28,21 +28,17 @@ using DynamicCascades: PLOT_DIR # TODO Probably remove
 using Dates
 using DataFrames
 using CSV
+using Serialization
 
 # PARAMETERS ###################################################################
 # Experiment name
 save_graph_and_filepath = false
-exp_name = "WS_testrun_N_G=2_"
-t=now()
-datetime = Dates.format(t, "yyyymmdd_HHMMSS.s")
-exp_name_date = string(exp_name, datetime)
-exp_path = joinpath(@__DIR__, exp_name_date)
-ispath(exp_path) || mkdir(exp_path)
+exp_name = "WS_testrun_plots"
 
 # k = [4, 10]
 k = [4]
-beta = [0.1, 0.5, 0.9]
-# beta = [0.1, 0.5]
+# beta = [0.1, 0.5, 0.9]
+beta = [0.1, 0.5]
 
 #= frequency bounds [narrow bounds, wide bounds] bounds.
 The value in numerator of round(0.1/(2*π) is the angular frequency =#
@@ -56,15 +52,16 @@ failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
 
 # inertia_values = [0.2, 0.5, 0.7, 0.9, 1.1, 1.4, 1.7, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 20.0]
 # inertia_values = [0.2, 1.0, 2.1, 3.0, 4.0, 5.0, 7.2, 11.0, 15.0, 21.0]
-inertia_values = [0.2, 1.0, 5.0, 10.0, 15.0, 20.0]
-# inertia_values = [0.2, 0.7]
-
+# inertia_values = [0.2, 1.0, 5.0, 10.0, 15.0, 20.0]
+inertia_values = [0.2, 0.7, 5.0]
 
 # constant parameters
-N_ensemble_size = 4 # 100
+N_ensemble_size = 3 # 100
 N_nodes = 100
 
+
 K = 6 # coupling K
+# TODO changing this to γ, τ possible without trouble?
 gamma = 1 # damping swing equation nodes γ
 tau = 1 # time constant τ
 
@@ -73,6 +70,29 @@ init_pert = [:line] # initial perturbation set constant to an initial line failu
 
 sigma = 1 # standard deviation σ
 mu = 0 # mean μ
+
+
+# Create result directory
+t=now()
+datetime = Dates.format(t, "_yyyymmdd_HHMMSS.s")
+exp_name_date = string(exp_name, "_N_G=$N_ensemble_size", datetime)
+exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
+ispath(exp_data_dir) || mkdir(exp_data_dir)
+
+# For writing parameters
+exp_params_dict = Dict(
+    :save_graph_and_filepath => save_graph_and_filepath,
+    :exp_name => exp_name,
+    :N_ensemble_size => N_ensemble_size,
+    :k => k, :beta => beta, :N_nodes => N_nodes,
+    :inertia_values => inertia_values, :K => K,  :gamma => gamma, :tau => tau,
+    :sigma => sigma, :mu => mu,
+    :failure_modes => failure_modes,
+    :init_pert => init_pert, :freq_bounds => freq_bounds, :alpha => alpha,
+    )
+
+CSV.write(joinpath(exp_data_dir, "exp_params.csv"), exp_params_dict, writeheader=true, header=["parameter", "value"])
+Serialization.serialize(joinpath(exp_data_dir, "exp.params"), exp_params_dict)
 
 ################################################################################
 #= create hyperparameter: the order is chosen such, that with an increasing number
@@ -100,9 +120,8 @@ df_hpe = hcat(DataFrame(ArrayTaskID = 1:length(hyperparam_ensemble)), df_hpe)
 # add columns `graph_seed`, `distr_seed` and `filepath` to df
 df_hpe[!, :graph_seed] .= 0; df_hpe[!, :distr_seed] .= 0; df_hpe[!, :filepath] .= "<filepath>"
 
-
+# TODO explain what is done
 df_hpe[!, :ensemble_element] = vcat([fill(i, length(hyperparam)) for i in 1:N_ensemble_size]...)
-
 
 
 function get_network_args(df::DataFrame, task_id::Int)
@@ -160,7 +179,6 @@ end
 number_of_task_ids_between_graphs = length(inertia_values) * length(freq_bounds) * length(failure_modes)
 
 
-# TODO TODO TODO HIER WEITER entweder hier oder im loop `global graph_seed`
 graph_seed = 0; distr_seed = 0
 # Loop over each ArrayTaskID:
 for task_id in df_hpe.ArrayTaskID
@@ -217,11 +235,17 @@ for task_id in df_hpe.ArrayTaskID
 
     N,k_,β,graph_seed_,μ,σ,distr_seed_,K_,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,_,ensemble_element = get_network_args_stripped(df_hpe, task_id)
 
-    # Create paths and directories
-    if save_graph_and_filepath == true
+    # Create directories for results
+    graph_combinations_path = joinpath(exp_data_dir, "k=$k_,beta=$β")
+    ispath(graph_combinations_path) || mkdir(graph_combinations_path)
 
-        graph_combinations_path = joinpath(exp_path, "k=$k_,beta=$β")
-        ispath(graph_combinations_path) || mkdir(graph_combinations_path)
+    failure_mode_string = joinpath(graph_combinations_path, "trip_lines=$trip_lines,trip_nodes=$trip_nodes")
+    ispath(failure_mode_string) || mkdir(failure_mode_string)
+    failure_mode_frequ_bound = joinpath(failure_mode_string, "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound")
+    ispath(failure_mode_frequ_bound) || mkdir(failure_mode_frequ_bound)
+
+    # Create directories for graphs
+    if save_graph_and_filepath == true
 
         graph_folder_path = joinpath(graph_combinations_path, "graphs")
         ispath(graph_folder_path) || mkdir(graph_folder_path)
@@ -235,20 +259,8 @@ for task_id in df_hpe.ArrayTaskID
         # save network
         savegraph(filepath, network)
     end
-
-    # Create directories for results
-    exp_data = joinpath(RESULTS_DIR, string(exp_name, datetime))
-    ispath(exp_data) || mkdir(exp_data)
-
-    graph_combinations_path = joinpath(exp_data, "k=$k_,beta=$β")
-    ispath(graph_combinations_path) || mkdir(graph_combinations_path)
-
-    failure_mode_string = joinpath(graph_combinations_path, "trip_lines=$trip_lines,trip_nodes=$trip_nodes")
-    ispath(failure_mode_string) || mkdir(failure_mode_string)
-    failure_mode_frequ_bound = joinpath(failure_mode_string, "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound")
-    ispath(failure_mode_frequ_bound) || mkdir(failure_mode_frequ_bound)
 end
 
 # Save to CSV
-CSV.write(joinpath(@__DIR__, string(exp_path, "/config.csv")), df_hpe)
-CSV.write(joinpath(RESULTS_DIR, string(exp_name_date, "/config.csv")), df_hpe)
+CSV.write(joinpath(exp_data_dir, "config.csv"), df_hpe)
+CSV.write(joinpath(exp_data_dir, "exp_params.csv"))
