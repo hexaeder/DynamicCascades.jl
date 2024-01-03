@@ -9,7 +9,7 @@
 #SBATCH --workdir=/home/brandner/MA_data/results_NB/WS_testrun_N_G=4_20240103_112850.85
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --array=1-72
+#SBATCH --array=1-432
 
 exp_name_date="WS_testrun_N_G=4_20240103_112850.85"
 
