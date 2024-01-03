@@ -6,12 +6,12 @@
 #SBATCH --account=icone
 #SBATCH --output=%x-%A_%a-%N.out
 #SBATCH --error=%x-%A_%a-%N.err
-#SBATCH --workdir=/home/brandner/MA_data/results_NB/WS_testrun_N_G=2_20240102_173754.851
+#SBATCH --workdir=/home/brandner/MA_data/results_NB/WS_testrun_N_G=4_20240103_112850.85
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --array=1-72
 
-exp_name_date="WS_testrun_N_G=2_20240102_173754.851"
+exp_name_date="WS_testrun_N_G=4_20240103_112850.85"
 
 cd /home/brandner/DynamicCascades.jl/scripts/cluster/WS_experiments
 
