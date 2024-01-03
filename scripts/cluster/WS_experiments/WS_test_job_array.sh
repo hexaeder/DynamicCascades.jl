@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --qos=short
-#SBATCH --time=0-00:30:00
+#SBATCH --time=0-00:20:00
 #SBATCH --job-name=test_job_array
 #SBATCH --account=icone
 #SBATCH --output=%x-%A_%a-%N.out

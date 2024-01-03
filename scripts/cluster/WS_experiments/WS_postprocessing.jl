@@ -37,7 +37,7 @@ using DataFrames
 using CSV
 
 
-exp_name_date = "WS_testrun_N_G=2_20240101_183724.014"
+exp_name_date = "WS_testrun_N_G=2_20240102_173754.851"
 
 # read in SLURM_ARRAY_TASK_ID from `ARGS`
 # task_id = parse(Int64, ARGS[1])
@@ -46,73 +46,65 @@ exp_name_date = "WS_testrun_N_G=2_20240101_183724.014"
 # load config file
 df_config = DataFrame(CSV.File(joinpath(@__DIR__, exp_name_date, "config.csv")))
 
-num_parameter_combinations = Int(length(df_hpe[!,:ArrayTaskID])/N_ensemble_size)
+# TODO read these two params from "human readable" config file
+N_ensemble_size = df_config[size(df_config, 1), :ensemble_element]
+num_parameter_combinations = Int(length(df_config[!,:ArrayTaskID])/N_ensemble_size)
 
 df_avg_error = deepcopy(df_config)
 
 # Delete columns
-select!(df_avg_error, Not([:graph_seed, :distr_seed, :filepath]))
+select!(df_avg_error, Not([:graph_seed, :distr_seed, :filepath, :ensemble_element]))
 
 # Keep only the first N_rows rows
 df_avg_error = df_avg_error[1:num_parameter_combinations, :]
 
 # add columns to df
-df_avg_error[!, :ensemble_avg] .= NaN; df_avg_error[!, :ensemble_standard_error] .= NaN;
+df_avg_error[!, :ensemble_avg_line_failures] .= NaN; df_avg_error[!, :ensemble_avg_node_failures] .= NaN;
+df_avg_error[!, :ensemble_SE_line_failures] .= NaN; df_avg_error[!, :ensemble_SE_node_failures] .= NaN;
 
-test, = get_network_args(df_hpe, 2)
-
-
-N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert = get_network_args_stripped(df_config, 1)
-
-exp_data = joinpath(RESULTS_DIR, exp_name_date)
-graph_combinations_path = joinpath(exp_data, "k=$k,beta=$β")
-
-failure_mode_string = joinpath(graph_combinations_path, "trip_lines=$trip_lines,trip_nodes=$trip_nodes")
-failure_mode_frequ_bound = joinpath(failure_mode_string, "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound")
-
-filename = "/trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound,N=$N,k=$k,β=$β,graph_seed=$graph_seed,μ=$μ,σ=$σ,distr_seed=$distr_seed,K=$K,α=$α,M=$M,γ=$γ,τ=$τ,init_pert=$init_pert.csv"
-df_result = DataFrame(CSV.File(string(failure_mode_frequ_bound, filename)))
-
-df_result[1, :norm_avg_line_failures]
-df_result[1, :norm_avg_node_failures]
-
-
+# DataFrame with failures for all ArrayTaskIDs
+df_all_failures = deepcopy(df_config)
+df_all_failures[!, :norm_avg_line_failures] .= NaN ; df_all_failures[!, :norm_avg_node_failures] .= NaN;
 
 for task_id in df_avg_error.ArrayTaskID
-
     # loop over all elements of an ensemble
+    norm_avg_line_failures_ensemble = Float64[]
+    norm_avg_node_failures_ensemble = Float64[]
+    for i in 0:num_parameter_combinations:(length(df_config[!,:ArrayTaskID]) - 1)
+        try
+            N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, (task_id + i))
 
+            exp_data = joinpath(RESULTS_DIR, exp_name_date)
+            graph_combinations_path = joinpath(exp_data, "k=$k,beta=$β")
 
+            failure_mode_string = joinpath(graph_combinations_path, "trip_lines=$trip_lines,trip_nodes=$trip_nodes")
+            failure_mode_frequ_bound = joinpath(failure_mode_string, "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound")
 
-        # try
-        # read in node failures
-        # read in line failures
-        # catch
-        #     contiue
-        # end
+            filename = "/trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound,N=$N,k=$k,β=$β,graph_seed=$graph_seed,μ=$μ,σ=$σ,distr_seed=$distr_seed,K=$K,α=$α,M=$M,γ=$γ,τ=$τ,init_pert=$init_pert,ensemble_element=$ensemble_element.csv"
+            df_result = DataFrame(CSV.File(string(failure_mode_frequ_bound, filename)))
 
-    # Calculate ensemble_avg and ensemble_standard_error
-    avg =
-    standard_error =
+            norm_avg_line_failures = df_result[1, :norm_avg_line_failures]
+            norm_avg_node_failures = df_result[1, :norm_avg_node_failures]
 
-    # Write to df
-    df_hpe[task_id,:ensemble_avg] =
-    df_hpe[task_id,:ensemble_standard_error] =
+            push!(norm_avg_line_failures_ensemble, norm_avg_line_failures)
+            push!(norm_avg_node_failures_ensemble, norm_avg_node_failures)
 
+            df_all_failures[(task_id + i), :norm_avg_line_failures] = norm_avg_line_failures
+            df_all_failures[(task_id + i), :norm_avg_node_failures] = norm_avg_node_failures
+        catch
+            continue
+        end
+    end
+    # Calculate ensemble_avg and ensemble_standard_error and write to df
+    df_avg_error[task_id,:ensemble_avg_line_failures] = mean(norm_avg_line_failures_ensemble)
+    df_avg_error[task_id,:ensemble_avg_node_failures] = mean(norm_avg_node_failures_ensemble)
+    df_avg_error[task_id,:ensemble_SE_line_failures] = 1 / sqrt(N_ensemble_size) * std(norm_avg_line_failures_ensemble; corrected=true)
+    df_avg_error[task_id,:ensemble_SE_node_failures] = 1 / sqrt(N_ensemble_size) * std(norm_avg_node_failures_ensemble; corrected=true)
 end
 
 
-
-
-
-
-
-
-
-
-
-
-
+CSV.write(joinpath(RESULTS_DIR, string(exp_name_date, "/avg_error.csv")), df_avg_error)
+CSV.write(joinpath(RESULTS_DIR, string(exp_name_date, "/all_failures.csv")), df_all_failures)
 
 
 

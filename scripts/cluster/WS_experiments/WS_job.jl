@@ -37,7 +37,6 @@ using DataFrames
 using CSV
 
 
-# exp_name_date = "WS_testrun_N_G=2_20240101_183724.014"
 exp_name_date = ARGS[2]
 
 # read in SLURM_ARRAY_TASK_ID from `ARGS`
@@ -97,7 +96,7 @@ number_failures_lines = Float64[]
 number_failures_nodes = Float64[]
 x_static = steadystate(network; verbose=true)
 # for i in 1:ne(network) TODO TODO #################################################################################################################### TODO
-for i in 1:4
+for i in 1:10
     sol = simulate(network;
                    x_static=x_static,
                    initial_fail = Int[i],

@@ -35,7 +35,8 @@ save_graph_and_filepath = false
 exp_name = "WS_testrun_N_G=2_"
 t=now()
 datetime = Dates.format(t, "yyyymmdd_HHMMSS.s")
-exp_path = joinpath(@__DIR__, string(exp_name, datetime))
+exp_name_date = string(exp_name, datetime)
+exp_path = joinpath(@__DIR__, exp_name_date)
 ispath(exp_path) || mkdir(exp_path)
 
 # k = [4, 10]
@@ -55,11 +56,12 @@ failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
 
 # inertia_values = [0.2, 0.5, 0.7, 0.9, 1.1, 1.4, 1.7, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 20.0]
 # inertia_values = [0.2, 1.0, 2.1, 3.0, 4.0, 5.0, 7.2, 11.0, 15.0, 21.0]
-# inertia_values = [0.2, 1.0, 5.0, 10.0, 15.0, 20.0]
-inertia_values = [0.2, 0.7]
+inertia_values = [0.2, 1.0, 5.0, 10.0, 15.0, 20.0]
+# inertia_values = [0.2, 0.7]
+
 
 # constant parameters
-N_ensemble_size = 2 # 100
+N_ensemble_size = 4 # 100
 N_nodes = 100
 
 K = 6 # coupling K
@@ -117,8 +119,8 @@ function get_network_args(df::DataFrame, task_id::Int)
     γ=df[task_id,:gamma]*1u"s"
     τ=df[task_id,:tau]*1u"s"
     freq_bound=df[task_id,:freq_bounds]
-    trip_lines=Symbol(eval(Meta.parse(string(df[1,:failure_modes])))[1])
-    trip_nodes=Symbol(eval(Meta.parse(string(df[1,:failure_modes])))[2])
+    trip_lines=Symbol(eval(Meta.parse(string(df[task_id,:failure_modes])))[1])
+    trip_nodes=Symbol(eval(Meta.parse(string(df[task_id,:failure_modes])))[2])
     failure_mode=df[task_id,:failure_modes]
     init_pert=df[task_id,:init_pert]
     ensemble_element=df[task_id,:ensemble_element]
@@ -249,3 +251,4 @@ end
 
 # Save to CSV
 CSV.write(joinpath(@__DIR__, string(exp_path, "/config.csv")), df_hpe)
+CSV.write(joinpath(RESULTS_DIR, string(exp_name_date, "/config.csv")), df_hpe)
