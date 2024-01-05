@@ -8,7 +8,7 @@ using LinearAlgebra
 using OrdinaryDiffEq.DiffEqBase
 
 export nd_model, get_parameters, calculate_apparent_power
-export steadystate, simulate, SolutionContainer, issteadystate
+export steadystate, steadystate_relaxation, simulate, SolutionContainer, issteadystate
 export terminated
 
 ####
@@ -179,7 +179,38 @@ function steadystate(network; project=false, verbose=false, tol=1e-7, zeroidx=no
         @warn "Steadystate: θ ∈ $ex, consider using project=true flag!"
     end
     residuum = issteadystate(network, x_static; ndp=(nd, p))
-    println(residuum)
+
+    @assert residuum < tol "No steady state found $residuum"
+
+    return x_static
+end
+
+# TODO Avoid code duplification after testing this function.
+function steadystate_relaxation(network; project=false, verbose=false, tol=1e-7, zeroidx=nothing)
+    verbose && println("Find steady state...")
+    (nd, p) = nd_model(network)
+    x0 = zeros(length(nd.syms));
+
+    tspan = (0., 2000.);
+    prob = ODEProblem(nd, x0, tspan, p);
+    sol = solve(prob, Rosenbrock23());
+    x_static = sol[end]
+
+    θidx = idx_containing(nd, "θ")
+    if zeroidx !== nothing
+        offset = x_static[θidx[zeroidx]]
+        x_static[θidx] .= x_static[θidx] .- offset
+        @assert iszero(x_static[θidx[zeroidx]])
+    end
+
+    project && project_theta!(nd, x0)
+
+    ex = extrema(x_static[θidx])
+    if ex[1] < -π/2 || ex[2] > π/2
+        @warn "Steadystate: θ ∈ $ex, consider using project=true flag!"
+    end
+    residuum = issteadystate(network, x_static; ndp=(nd, p))
+
     @assert residuum < tol "No steady state found $residuum"
 
     return x_static
