@@ -13,7 +13,7 @@
 
 exp_name_date="WS_testrun_plots_N_G=3_20240103_202725.758"
 
-cd /home/brandner/DynamicCascades.jl/scripts/cluster/WS_experiments
+cd /home/brandner/DynamicCascades.jl/scripts/cluster/experiment_jarray
 
 module purge
 module load julia/1.8.2
