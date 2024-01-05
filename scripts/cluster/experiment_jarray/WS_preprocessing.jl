@@ -5,21 +5,21 @@ include("helpers_jarray.jl")
 save_graph_and_filepath = false
 solver_name = "Rodas4P()" # NOTE adapt!
 steadystate_choice = :rootfind # :relaxation
-exp_name = "WS_testrun_draft_pool"
-long_name = "bla" # for providing more details
+exp_name = "WS_testrun_params_pool"
+long_name = "all inertia, all β, one bound at 10" # for providing more details
 # Graph params #############
 N_nodes = 100
 # k = [4, 10]
 k = [4]
-# β = [0.1, 0.5, 0.9]
-β = [0.1, 0.5]
+β = [0.1, 0.5, 0.9]
+# β = [0.1, 0.5]
 
 # MetaGraph params ###############
-# inertia_values = [0.2, 0.5, 0.7, 0.9, 1.1, 1.4, 1.7, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 20.0]
+inertia_values = [0.2, 0.5, 0.7, 0.9, 1.1, 1.4, 1.7, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 20.0]
 # inertia_values = [0.2, 1.0, 2.1, 3.0, 4.0, 5.0, 7.2, 11.0, 15.0, 21.0]
 # inertia_values = [0.2, 1.0, 5.0, 10.0, 15.0, 20.0]
 # inertia_values = [0.2, 0.7, 5.0]
-inertia_values = [0.2, 0.7]
+# inertia_values = [0.2, 0.7]
 
 K = 6 # coupling K
 γ = 1 # damping swing equation nodes γ
@@ -37,7 +37,7 @@ monitored_power_flow = :apparent
 
 #= frequency bounds [narrow bounds, wide bounds] bounds.
 The value in numerator of round(0.1/(2*π) is the angular frequency =#
-freq_bounds = [round(0.1/(2*π), digits=2), round(0.5/(2*π), digits=2)]
+freq_bounds = [round(0.1/(2*π), digits=2), round(0.5/(2*π), digits=2), round(10.0/(2*π), digits=2)]
 # freq_bounds = [round(0.1/(2*π), digits=2)]
 
 # failure_modes = [trip_lines, trip_nodes]

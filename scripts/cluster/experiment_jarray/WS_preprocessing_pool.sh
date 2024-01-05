@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #SBATCH --qos=short
-#SBATCH --time=0-04:00:00
-#SBATCH --job-name=test_preprocessing_pool
+#SBATCH --time=1-0:00:00
+#SBATCH --job-name=test_params_pool
 #SBATCH --output=%x-%j-%N.out
 #SBATCH --error=%x-%j-%N.err
 
