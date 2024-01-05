@@ -54,6 +54,7 @@ sol = simulate(network;
                trip_lines = :dynamic,
                trip_nodes = :dynamic,
                trip_load_nodes = :none,
+               monitored_power_flow = :apparent,
                # f_min = -1.0/(2π),
                # f_max = 1.0/(2π),
                f_min = -2.5,

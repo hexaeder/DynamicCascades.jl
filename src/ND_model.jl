@@ -135,6 +135,7 @@ struct SolutionContainer{G,T}
     trip_lines::Symbol
     trip_nodes::Symbol
     trip_load_nodes::Symbol
+    monitored_power_flow::Symbol
     sol::T
     frequencies_load_nodes::SavedValues{Float64,Vector{Float64}}
     load_S::SavedValues{Float64,Vector{Float64}}
@@ -234,6 +235,7 @@ function simulate(network;
                   trip_lines=:dynamic,
                   trip_nodes=:dynamic,
                   trip_load_nodes=:dynamic,
+                  monitored_power_flow =:apparent,
                   f_min = -2.5,
                   f_max = 1.5,
                   filename=nothing,
@@ -261,7 +263,7 @@ function simulate(network;
     #= TODO Next line, overload_cb() returns CallbackSet(vccb_lines, vccb_nodes_max, vccb_nodes_min, scb_P, scb_S).
     So it is CallbackSet(CallbackSet(vccb_lines, vccb_nodes_max, vccb_nodes_min, scb_P, scb_S)). Try out if this is
     redundant =#
-    cbs = CallbackSet(overload_cb(;trip_lines, trip_nodes, trip_load_nodes, f_min, f_max, frequencies_load_nodes, load_S, load_P, failures, failures_nodes, failures_load_nodes, verbose));
+    cbs = CallbackSet(overload_cb(;trip_lines, trip_nodes, trip_load_nodes, monitored_power_flow, f_min, f_max, frequencies_load_nodes, load_S, load_P, failures, failures_nodes, failures_load_nodes, verbose));
     if !isempty(initial_fail)
         # NOTE add node failures in case of implementing initial node failures
         cbs = CallbackSet(InitialFailCB(network, initial_fail, failtime; init_pert, P_perturb, failures, failures_nodes, verbose), cbs)
@@ -281,7 +283,7 @@ function simulate(network;
     # sol = solve(prob, KenCarp4(); callback=cbs, progress=true, solverargs...);
 
     container = SolutionContainer(network,
-                                  initial_fail, failtime, trip_lines, trip_nodes, trip_load_nodes,
+                                  initial_fail, failtime, trip_lines, trip_nodes, trip_load_nodes, monitored_power_flow,
                                   sol, frequencies_load_nodes, load_S, load_P, failures, failures_nodes, failures_load_nodes)
 
     if terminate_steady_state
@@ -523,8 +525,13 @@ function calculate_active_power(network::MetaGraph, u)
     calculate_active_power(u, p, 0.0, nd, network)
 end
 
-function calculate_active_power(u, p, t, nd, network::MetaGraph; gd=nd(u, p, t, GetGD))
-    P = zeros(ne(network))
+function calculate_active_power(u, p, t, nd, network::MetaGraph)
+    out = zeros(ne(network))
+    calculate_active_power!(out, u, p, t, nd, network)
+    return out
+end
+
+function calculate_active_power!(P, u, p, t, nd, network::MetaGraph; gd=nd(u, p, t, GetGD))
     for (i, e) in enumerate(edges(nd.graph))
         P[i] = get_edge(gd, i)[1]
         # TODO: check again with ne code
@@ -532,7 +539,7 @@ function calculate_active_power(u, p, t, nd, network::MetaGraph; gd=nd(u, p, t, 
         # X = - 1.0/rts96.susceptance[i]
         # P[i] = Vs*Vd/X * sin(θs - θd) * sign(K) - get_edge(gd, i)[1]
     end
-    return P
+    nothing
 end
 
 """
@@ -542,6 +549,7 @@ This function returns a constructor for the overload callback with two kw argume
   - `trip_lines=true` : toggle whether the CB should kill lines (set K=0)
   - `trip_nodes=true` : toggle whether the CB should switch generator to (dynamic) load nodes (and set load to zero)
   - `trip__load_nodes=true` : toggle whether the CB should set the load of (dynamic) load nodes to zero
+  - `monitored_power_flow =:apparent` : monitoring `:apparent` or `:active` power flow as line failure condition
   - `frequencies_load_nodes=nothing` : provide `SavedValues` type for frequency values of load nodes
   - `load_S=nothing` : provide `SavedValues` type for S values
   - `load_P=nothing` : provide `SavedValues` type for P values
@@ -556,7 +564,7 @@ are injected inside the shutdown affect. In order for this to work the affect ne
 bump the `saveiter` counter of the other (saving) callback. Very ugly.
 """
 function get_callback_generator(network::MetaGraph, nd::ODEFunction)
-    function gen_cb(;trip_lines=:dynamic, trip_nodes=:dynamic, trip_load_nodes=:dynamic,
+    function gen_cb(;trip_lines=:dynamic, trip_nodes=:dynamic, trip_load_nodes=:dynamic, monitored_power_flow =:apparent,
                     f_min = -1.0, f_max = 1.0, frequencies_load_nodes=nothing, load_S=nothing, load_P=nothing,
                     failures=nothing, failures_nodes=nothing, failures_load_nodes=nothing, verbose=true)
         save_S_fun = let _network=network
@@ -614,22 +622,32 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
 
         ## dynamic line condition
         if trip_lines == :dynamic
-            condition = let _current_load = zeros(ne(network)), _network = network, _rating = get_prop(network, edges(network), :rating)
-                (out, u, t, integrator) -> begin
-                    # upcrossing through zero triggers condition
-                    calculate_apparent_power!(_current_load, u, integrator.p, t, integrator.f.f, _network)
-                    # calculate_active_power(_current_load, u, integrator.p, t, integrator.f.f, _network)
-                    out .= _current_load .- _rating
-                    nothing
+            if monitored_power_flow == :apparent
+                condition = let _current_load = zeros(ne(network)), _network = network, _rating = get_prop(network, edges(network), :rating)
+                    (out, u, t, integrator) -> begin
+                        # upcrossing through zero triggers condition
+                        calculate_apparent_power!(_current_load, u, integrator.p, t, integrator.f.f, _network)
+                        out .= _current_load .- _rating
+                        nothing
+                    end
+                end
+            elseif monitored_power_flow == :active
+                condition = let _current_load = zeros(ne(network)), _network = network, _rating = get_prop(network, edges(network), :rating)
+                    (out, u, t, integrator) -> begin
+                        # upcrossing through zero triggers condition
+                        calculate_active_power!(_current_load, u, integrator.p, t, integrator.f.f, _network)
+                        out .= _current_load .- _rating
+                        nothing
+                    end
                 end
             end
 
-            # function condition(out, u, t, integrator)
-            #     current_load = zeros(ne(network))
-            #     rating = get_prop(network, edges(network), :rating)
-            #     calculate_apparent_power!(current_load, u, integrator.p, t, integrator.f.f, network)
-            #     out .= current_load .- rating
-            # end
+            function condition(out, u, t, integrator)
+                current_load = zeros(ne(network))
+                rating = get_prop(network, edges(network), :rating)
+                calculate_apparent_power!(current_load, u, integrator.p, t, integrator.f.f, network)
+                out .= current_load .- rating
+            end
 
             affect! = let _failures = failures, _verbose = verbose, _load_S = load_S, _load_P = load_P, _scb_S = scb_S, _scb_P = scb_P
                 (integrator, event_idx) -> begin
@@ -802,7 +820,12 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
                     end
 
                     if trip_lines == :static
-                        calculate_apparent_power!(_current_load, u, integrator.p, t, integrator.f.f, _network)
+                        # NOTE not tested [2024-01-05 Fr]
+                        if monitored_power_flow == :apparent
+                            calculate_apparent_power!(_current_load, u, integrator.p, t, integrator.f.f, _network)
+                        elseif monitored_power_flow == :active
+                            calculate_active_power!(_current_load, u, integrator.p, t, integrator.f.f, _network)
+                        end
                         _current_load .-= _rating
                         triggered_lines = findall(x->x>0, _current_load)
                     else
