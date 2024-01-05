@@ -40,13 +40,12 @@ number_failures_lines = Float64[]
 number_failures_nodes = Float64[]
 # x_static = steadystate(network; verbose=true)
 x_static = steadystate_relaxation(network; verbose=true)
-# for i in 1:ne(network) TODO TODO #################################################################################################################### TODO
-for i in 1:10
+for i in 1:ne(network)
     sol = simulate(network;
                    x_static=x_static,
                    initial_fail = Int[i],
                    init_pert = init_pert,
-                   tspan = (0, 10),
+                   tspan = (0, 100000),
                    trip_lines = trip_lines,
                    trip_nodes = trip_nodes,
                    trip_load_nodes = :none,
