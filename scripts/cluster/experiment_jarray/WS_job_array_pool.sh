@@ -5,7 +5,7 @@
 #SBATCH --job-name=test_job_array
 #SBATCH --output=%x-%A_%a-%N.out
 #SBATCH --error=%x-%A_%a-%N.err
-#SBATCH --workdir=/home/brandner/MA_data/results_NB/WS_testrun_draft_pool_N_G=2_20240105_192216.069
+#SBATCH --workdir=/users/stud/brandner/MA/repos/MA_data/results_NB/WS_testrun_draft_pool_N_G=2_20240105_192216.069
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --array=1-48
