@@ -3,7 +3,6 @@
 #SBATCH --qos=short
 #SBATCH --time=0-04:00:00
 #SBATCH --job-name=test_preprocessing_pool
-#SBATCH --account=icone
 #SBATCH --output=%x-%j-%N.out
 #SBATCH --error=%x-%j-%N.err
 
