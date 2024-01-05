@@ -5,7 +5,7 @@ include("helpers_jarray.jl")
 save_graph_and_filepath = false
 solver_name = "Rodas4P()" # NOTE adapt!
 steadystate_choice = :rootfind # :relaxation
-exp_name = "WS_testrun_draft"
+exp_name = "WS_testrun_draft_pool"
 long_name = "bla" # for providing more details
 # Graph params #############
 N_nodes = 100
