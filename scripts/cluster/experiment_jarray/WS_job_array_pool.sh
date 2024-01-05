@@ -1,16 +1,16 @@
 #!/bin/bash
 
 #SBATCH --qos=short
-#SBATCH --time=0-00:30:00
+#SBATCH --time=1-00:00:00
 #SBATCH --job-name=test_job_array
 #SBATCH --output=%x-%A_%a-%N.out
 #SBATCH --error=%x-%A_%a-%N.err
-#SBATCH --workdir=/users/stud/brandner/MA/repos/MA_data/results_NB/WS_testrun_draft_pool_N_G=2_20240105_195407.75
+#SBATCH --workdir=/users/stud/brandner/MA/repos/MA_data/results_NB/WS_testrun_params_pool_N_G=2_20240105_202303.072
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --array=1-48
+#SBATCH --array=1-972
 
-exp_name_date="WS_testrun_draft_pool_N_G=2_20240105_195407.75"
+exp_name_date="WS_testrun_params_pool_N_G=2_20240105_202303.072"
 
 cd /users/stud/brandner/MA/repos/DynamicCascades.jl/scripts/cluster/experiment_jarray
 
