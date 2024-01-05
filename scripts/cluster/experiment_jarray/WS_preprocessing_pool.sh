@@ -6,8 +6,4 @@
 #SBATCH --output=%x-%j-%N.out
 #SBATCH --error=%x-%j-%N.err
 
-
-module purge
-module load julia/1.8.4
-
-julia WS_preprocessing.jl
+~/julia-1.8.4/bin/julia WS_preprocessing.jl
