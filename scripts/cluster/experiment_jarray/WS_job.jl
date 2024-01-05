@@ -9,11 +9,10 @@ task_id = parse(Int64, ARGS[1])
 
 # load config file, and parameters
 df_config = DataFrame(CSV.File(joinpath(RESULTS_DIR, exp_name_date, "config.csv")))
-# NOTE Use next line for reading in constant parameters.
-# exp_params_dict = Serialization.deserialize(joinpath(RESULTS_DIR, exp_name_date, "exp.params"))
+exp_params_dict = Serialization.deserialize(joinpath(RESULTS_DIR, exp_name_date, "exp.params"))
 
-
-init_pert = Symbol(df_config[task_id,:init_pert])
+N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
+monitored_power_flow = exp_params_dict[:monitored_power_flow]
 
 # Alternative of loading graphs that have been generated during postprocessing
 # filepath_graph = df_config[task_id,:filepath]
@@ -51,7 +50,7 @@ for i in 1:10
                    trip_lines = trip_lines,
                    trip_nodes = trip_nodes,
                    trip_load_nodes = :none,
-                   monitored_power_flow = :apparent,
+                   monitored_power_flow = monitored_power_flow,
                    f_min = -freq_bound,
                    f_max = freq_bound,
                    solverargs = (;dtmax=0.01),

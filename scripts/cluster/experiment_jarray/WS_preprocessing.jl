@@ -33,7 +33,7 @@ N_ensemble_size = 2 # 100
 
 init_pert = [:line] # initial perturbation set constant to an initial line failure
 α = 0.7 # tuning parameter α, :rating = α*K
-# monitored_power_flow = :apparent
+monitored_power_flow = :apparent
 
 #= frequency bounds [narrow bounds, wide bounds] bounds.
 The value in numerator of round(0.1/(2*π) is the angular frequency =#
@@ -67,7 +67,7 @@ exp_params_dict = Dict(
     :inertia_values => inertia_values, :K => K,  :γ => γ, :τ => τ,
     :σ => σ, :μ => μ,
     :failure_modes => failure_modes,
-    :init_pert => init_pert, :freq_bounds => freq_bounds, :α => α,
+    :init_pert => init_pert, :freq_bounds => freq_bounds, :α => α, :monitored_power_flow => monitored_power_flow,
     )
 
 CSV.write(joinpath(exp_data_dir, "exp_params.csv"), exp_params_dict, writeheader=true, header=["parameter", "value"])
