@@ -20,6 +20,21 @@ end
 using Pkg
 Pkg.activate(PKG_DIR)
 
+using LinearAlgebra
+print("Number of threads before setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
+BLAS.set_num_threads(1)
+print("Number of threads after setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
+
+using DynamicCascades
+using NetworkDynamics
+using Graphs
+using MetaGraphs
+using Unitful
+using Statistics
+using Dates
+using DataFrames
+using CSV
+using Serialization
 
 function get_network_args(df::DataFrame, task_id::Int)
     N=df[task_id,:N_nodes]

@@ -7,21 +7,6 @@ else # if on PIK-HPC or Pool
     # Pkg.precompile()
 end
 
-using LinearAlgebra
-print("Number of threads before setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
-BLAS.set_num_threads(1)
-print("Number of threads after setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
-
-using DynamicCascades
-using NetworkDynamics
-using Graphs
-using MetaGraphs
-using Unitful
-using Statistics
-using Dates
-using DataFrames
-using CSV
-using Serialization
 using GraphMakie
 using Colors
 using CairoMakie
