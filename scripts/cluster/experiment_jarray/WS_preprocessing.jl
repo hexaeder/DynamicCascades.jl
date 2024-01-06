@@ -9,8 +9,8 @@ end
 
 # PARAMETERS ###################################################################
 # Experiment name
-name = "WS_testrun_params_"
-long_name = "Run for finding frequency bounds." # for providing more details
+name = "WS_testrun_params_k=10"
+long_name = "Run for finding K bounds." # for providing more details
 save_graph_and_filepath = false
 solver_name = "Rodas4P()" # NOTE adapt!
 steadystate_choice = :rootfind # :relaxation
@@ -18,7 +18,7 @@ steadystate_choice = :rootfind # :relaxation
 # Graph params #############
 N_nodes = 100
 # k = [4, 10]
-k_vals = [4]
+k_vals = [10]
 β_vals = [0.1, 0.5, 0.9]
 # β = [0.1, 0.5]
 
@@ -28,8 +28,8 @@ k_vals = [4]
 # inertia_values = [0.2, 1.0, 5.0, 10.0, 15.0]
 # inertia_values = [0.2, 0.7, 5.0]
 # inertia_values = [0.2, 0.7]
-inertia_values = [0.2, 0.4, 0.6, 0.8, 1.0, 2.0, 3.0, 4.0, 5.0, 7.5, 10.0]
-K_vals = 6 # coupling K
+inertia_values = [0.2, 0.4, 0.8, 1.0, 3.0, 5.0, 7.5]
+K_vals = 1 # coupling K
 γ_vals = 1 # damping swing equation nodes γ
 τ_vals = 1 # time constant τ
 σ_vals = 1 # standard deviation σ
