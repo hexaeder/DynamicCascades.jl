@@ -6,6 +6,8 @@ const ON_POOL = occursin("pool", gethostname())
 @info "Initialize environment"
 # PKG_DIR = ON_YOGA ? abspath(@__DIR__, "..", "..", "..") : "/home/brandner/DynamicCascades.jl"
 
+println("ON_PIK_HPC=$ON_PIK_HPC")
+
 if ON_YOGA
     PKG_DIR = abspath(@__DIR__, "..", "..", "..")
     server_string = "YOGA_"
