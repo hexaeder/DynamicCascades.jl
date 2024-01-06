@@ -5,7 +5,7 @@ include("helpers_jarray.jl")
 save_graph_and_filepath = false
 solver_name = "Rodas4P()" # NOTE adapt!
 steadystate_choice = :rootfind # :relaxation
-exp_name = "WS_testrun_paramsK=3_pool"
+exp_name = "WS_testrun_params_K=6_pool"
 long_name = "all inertia, all β, one bound at 10" # for providing more details
 # Graph params #############
 N_nodes = 100
@@ -21,7 +21,7 @@ inertia_values = [0.01, 0.2, 1.0, 5.0, 10.0, 15.0]
 # inertia_values = [0.2, 0.7, 5.0]
 # inertia_values = [0.2, 0.7]
 
-K = 9 # coupling K
+K = 6 # coupling K
 γ = 1 # damping swing equation nodes γ
 τ = 1 # time constant τ
 σ = 1 # standard deviation σ

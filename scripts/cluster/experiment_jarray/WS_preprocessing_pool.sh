@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --qos=priority
+#SBATCH --qos=short
 #SBATCH --time=0-00:30:00
 #SBATCH --job-name=test_params_pool_K=9_priority
 #SBATCH --output=%x-%j-%N.out
