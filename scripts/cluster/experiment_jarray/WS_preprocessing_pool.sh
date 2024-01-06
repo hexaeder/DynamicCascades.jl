@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #SBATCH --qos=short
-#SBATCH --time=0-02:00:00
-#SBATCH --job-name=test_params_pool_K=9
+#SBATCH --time=0-00:30:00
+#SBATCH --job-name=test_params_pool_K=9_short
 #SBATCH --output=%x-%j-%N.out
 #SBATCH --error=%x-%j-%N.err
 
