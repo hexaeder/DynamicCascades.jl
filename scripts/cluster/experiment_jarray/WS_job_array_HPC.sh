@@ -1,22 +1,27 @@
 #!/bin/bash
 
 #SBATCH --qos=short
-#SBATCH --time=0-00:20:00
-#SBATCH --job-name=test_job_array
+#SBATCH --time=0-12:00:00
+#SBATCH --job-name=WS_K=9
 #SBATCH --account=icone
 #SBATCH --output=%x-%A_%a-%N.out
 #SBATCH --error=%x-%A_%a-%N.err
-#SBATCH --workdir=/home/brandner/MA_data/results_NB/WS_testrun_plots_N_G=3_20240103_202725.758
+#SBATCH --workdir=/home/brandner/MA_data/results_NB/WS_testrun_paramsK=9_pool_N_G=2_20240106_020923.414
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --array=1-108
+#SBATCH --array=1-540
 
-exp_name_date="WS_testrun_plots_N_G=3_20240103_202725.758"
+#SBATCH --mail-type=begin        # send email when job begins
+#SBATCH --mail-type=end          # send email when job ends
+#SBATCH --mail-type=FAIL         # send email when job fails
+#SBATCH --mail-user=brandner@pik-potsdam.de
+
+exp_name_date="WS_testrun_paramsK=9_pool_N_G=2_20240106_020923.414"
 
 cd /home/brandner/DynamicCascades.jl/scripts/cluster/experiment_jarray
 
 module purge
-module load julia/1.8.2
+module load julia/1.8.4
 
 julia WS_job.jl $SLURM_ARRAY_TASK_ID $exp_name_date
 
