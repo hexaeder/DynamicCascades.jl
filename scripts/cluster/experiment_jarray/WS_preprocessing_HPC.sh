@@ -2,7 +2,7 @@
 
 #SBATCH --qos=priority
 #SBATCH --time=0-01:00:00
-#SBATCH --job-name=test_preprocessing
+#SBATCH --job-name=test_preprocessing_K=1
 #SBATCH --account=icone
 #SBATCH --output=%x-%j-%N.out
 #SBATCH --error=%x-%j-%N.err
