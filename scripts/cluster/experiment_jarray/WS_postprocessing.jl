@@ -11,9 +11,15 @@ using GraphMakie
 using Colors
 using CairoMakie
 
-exp_name_date = "WS_testrun_plots_N_G=3_20240103_202725.758"
+exp_name_date = "WS_testrun_params_K=3_pool_N_G=2_20240106_021759.114"
+# exp_name_date = "WS_testrun_params_K=6_pool_N_G=2_20240106_021205.818"
+# exp_name_date = "WS_testrun_paramsK=9_pool_N_G=2_20240106_020923.414"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 
+# left_out_frequencies = [0.0, 0.02, 0.08]
+left_out_frequencies = [0.0, 0.02, 0.16, 0.8]
+# left_out_frequencies = [0.0, 0.02, 0.08]
+left_out_inertia_values = [0.01]
 ################################################################################
 ###################### Calculate mean and standard error #######################
 ################################################################################
@@ -85,8 +91,6 @@ CSV.write(joinpath(RESULTS_DIR, exp_name_date, "all_failures.csv"), df_all_failu
 ################################################################################
 ################################ Plotting  #####################################
 ################################################################################
-
-
 function create_figs(failure_modes)
     fig_lines_only = Figure(); fig_nodes_only = Figure(); fig_lines_and_nodes= Figure();
     ax_lines_only = Axis(fig_lines_only[1, 1]); ax_nodes_only = Axis(fig_nodes_only[1, 1]); ax_lines_and_nodes = Axis(fig_lines_and_nodes[1, 1])
@@ -127,17 +131,29 @@ fig_lines_only, ax_lines_only, fig_nodes_only, ax_nodes_only, fig_lines_and_node
 
 df_avg_error = DataFrame(CSV.File(joinpath(RESULTS_DIR, exp_name_date, "avg_error.csv")))
 inertia_values = exp_params_dict[:inertia_values]
-# lines!([NaN], [NaN]; label="Bounds", color=:white, linewidth=3) # headline legend
+
+#= Different inertia values for: Ensemble average over normalized average of
+failures (the latter for a single network) =#
+y_lines = Float64[]; y_nodes = Float64[]
+#= Different inertia values for: Ensemble standard error over normalized average
+of failures (the latter for a single network) =#
+err_lines = Float64[]; err_nodes = Float64[]
 for task_id in df_avg_error.ArrayTaskID
     #= Empty arrays (after all inertia values of one configuration pushed to array)
     The entries in df_avg_error are ordered accordningly.=#
     if ((task_id-1) % length(inertia_values)) == 0
-        #= Different inertia values for: Ensemble average over normalized average of
-        failures (the latter for a single network) =#
         y_lines = Float64[]; y_nodes = Float64[]
-        #= Different inertia values for: Ensemble standard error over normalized average
-        of failures (the latter for a single network) =#
         err_lines = Float64[]; err_nodes = Float64[]
+    end
+
+    # Leave certain jobs out:
+    N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
+    # frequency bounds
+    if freq_bound ∈ left_out_frequencies
+        continue
+    end
+    if M ∈ left_out_inertia_values
+        continue
     end
 
     # Read out ensemble_avg and ensemble_standard_error
@@ -152,26 +168,29 @@ for task_id in df_avg_error.ArrayTaskID
 
         if (trip_lines == :dynamic &&  trip_nodes == :none)
             if (task_id % (length(inertia_values) * length(freq_bounds))) == 0
-                scatterlines!(ax_lines_only, inertia_values, y_lines, label = "k=$k,β=$β")
-                errorbars!(ax_lines_only, inertia_values, y_lines, err_lines, color = :black,  whiskerwidth = 10)
+                println("Hallo")
+                scatterlines!(ax_lines_only, filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values)), y_lines, label = "k=$k,β=$β")
+                errorbars!(ax_lines_only, filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values)), y_lines, err_lines, color = :black,  whiskerwidth = 10)
             end
         elseif (trip_lines == :none &&  trip_nodes == :dynamic)
-            scatterlines!(ax_nodes_only, inertia_values, y_nodes, label = "f_b=$freq_bound,k=$k,β=$β")
-            errorbars!(ax_nodes_only, inertia_values, y_nodes, err_nodes, color = :black,  whiskerwidth = 10)
+            scatterlines!(ax_nodes_only, filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values)), y_nodes, label = "f_b=$freq_bound,k=$k,β=$β")
+            errorbars!(ax_nodes_only, filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values)), y_nodes, err_nodes, color = :black,  whiskerwidth = 10)
         elseif (trip_lines == :dynamic &&  trip_nodes == :dynamic)
-            scatterlines!(ax_lines_and_nodes, inertia_values, y_lines, label = "f_b=$freq_bound,k=$k,β=$β")
-            errorbars!(ax_lines_and_nodes, inertia_values, y_lines, err_lines, color = :black,  whiskerwidth = 10)
-            scatterlines!(ax_lines_and_nodes, inertia_values, y_nodes, linestyle=:dash)
-            errorbars!(ax_lines_and_nodes, inertia_values, y_nodes, err_nodes, color = :black,  whiskerwidth = 10)
+            scatterlines!(ax_lines_and_nodes, filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values)), y_lines, linestyle=:dash, label = "f_b=$freq_bound,k=$k,β=$β")
+            errorbars!(ax_lines_and_nodes, filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values)), y_lines, err_lines, color = :black,  whiskerwidth = 10)
+            scatterlines!(ax_lines_and_nodes, filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values)), y_nodes)
+            errorbars!(ax_lines_and_nodes, filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values)), y_nodes, err_nodes, color = :black,  whiskerwidth = 10)
         end
     end
 end
-
+N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, 1)
 #  See https://docs.makie.org/stable/reference/blocks/legend/
-axislegend(ax_lines_only, position = :rt)
-axislegend(ax_nodes_only, position = :rt)
-axislegend(ax_lines_and_nodes, position = :rt)
-text!(ax_lines_and_nodes, 0.5, 0.02, text = "node failures: solid lines ___ \n line failures: dashed lines -----", align = (:center, :center), textsize=25)
+lines!(ax_lines_and_nodes, [NaN], [NaN]; label="node failures: ___ (solid) \nline failures:   ----- (dashed)", color=:white, linewidth=3)
+axislegend(ax_lines_only, position = :rb, labelsize=10)
+axislegend(ax_nodes_only, position = :rt, labelsize=10)
+axislegend(ax_lines_and_nodes, position = :rt, labelsize=10)
+
+# text!(ax_lines_and_nodes, 5.0, 0.02, text = "node failures: solid lines ___ \n line failures: dashed lines -----", align = (:center, :center), textsize=25)
 
 # fig_lines_only
 # fig_nodes_only
@@ -181,11 +200,11 @@ text!(ax_lines_and_nodes, 0.5, 0.02, text = "node failures: solid lines ___ \n l
 k_str = string(exp_params_dict[:k])
 β_str = string(exp_params_dict[:β])
 freq_bounds_str = string(exp_params_dict[:freq_bounds])
+K_str = string(exp_params_dict[:K])
 
-CairoMakie.save(joinpath(exp_data_dir, "lines_only_k=$k_str,β=$β_str,f_b=$freq_bounds_str.pdf"),fig_lines_only)
-CairoMakie.save(joinpath(exp_data_dir, "nodes_only_k=$k_str,β=$β_str,f_b=$freq_bounds_str.pdf"),fig_nodes_only)
-CairoMakie.save(joinpath(exp_data_dir, "lines+nodes_k=$k_str,β=$β_str,f_b=$freq_bounds_str.pdf"),fig_lines_and_nodes)
-
+CairoMakie.save(joinpath(exp_data_dir, "lines_only_K=$K_str,k=$k_str,β=$β_str,f_b=$freq_bounds_str.pdf"),fig_lines_only)
+CairoMakie.save(joinpath(exp_data_dir, "nodes_only_K=$K_str,k=$k_str,β=$β_str,f_b=$freq_bounds_str.pdf"),fig_nodes_only)
+CairoMakie.save(joinpath(exp_data_dir, "lines+nodes_K=$K_str,k=$k_str,β=$β_str,f_b=$freq_bounds_str.pdf"),fig_lines_and_nodes)
 
 # # NOTE Further plotting options:
 # # Placing the legend besides the coordinate system.

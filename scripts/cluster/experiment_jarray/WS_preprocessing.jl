@@ -10,7 +10,7 @@ end
 # PARAMETERS ###################################################################
 # Experiment name
 name = "WS_testrun_params_"
-long_name = "_" # for providing more details
+long_name = "Run for finding frequency bounds." # for providing more details
 save_graph_and_filepath = false
 solver_name = "Rodas4P()" # NOTE adapt!
 steadystate_choice = :rootfind # :relaxation
@@ -27,15 +27,15 @@ k_vals = [4]
 # inertia_values = [0.2, 1.0, 2.1, 3.0, 4.0, 5.0, 7.2, 11.0, 15.0, 21.0]
 # inertia_values = [0.2, 1.0, 5.0, 10.0, 15.0]
 # inertia_values = [0.2, 0.7, 5.0]
-inertia_values = [0.2, 0.7]
-
-K_vals = 3 # coupling K
+# inertia_values = [0.2, 0.7]
+inertia_values = [0.2, 0.4, 0.6, 0.8, 1.0, 2.0, 3.0, 4.0, 5.0, 7.5, 10.0]
+K_vals = 6 # coupling K
 γ_vals = 1 # damping swing equation nodes γ
 τ_vals = 1 # time constant τ
 σ_vals = 1 # standard deviation σ
 μ_vals = 0 # mean μ
 
-N_ensemble_size = 2 # 100
+N_ensemble_size = 4 # 100
 
 # Cacading params ##############
 
@@ -45,11 +45,10 @@ monitored_power_flow = :apparent
 
 #= frequency bounds [narrow bounds, wide bounds] bounds.
 The value in numerator of round(0.1/(2*π) is the angular frequency =#
-
-# freq_bounds = [round(i/(2*π), digits=2) for i in [0.01, 0.1, 0.5, 1.0, 5.0]]
-
+# freq_bounds = [round(i/(2*π), digits=4) for i in [0.01, 0.1, 0.5, 1.0, 5.0]]
 # freq_bounds = [round(0.1/(2*π), digits=2), round(0.5/(2*π), digits=2), round(10.0/(2*π), digits=2)]
-freq_bounds = [round(0.1/(2*π), digits=2)]
+# freq_bounds = [round(0.1/(2*π), digits=2)]
+freq_bounds = [0.1, 0.3, 0.5, 0.7]
 
 # failure_modes = [trip_lines, trip_nodes]
 failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
