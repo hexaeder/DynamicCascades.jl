@@ -10,6 +10,11 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --array=1-972
 
+#SBATCH --mail-type=begin        # send email when job begins
+#SBATCH --mail-type=end          # send email when job ends
+#SBATCH --mail-type=FAIL         # send email when job fails
+#SBATCH --mail-user=brandner@pik-potsdam.de
+
 exp_name_date="WS_testrun_params_pool_N_G=2_20240105_202303.072"
 
 cd /users/stud/brandner/MA/repos/DynamicCascades.jl/scripts/cluster/experiment_jarray

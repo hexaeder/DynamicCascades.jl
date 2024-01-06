@@ -2,7 +2,7 @@
 
 #SBATCH --qos=short
 #SBATCH --time=1-0:00:00
-#SBATCH --job-name=test_params_pool
+#SBATCH --job-name=test_params_pool_K=3
 #SBATCH --output=%x-%j-%N.out
 #SBATCH --error=%x-%j-%N.err
 

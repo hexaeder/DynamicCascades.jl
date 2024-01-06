@@ -10,6 +10,7 @@
 
 #SBATCH --mail-type=begin        # send email when job begins
 #SBATCH --mail-type=end          # send email when job ends
+#SBATCH --mail-type=FAIL         # send email when job fails
 #SBATCH --mail-user=brandner@pik-potsdam.de
 
 

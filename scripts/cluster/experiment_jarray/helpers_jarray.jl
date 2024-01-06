@@ -18,9 +18,9 @@ Pkg.activate(PKG_DIR)
 
 if ON_YOGA
     using Revise
-else # if on PIK-HPC or Pool
-    Pkg.instantiate()
-    # Pkg.precompile()
+# else # if on PIK-HPC or Pool
+#     # Pkg.instantiate() leads to https://discourse.julialang.org/t/stale-file-handle-error-when-submitting-job-array-on-slurm/70108
+#     # Pkg.precompile()
 end
 
 using LinearAlgebra
