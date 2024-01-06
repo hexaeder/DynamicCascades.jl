@@ -8,7 +8,7 @@
 #SBATCH --workdir=/users/stud/brandner/MA/repos/MA_data/results_NB/WS_testrun_params_K=3_pool_N_G=2_20240106_021759.114
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --array=1-972
+#SBATCH --array=1-540
 
 #SBATCH --mail-type=begin        # send email when job begins
 #SBATCH --mail-type=end          # send email when job ends
