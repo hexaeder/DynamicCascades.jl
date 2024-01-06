@@ -14,6 +14,5 @@
 *scratch*
 
 /scripts/cluster/cluster_only
-/scripts/cluster/experiment_jarray/WS_pipeline_tryout.jl
 
 /scripts/delete_soon
