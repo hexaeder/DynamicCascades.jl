@@ -56,7 +56,7 @@ failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
 # failure_modes = [[:dynamic, :dynamic], [:dynamic, :none]]
 # failure_modes = [[:dynamic, :dynamic]]
 
-exp_name_params = "K=$K,N_G=$N_ensemble_size"
+exp_name_params = "K_=$K_vals,N_G=$N_ensemble_size"
 exp_name = string(name, server_string, exp_name_params)
 ################################################################################
 
