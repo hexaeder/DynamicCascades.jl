@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --qos=priority
-#SBATCH --time=1-00:00:00
+#SBATCH --time=0-01:00:00
 #SBATCH --job-name=test_preprocessing
 #SBATCH --account=icone
 #SBATCH --output=%x-%j-%N.out
