@@ -21,7 +21,7 @@ inertia_values = [0.01, 0.2, 1.0, 5.0, 10.0, 15.0]
 # inertia_values = [0.2, 0.7, 5.0]
 # inertia_values = [0.2, 0.7]
 
-K = 3 # coupling K
+K = 9 # coupling K
 γ = 1 # damping swing equation nodes γ
 τ = 1 # time constant τ
 σ = 1 # standard deviation σ
