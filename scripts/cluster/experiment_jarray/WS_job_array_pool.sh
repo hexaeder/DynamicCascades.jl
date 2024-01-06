@@ -2,7 +2,7 @@
 
 #SBATCH --qos=short
 #SBATCH --time=1-00:00:00
-#SBATCH --job-name=test_params_K=6
+#SBATCH --job-name=test_params_K=9
 #SBATCH --output=%x-%A_%a-%N.out
 #SBATCH --error=%x-%A_%a-%N.err
 #SBATCH --workdir=/users/stud/brandner/MA/repos/MA_data/results_NB/WS_testrun_params_K=6_pool_N_G=2_20240106_021205.818
