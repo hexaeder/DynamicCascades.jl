@@ -6,24 +6,24 @@
 #SBATCH --account=icone
 #SBATCH --output=%x-%A_%a-%N.out
 #SBATCH --error=%x-%A_%a-%N.err
-#SBATCH --workdir=/home/brandner/MA_data/results_NB/WS_testrun_paramsK=9_pool_N_G=2_20240106_020923.414
+#SBATCH --workdir=/home/brandner/MA_data/results_NB/WS_testrun_params_PIK_HPC_K_=6,N_G=4_20240107_000645.973/output
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --array=1-540
+#SBATCH --array=1-1584
 
 #SBATCH --mail-type=begin        # send email when job begins
 #SBATCH --mail-type=end          # send email when job ends
 #SBATCH --mail-type=FAIL         # send email when job fails
 #SBATCH --mail-user=brandner@pik-potsdam.de
 
-exp_name_date="WS_testrun_paramsK=9_pool_N_G=2_20240106_020923.414"
+exp_name_date="WS_testrun_params_PIK_HPC_K_=6,N_G=4_20240107_000645.973"
 
 cd /home/brandner/DynamicCascades.jl/scripts/cluster/experiment_jarray
-####################################################################################################################
+
 module purge
 module load julia/1.8.2
 
-julia WS_job_2.jl $SLURM_ARRAY_TASK_ID $exp_name_date
+julia WS_job.jl $SLURM_ARRAY_TASK_ID $exp_name_date
 
 # # Specify the path to the config file
 # config=231219_WS_test_config.csv

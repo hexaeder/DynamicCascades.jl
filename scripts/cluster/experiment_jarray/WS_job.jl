@@ -47,9 +47,9 @@ end
 number_failures_lines = Float64[]
 number_failures_nodes = Float64[]
 if steadystate_choice == :rootfind
-    steadystate(network; verbose=true) # "Old" way: leads to some errors, thus the `catch`-option below
+    x_static = steadystate(network; verbose=true) # "Old" way: leads to some errors, thus the `catch`-option below
 elseif steadystate_choice == :relaxation
-    steadystate_relaxation(network; verbose=true) # "New" way, steady state more precise, less/no errors, probabyl slower
+    x_static = steadystate_relaxation(network; verbose=true) # "New" way, steady state more precise, less/no errors, probabyl slower
 end
 for i in 1:ne(network)
     sol = simulate(network;
