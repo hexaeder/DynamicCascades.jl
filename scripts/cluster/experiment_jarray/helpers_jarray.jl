@@ -1,44 +1,24 @@
-@assert VERSION == v"1.8.4"
+# @assert VERSION == v"1.8.4"
 const ON_YOGA = occursin("Yoga", gethostname())
 const ON_PIK_HPC = occursin("login", gethostname())
 const ON_POOL = occursin("pool", gethostname())
 
 @info "Initialize environment"
 # PKG_DIR = ON_YOGA ? abspath(@__DIR__, "..", "..", "..") : "/home/brandner/DynamicCascades.jl"
+
 if ON_YOGA
     PKG_DIR = abspath(@__DIR__, "..", "..", "..")
+    server_string = "YOGA_"
 elseif ON_PIK_HPC
     PKG_DIR = "/home/brandner/DynamicCascades.jl"
+    server_string = "PIK_HPC_"
 elseif ON_POOL
     PKG_DIR = "/users/stud/brandner/MA/repos/DynamicCascades.jl"
+    server_string = "POOL_"
 end
 
 using Pkg
 Pkg.activate(PKG_DIR)
-
-if ON_YOGA
-    using Revise
-# else # if on PIK-HPC or Pool
-#     # Pkg.instantiate() leads to https://discourse.julialang.org/t/stale-file-handle-error-when-submitting-job-array-on-slurm/70108
-#     # Pkg.precompile()
-end
-
-using LinearAlgebra
-print("Number of threads before setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
-BLAS.set_num_threads(1)
-print("Number of threads after setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
-
-using DynamicCascades
-using NetworkDynamics
-using Graphs
-using MetaGraphs
-using Unitful
-using Statistics
-using Dates
-using DataFrames
-using CSV
-using Serialization
-
 
 
 function get_network_args(df::DataFrame, task_id::Int)

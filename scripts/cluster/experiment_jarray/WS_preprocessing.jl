@@ -1,54 +1,80 @@
 include("helpers_jarray.jl")
 
+if ON_YOGA
+    using Revise
+else # if on PIK-HPC or Pool
+    Pkg.instantiate()
+    # Pkg.precompile()
+end
+
+using LinearAlgebra
+print("Number of threads before setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
+BLAS.set_num_threads(1)
+print("Number of threads after setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
+
+using DynamicCascades
+using NetworkDynamics
+using Graphs
+using MetaGraphs
+using Unitful
+using Statistics
+using Dates
+using DataFrames
+using CSV
+using Serialization
+
+
 # PARAMETERS ###################################################################
 # Experiment name
+name = "WS_testrun_params_"
+long_name = "_" # for providing more details
 save_graph_and_filepath = false
 solver_name = "Rodas4P()" # NOTE adapt!
 steadystate_choice = :rootfind # :relaxation
-exp_name = "WS_testrun_params_K=6_pool"
-long_name = "all inertia, all β, one bound at 10" # for providing more details
+
 # Graph params #############
 N_nodes = 100
 # k = [4, 10]
-k = [4]
-β = [0.1, 0.5, 0.9]
+k_vals = [4]
+β_vals = [0.1, 0.5, 0.9]
 # β = [0.1, 0.5]
 
 # MetaGraph params ###############
 # inertia_values = [0.2, 0.5, 0.7, 0.9, 1.1, 1.4, 1.7, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 20.0]
 # inertia_values = [0.2, 1.0, 2.1, 3.0, 4.0, 5.0, 7.2, 11.0, 15.0, 21.0]
-inertia_values = [0.01, 0.2, 1.0, 5.0, 10.0, 15.0]
+# inertia_values = [0.2, 1.0, 5.0, 10.0, 15.0]
 # inertia_values = [0.2, 0.7, 5.0]
-# inertia_values = [0.2, 0.7]
+inertia_values = [0.2, 0.7]
 
-K = 3 # coupling K
-γ = 1 # damping swing equation nodes γ
-τ = 1 # time constant τ
-σ = 1 # standard deviation σ
-μ = 0 # mean μ
+K_vals = 3 # coupling K
+γ_vals = 1 # damping swing equation nodes γ
+τ_vals = 1 # time constant τ
+σ_vals = 1 # standard deviation σ
+μ_vals = 0 # mean μ
 
 N_ensemble_size = 2 # 100
 
 # Cacading params ##############
 
 init_pert = [:line] # initial perturbation set constant to an initial line failure
-α = 0.7 # tuning parameter α, :rating = α*K
+α_vals = 0.7 # tuning parameter α, :rating = α*K
 monitored_power_flow = :apparent
 
 #= frequency bounds [narrow bounds, wide bounds] bounds.
 The value in numerator of round(0.1/(2*π) is the angular frequency =#
 
-freq_bounds = [round(i/(2*π), digits=2) for i in [0.01, 0.1, 0.5, 1.0, 5.0]]
+# freq_bounds = [round(i/(2*π), digits=2) for i in [0.01, 0.1, 0.5, 1.0, 5.0]]
 
 # freq_bounds = [round(0.1/(2*π), digits=2), round(0.5/(2*π), digits=2), round(10.0/(2*π), digits=2)]
-# freq_bounds = [round(0.1/(2*π), digits=2)]
+freq_bounds = [round(0.1/(2*π), digits=2)]
 
 # failure_modes = [trip_lines, trip_nodes]
 failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
 # failure_modes = [[:dynamic, :dynamic], [:dynamic, :none]]
 # failure_modes = [[:dynamic, :dynamic]]
 
-
+exp_name_params = "K=$K,N_G=$N_ensemble_size"
+exp_name = string(name, server_string, exp_name_params)
 ################################################################################
 
 
@@ -56,7 +82,7 @@ failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
 # Create result directory
 t=now()
 datetime = Dates.format(t, "_yyyymmdd_HHMMSS.s")
-exp_name_date = string(exp_name, "_N_G=$N_ensemble_size", datetime)
+exp_name_date = string(exp_name, datetime)
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 ispath(exp_data_dir) || mkdir(exp_data_dir)
 
@@ -66,11 +92,11 @@ exp_params_dict = Dict(
     :exp_name => exp_name, :long_name => long_name,
     :solver_name => solver_name, :steadystate_choice => steadystate_choice,
     :N_ensemble_size => N_ensemble_size,
-    :k => k, :β => β, :N_nodes => N_nodes,
-    :inertia_values => inertia_values, :K => K,  :γ => γ, :τ => τ,
-    :σ => σ, :μ => μ,
+    :k => k_vals, :β => β_vals, :N_nodes => N_nodes,
+    :inertia_values => inertia_values, :K => K_vals,  :γ => γ_vals, :τ => τ_vals,
+    :σ => σ_vals, :μ => μ_vals,
     :failure_modes => failure_modes,
-    :init_pert => init_pert, :freq_bounds => freq_bounds, :α => α, :monitored_power_flow => monitored_power_flow,
+    :init_pert => init_pert, :freq_bounds => freq_bounds, :α => α_vals, :monitored_power_flow => monitored_power_flow,
     )
 
 CSV.write(joinpath(exp_data_dir, "exp_params.csv"), exp_params_dict, writeheader=true, header=["parameter", "value"])
@@ -84,8 +110,8 @@ of finished jobs of the job array the size of the ensemble increases equally,
 e.g. when half of all jobs are finished, for each ensemble half of the grids
 shall be simulated. Parameters included are parameters that are potentially changed
 in an (future) experiment.=#
-hyperparam = collect(Iterators.product(inertia_values, freq_bounds, failure_modes, β, k,
-    N_nodes, K, γ, τ, α, init_pert, σ, μ))[:]
+hyperparam = collect(Iterators.product(inertia_values, freq_bounds, failure_modes, β_vals, k_vals,
+    N_nodes, K_vals, γ_vals, τ_vals, α_vals, init_pert, σ_vals, μ_vals))[:]
 
 # Repeat hyperparam N_ensemble_size times
 hyperparam_ensemble = repeat(hyperparam, N_ensemble_size)
@@ -155,10 +181,10 @@ for task_id in df_hpe.ArrayTaskID
                     program leave out this grid and print which grid was left out.=#
                 end
 
-                N,k_,β,graph_seed_,μ,σ,distr_seed_,K_,_,_,γ,τ,_,_,_,_,_ = get_network_args_stripped(df_hpe, task_id)
+                N,k_,β,graph_seed_,μ,σ,distr_seed_,K,_,_,γ,τ,_,_,_,_,_ = get_network_args_stripped(df_hpe, task_id)
                 M = ustrip(u"s^2", get_prop(network, 1, :_M))
                 # Next line needs to be kept with the long sting, string_metagraph_args() can't be used as `M` changes.
-                @warn "No static solution found: ArrayTaskID=$task_id, Parameters: N=$N,k=$k_,β=$β,graph_seed=$graph_seed_,μ=$μ,σ=$σ,distr_seed=$distr_seed_,K=$K_,M=$M,γ=$γ,τ=$τ."
+                @warn "No static solution found: ArrayTaskID=$task_id, Parameters: N=$N,k=$k_,β=$β,graph_seed=$graph_seed_,μ=$μ,σ=$σ,distr_seed=$distr_seed_,K=$K,M=$M,γ=$γ,τ=$τ."
 
                 # generate new grid by increasing seeds by one
                 global graph_seed += 1; global distr_seed += 1
@@ -171,10 +197,10 @@ for task_id in df_hpe.ArrayTaskID
     end
     df_hpe[task_id,:graph_seed] = graph_seed; df_hpe[task_id,:distr_seed] = distr_seed
 
-    N,k_,β,graph_seed_,μ,σ,distr_seed_,K_,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,_,ensemble_element = get_network_args_stripped(df_hpe, task_id)
+    N,k,β,graph_seed_,μ,σ,distr_seed_,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,_,ensemble_element = get_network_args_stripped(df_hpe, task_id)
 
     # Create directories for results (preventing that different jobs try to create a directory at the same time)
-    graph_combinations_path = joinpath(exp_data_dir, "k=$k_,β=$β")
+    graph_combinations_path = joinpath(exp_data_dir, "k=$k,β=$β")
     ispath(graph_combinations_path) || mkdir(graph_combinations_path)
 
     failure_mode_string = joinpath(graph_combinations_path, "trip_lines=$trip_lines,trip_nodes=$trip_nodes")
@@ -188,7 +214,7 @@ for task_id in df_hpe.ArrayTaskID
         graph_folder_path = joinpath(graph_combinations_path, "graphs")
         ispath(graph_folder_path) || mkdir(graph_folder_path)
 
-        graph_params = "graph_seed=$graph_seed_,distr_seed=$distr_seed_,k=$k_,β=$β,ensemble_element=$ensemble_element"
+        graph_params = "graph_seed=$graph_seed_,distr_seed=$distr_seed_,k=$k,β=$β,ensemble_element=$ensemble_element"
         filepath = joinpath(graph_folder_path, string(graph_params,".lg"))
 
         # Assign filepath to df

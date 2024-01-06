@@ -192,7 +192,7 @@ function steadystate_relaxation(network; project=false, verbose=false, tol=1e-7,
     (nd, p) = nd_model(network)
     x0 = zeros(length(nd.syms));
 
-    tspan = (0., 2000.);
+    tspan = (0., 10000.); # NOTE For high inertia values the relaxation takes really long.
     prob = ODEProblem(nd, x0, tspan, p);
     sol = solve(prob, Rosenbrock23());
     x_static = sol[end]

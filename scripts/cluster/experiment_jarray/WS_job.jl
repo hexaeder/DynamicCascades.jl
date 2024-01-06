@@ -1,5 +1,28 @@
 include("helpers_jarray.jl")
 
+if ON_YOGA
+    using Revise
+# else # if on PIK-HPC or Pool
+#     Pkg.instantiate() # For job arrays this leads to https://discourse.julialang.org/t/stale-file-handle-error-when-submitting-job-array-on-slurm/70108
+#     # Pkg.precompile()
+end
+
+using LinearAlgebra
+print("Number of threads before setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
+BLAS.set_num_threads(1)
+print("Number of threads after setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
+
+using DynamicCascades
+using NetworkDynamics
+using Graphs
+using MetaGraphs
+using Unitful
+using Statistics
+using Dates
+using DataFrames
+using CSV
+using Serialization
+
 # PARAMETERS ###################################################################
 exp_name_date = ARGS[2]
 
@@ -13,6 +36,7 @@ exp_params_dict = Serialization.deserialize(joinpath(RESULTS_DIR, exp_name_date,
 
 N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
 monitored_power_flow = exp_params_dict[:monitored_power_flow]
+steadystate_choice = exp_params_dict[:steadystate_choice]
 
 # Alternative of loading graphs that have been generated during postprocessing
 # filepath_graph = df_config[task_id,:filepath]
@@ -38,8 +62,11 @@ end
 
 number_failures_lines = Float64[]
 number_failures_nodes = Float64[]
-# x_static = steadystate(network; verbose=true)
-x_static = steadystate_relaxation(network; verbose=true)
+if steadystate_choice == :rootfind
+    steadystate(network; verbose=true) # "Old" way: leads to some errors, thus the `catch`-option below
+elseif steadystate_choice == :relaxation
+    steadystate_relaxation(network; verbose=true) # "New" way, steady state more precise, less/no errors, probabyl slower
+end
 for i in 1:ne(network)
     sol = simulate(network;
                    x_static=x_static,
