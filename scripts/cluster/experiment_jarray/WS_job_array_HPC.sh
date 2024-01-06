@@ -19,11 +19,11 @@
 exp_name_date="WS_testrun_paramsK=9_pool_N_G=2_20240106_020923.414"
 
 cd /home/brandner/DynamicCascades.jl/scripts/cluster/experiment_jarray
-
+####################################################################################################################
 module purge
-module load julia/1.8.4
+module load julia/1.8.2
 
-julia WS_job.jl $SLURM_ARRAY_TASK_ID $exp_name_date
+julia WS_job_2.jl $SLURM_ARRAY_TASK_ID $exp_name_date
 
 # # Specify the path to the config file
 # config=231219_WS_test_config.csv
