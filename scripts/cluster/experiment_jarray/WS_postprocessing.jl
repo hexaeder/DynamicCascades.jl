@@ -11,15 +11,22 @@ using GraphMakie
 using Colors
 using CairoMakie
 
-exp_name_date = "WS_testrun_params_K=3_pool_N_G=2_20240106_021759.114"
+exp_name_date = "WS_testrun_params_PIK_HPC_K_=6,N_G=4_20240107_000645.973"
+# exp_name_date = "WS_testrun_params_k=10PIK_HPC_K_=1,N_G=4_20240107_003159.367"
 # exp_name_date = "WS_testrun_params_K=6_pool_N_G=2_20240106_021205.818"
 # exp_name_date = "WS_testrun_paramsK=9_pool_N_G=2_20240106_020923.414"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 
+# left out frequency values
 # left_out_frequencies = [0.0, 0.02, 0.08]
-left_out_frequencies = [0.0, 0.02, 0.16, 0.8]
 # left_out_frequencies = [0.0, 0.02, 0.08]
-left_out_inertia_values = [0.01]
+left_out_frequencies = []
+freq_bounds_filtered = filter!(x->x ∉ left_out_frequencies, deepcopy(freq_bounds))
+
+# left out inertia values
+# left_out_inertia_values = [0.01]
+left_out_inertia_values = []
+filtered_inertia_values = filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values))
 ################################################################################
 ###################### Calculate mean and standard error #######################
 ################################################################################
@@ -43,7 +50,7 @@ df_avg_error = df_avg_error[1:num_parameter_combinations, :]
 df_avg_error[!, :ensemble_avg_line_failures] .= NaN; df_avg_error[!, :ensemble_avg_node_failures] .= NaN;
 df_avg_error[!, :ensemble_SE_line_failures] .= NaN; df_avg_error[!, :ensemble_SE_node_failures] .= NaN;
 
-# DataFrame with failures for all ArrayTaskIDs
+# DataFrame with failures for ALL ArrayTaskIDs
 df_all_failures = deepcopy(df_config)
 df_all_failures[!, :norm_avg_line_failures] .= NaN ; df_all_failures[!, :norm_avg_node_failures] .= NaN;
 
@@ -52,6 +59,7 @@ for task_id in df_avg_error.ArrayTaskID
     norm_avg_line_failures_ensemble = Float64[]
     norm_avg_node_failures_ensemble = Float64[]
     for i in 0:num_parameter_combinations:(length(df_config[!,:ArrayTaskID]) - 1)
+        # try...catch is for execution of postprocessing while not all jobs have finished
         try
             N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, (task_id + i))
 
@@ -132,13 +140,14 @@ fig_lines_only, ax_lines_only, fig_nodes_only, ax_nodes_only, fig_lines_and_node
 df_avg_error = DataFrame(CSV.File(joinpath(RESULTS_DIR, exp_name_date, "avg_error.csv")))
 inertia_values = exp_params_dict[:inertia_values]
 
+
 #= Different inertia values for: Ensemble average over normalized average of
 failures (the latter for a single network) =#
 y_lines = Float64[]; y_nodes = Float64[]
 #= Different inertia values for: Ensemble standard error over normalized average
 of failures (the latter for a single network) =#
 err_lines = Float64[]; err_nodes = Float64[]
-for task_id in df_avg_error.ArrayTaskID
+for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an ArrayTaskID in the strict sense but an average over task IDs
     #= Empty arrays (after all inertia values of one configuration pushed to array)
     The entries in df_avg_error are ordered accordningly.=#
     if ((task_id-1) % length(inertia_values)) == 0
@@ -152,6 +161,7 @@ for task_id in df_avg_error.ArrayTaskID
     if freq_bound ∈ left_out_frequencies
         continue
     end
+    # inertia values
     if M ∈ left_out_inertia_values
         continue
     end
@@ -162,24 +172,24 @@ for task_id in df_avg_error.ArrayTaskID
     push!(err_lines, df_avg_error[task_id, :ensemble_SE_line_failures])
     push!(err_nodes, df_avg_error[task_id, :ensemble_SE_node_failures])
 
+    # Only plot if all inertia values are pushed to `y_lines`, `y_nodes`, `err_lines`, `err_nodes`
     if (task_id % length(inertia_values)) == 0
         # frequency argument first for a nice order in the legend
         N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
 
         if (trip_lines == :dynamic &&  trip_nodes == :none)
-            if (task_id % (length(inertia_values) * length(freq_bounds))) == 0
-                println("Hallo")
-                scatterlines!(ax_lines_only, filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values)), y_lines, label = "k=$k,β=$β")
-                errorbars!(ax_lines_only, filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values)), y_lines, err_lines, color = :black,  whiskerwidth = 10)
+            if freq_bound == freq_bounds_filtered[1]
+                scatterlines!(ax_lines_only, filtered_inertia_values, y_lines, label = "k=$k,β=$β")
+                errorbars!(ax_lines_only, filtered_inertia_values, y_lines, err_lines, color = :black,  whiskerwidth = 10)
             end
         elseif (trip_lines == :none &&  trip_nodes == :dynamic)
-            scatterlines!(ax_nodes_only, filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values)), y_nodes, label = "f_b=$freq_bound,k=$k,β=$β")
-            errorbars!(ax_nodes_only, filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values)), y_nodes, err_nodes, color = :black,  whiskerwidth = 10)
+            scatterlines!(ax_nodes_only, filtered_inertia_values, y_nodes, label = "f_b=$freq_bound,k=$k,β=$β")
+            errorbars!(ax_nodes_only, filtered_inertia_values, y_nodes, err_nodes, color = :black,  whiskerwidth = 10)
         elseif (trip_lines == :dynamic &&  trip_nodes == :dynamic)
-            scatterlines!(ax_lines_and_nodes, filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values)), y_lines, linestyle=:dash, label = "f_b=$freq_bound,k=$k,β=$β")
-            errorbars!(ax_lines_and_nodes, filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values)), y_lines, err_lines, color = :black,  whiskerwidth = 10)
-            scatterlines!(ax_lines_and_nodes, filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values)), y_nodes)
-            errorbars!(ax_lines_and_nodes, filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values)), y_nodes, err_nodes, color = :black,  whiskerwidth = 10)
+            scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines, linestyle=:dash, label = "f_b=$freq_bound,k=$k,β=$β")
+            errorbars!(ax_lines_and_nodes, filtered_inertia_values, y_lines, err_lines, color = :black,  whiskerwidth = 10)
+            scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_nodes)
+            errorbars!(ax_lines_and_nodes, filtered_inertia_values, y_nodes, err_nodes, color = :black,  whiskerwidth = 10)
         end
     end
 end
@@ -199,12 +209,13 @@ axislegend(ax_lines_and_nodes, position = :rt, labelsize=10)
 # Save plots
 k_str = string(exp_params_dict[:k])
 β_str = string(exp_params_dict[:β])
-freq_bounds_str = string(exp_params_dict[:freq_bounds])
+freq_bounds_filtered_str = string(freq_bounds_filtered)
+
 K_str = string(exp_params_dict[:K])
 
-CairoMakie.save(joinpath(exp_data_dir, "lines_only_K=$K_str,k=$k_str,β=$β_str,f_b=$freq_bounds_str.pdf"),fig_lines_only)
-CairoMakie.save(joinpath(exp_data_dir, "nodes_only_K=$K_str,k=$k_str,β=$β_str,f_b=$freq_bounds_str.pdf"),fig_nodes_only)
-CairoMakie.save(joinpath(exp_data_dir, "lines+nodes_K=$K_str,k=$k_str,β=$β_str,f_b=$freq_bounds_str.pdf"),fig_lines_and_nodes)
+CairoMakie.save(joinpath(exp_data_dir, "lines_only_K=$K_str,k=$k_str,β=$β_str,f_b=$freq_bounds_filtered_str.pdf"),fig_lines_only)
+CairoMakie.save(joinpath(exp_data_dir, "nodes_only_K=$K_str,k=$k_str,β=$β_str,f_b=$freq_bounds_filtered_str.pdf"),fig_nodes_only)
+CairoMakie.save(joinpath(exp_data_dir, "lines+nodes_K=$K_str,k=$k_str,β=$β_str,f_b=$freq_bounds_filtered_str.pdf"),fig_lines_and_nodes)
 
 # # NOTE Further plotting options:
 # # Placing the legend besides the coordinate system.
