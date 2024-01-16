@@ -19,11 +19,12 @@ exp_name_date = "WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=4_20240115_180723.501"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 
 # left out frequency values
+left_out_frequencies = []
 # left_out_frequencies = [0.0, 0.02, 0.08]
 # left_out_frequencies = [0.0, 0.02, 0.08]
 # left_out_frequencies = [0.05, 0.1, 0.15, 0.2] # wide bounds
-left_out_frequencies = [0.15, 0.2, 0.25, 0.3] # narrow bounds
-freq_bounds_filtered = filter!(x->x ∉ left_out_frequencies, deepcopy(freq_bounds))
+# left_out_frequencies = [0.15, 0.2, 0.25, 0.3] # narrow bounds
+filtered_freq_bounds = filter!(x->x ∉ left_out_frequencies, deepcopy(freq_bounds))
 
 # left out inertia values
 # left_out_inertia_values = [0.01]
@@ -101,6 +102,35 @@ CSV.write(joinpath(RESULTS_DIR, exp_name_date, "all_failures.csv"), df_all_failu
 ################################################################################
 ################################ Plotting  #####################################
 ################################################################################
+
+# Color coding of lines
+using Colors, ColorSchemes
+
+norm_values = (filtered_freq_bounds .- minimum(filtered_freq_bounds)) ./ (maximum(filtered_freq_bounds) - minimum(filtered_freq_bounds))
+
+# Function to generate distinct colors based on a color map and normalization
+function distinct_colors(color_map, values)
+    norm_values = (values .- minimum(values)) ./ (maximum(values) - minimum(values))
+
+    colors = [cgrad(color_map, 101; categorical = true, rev=true)[Int(ceil(i*100)+1)] for i in norm_values]
+    return colors
+end
+
+# Colormaps
+# color_map = ColorSchemes.plasma
+color_map = ColorSchemes.cividis
+# color_map = :blues
+
+# Generate distinct colors based on the filtered_freq_bounds
+line_colors = distinct_colors(color_map, filtered_freq_bounds)
+
+# markers
+markers_labels = [
+    (:circle, ":circle"),
+    (:rect, ":rect"),
+    (:utriangle, ":utriangle"),
+]
+
 function create_figs(failure_modes)
     fig_lines_only = Figure(); fig_nodes_only = Figure(); fig_lines_and_nodes= Figure();
     ax_lines_only = Axis(fig_lines_only[1, 1]); ax_nodes_only = Axis(fig_nodes_only[1, 1]); ax_lines_and_nodes = Axis(fig_lines_and_nodes[1, 1])
@@ -179,18 +209,22 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
         # frequency argument first for a nice order in the legend
         N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
 
+        marker_index = findfirst(x -> x == β, β_vals)
+        marker = markers_labels[marker_index][1]
+        marker_label = markers_labels[marker_index][2]
+        color_index = findfirst(x -> x == freq_bound, filtered_freq_bounds)
         if (trip_lines == :dynamic &&  trip_nodes == :none)
-            if freq_bound == freq_bounds_filtered[1]
-                scatterlines!(ax_lines_only, filtered_inertia_values, y_lines, label = "k=$k,β=$β")
+            if freq_bound == filtered_freq_bounds[1]
+                scatterlines!(ax_lines_only, filtered_inertia_values, y_lines, marker = marker, label = "k=$k,β=$β")
                 errorbars!(ax_lines_only, filtered_inertia_values, y_lines, err_lines, color = :black,  whiskerwidth = 10)
             end
         elseif (trip_lines == :none &&  trip_nodes == :dynamic)
-            scatterlines!(ax_nodes_only, filtered_inertia_values, y_nodes, label = "f_b=$freq_bound,k=$k,β=$β")
+            scatterlines!(ax_nodes_only, filtered_inertia_values, y_nodes, marker = marker, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
             errorbars!(ax_nodes_only, filtered_inertia_values, y_nodes, err_nodes, color = :black,  whiskerwidth = 10)
         elseif (trip_lines == :dynamic &&  trip_nodes == :dynamic)
-            scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines, linestyle=:dash, label = "f_b=$freq_bound,k=$k,β=$β")
+            scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines, linestyle=:dash, marker = marker, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
             errorbars!(ax_lines_and_nodes, filtered_inertia_values, y_lines, err_lines, color = :black,  whiskerwidth = 10)
-            scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_nodes)
+            scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_nodes, marker = marker, color = line_colors[color_index])
             errorbars!(ax_lines_and_nodes, filtered_inertia_values, y_nodes, err_nodes, color = :black,  whiskerwidth = 10)
         end
     end
@@ -211,13 +245,13 @@ axislegend(ax_lines_and_nodes, position = :rt, labelsize=10)
 # Save plots
 k_str = string(exp_params_dict[:k])
 β_str = string(exp_params_dict[:β])
-freq_bounds_filtered_str = string(freq_bounds_filtered)
+filtered_freq_bounds_str = string(filtered_freq_bounds)
 
 K_str = string(exp_params_dict[:K])
 
-CairoMakie.save(joinpath(exp_data_dir, "lines_only_K=$K_str,k=$k_str,β=$β_str,f_b=$freq_bounds_filtered_str.pdf"),fig_lines_only)
-CairoMakie.save(joinpath(exp_data_dir, "nodes_only_K=$K_str,k=$k_str,β=$β_str,f_b=$freq_bounds_filtered_str.pdf"),fig_nodes_only)
-CairoMakie.save(joinpath(exp_data_dir, "lines+nodes_K=$K_str,k=$k_str,β=$β_str,f_b=$freq_bounds_filtered_str.pdf"),fig_lines_and_nodes)
+CairoMakie.save(joinpath(exp_data_dir, "lines_only_K=$K_str,k=$k_str,β=$β_str,f_b=$filtered_freq_bounds_str.pdf"),fig_lines_only)
+CairoMakie.save(joinpath(exp_data_dir, "nodes_only_K=$K_str,k=$k_str,β=$β_str,f_b=$filtered_freq_bounds_str.pdf"),fig_nodes_only)
+CairoMakie.save(joinpath(exp_data_dir, "lines+nodes_K=$K_str,k=$k_str,β=$β_str,f_b=$filtered_freq_bounds_str.pdf"),fig_lines_and_nodes)
 
 # # NOTE Further plotting options:
 # # Placing the legend besides the coordinate system.
@@ -227,36 +261,3 @@ CairoMakie.save(joinpath(exp_data_dir, "lines+nodes_K=$K_str,k=$k_str,β=$β_str
 # axislegend("Legend headline", position = :rt)
 # # Template on how to put all plots in one single figure:
 # # https://docs.makie.org/stable/tutorials/layout-tutorial/#panel_a
-#
-# # Color coding of lines
-# using Colors, ColorSchemes
-# using Printf
-#
-# ang_freq_bounds = [0.24, 0.32, 0.40, 0.48, 0.64, 0.80, 0.95, 1.27, 1.59, 1.91]
-#
-# norm_values = (ang_freq_bounds .- minimum(ang_freq_bounds)) ./ (maximum(ang_freq_bounds) - minimum(ang_freq_bounds))
-#
-# # Function to generate distinct colors based on a color map and normalization
-# function distinct_colors(color_map, values)
-#     norm_values = (values .- minimum(values)) ./ (maximum(values) - minimum(values))
-#
-#     colors = [cgrad(color_map, 101; categorical = true, rev=true)[Int(ceil(i*100)+1)] for i in norm_values]
-#     return colors
-# end
-# # color_map = ColorSchemes.plasma
-# color_map = ColorSchemes.cividis
-# # color_map = :blues
-#
-# # Generate distinct colors based on the ang_freq_bounds
-# line_colors = distinct_colors(color_map, ang_freq_bounds)
-#
-# for (i, dir, ang_freq) in zip(1:length(line_colors),directories, ang_freq_bounds)
-#     directory = string(MA_DATA, dir)
-#
-#     x = df_inertia_vs_failures_nodes.scale_inertia_values
-#     y_nodes = df_inertia_vs_failures_nodes.rel_failures
-#     y_lines = df_inertia_vs_failures_lines.rel_failures
-#
-#     scatterlines!(x, y_nodes, label = "$ang_freq", color = line_colors[i])
-#     scatterlines!(x, y_lines, color = line_colors[i], linestyle=:dash )
-# end
