@@ -15,5 +15,6 @@
 
 /scripts/cluster/cluster_only
 /scripts/cluster/experiment_jarray/WS_pipeline_tryout.jl
-
+/scripts/cluster/experiment_jarray/MWE_WS_plot.jl
+/scripts/cluster/experiment_jarray/WS_job_debug.jl
 /scripts/delete_soon

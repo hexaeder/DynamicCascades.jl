@@ -16,20 +16,20 @@ using CairoMakie
 # exp_name_date = "WS_testrun_paramsK=9_pool_N_G=2_20240106_020923.414"
 # exp_name_date = "WS_testrun_params_PIK_HPC_K_=6,N_G=4_20240107_000645.973"
 exp_name_date = "WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=4_20240115_180723.501"
-exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 
 # left out frequency values
-left_out_frequencies = []
+# left_out_frequencies = []
 # left_out_frequencies = [0.0, 0.02, 0.08]
 # left_out_frequencies = [0.0, 0.02, 0.08]
-# left_out_frequencies = [0.05, 0.1, 0.15, 0.2] # wide bounds
-# left_out_frequencies = [0.15, 0.2, 0.25, 0.3] # narrow bounds
-filtered_freq_bounds = filter!(x->x ∉ left_out_frequencies, deepcopy(freq_bounds))
+# left_out_frequencies = [0.05, 0.1] # wide bounds
+left_out_frequencies = [0.05, 0.1, 0.15] # narrow bounds
 
 # left out inertia values
 # left_out_inertia_values = [0.01]
 left_out_inertia_values = []
-filtered_inertia_values = filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values))
+
+exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
+
 ################################################################################
 ###################### Calculate mean and standard error #######################
 ################################################################################
@@ -72,7 +72,7 @@ for task_id in df_avg_error.ArrayTaskID
             failure_mode_string = joinpath(graph_combinations_path, "trip_lines=$trip_lines,trip_nodes=$trip_nodes")
             failure_mode_frequ_bound = joinpath(failure_mode_string, "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound")
 
-            filename = string("/", string_network_args(df_config, task_id), ".csv")
+            filename = string("/", string_network_args(df_config, task_id +i), ".csv")
             df_result = DataFrame(CSV.File(string(failure_mode_frequ_bound, filename)))
 
             norm_avg_line_failures = df_result[1, :norm_avg_line_failures]
@@ -102,6 +102,11 @@ CSV.write(joinpath(RESULTS_DIR, exp_name_date, "all_failures.csv"), df_all_failu
 ################################################################################
 ################################ Plotting  #####################################
 ################################################################################
+inertia_values = exp_params_dict[:inertia_values]
+freq_bounds = exp_params_dict[:freq_bounds]
+
+filtered_freq_bounds = filter!(x->x ∉ left_out_frequencies, deepcopy(freq_bounds))
+filtered_inertia_values = filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values))
 
 # Color coding of lines
 using Colors, ColorSchemes
@@ -122,8 +127,11 @@ color_map = ColorSchemes.cividis
 # color_map = :blues
 
 # Generate distinct colors based on the filtered_freq_bounds
-line_colors = distinct_colors(color_map, filtered_freq_bounds)
-
+if length(filtered_freq_bounds) == 1
+    line_colors = [RGBA{Float64}(1.0,0.9169,0.2731,1.0)]
+else
+    line_colors = distinct_colors(color_map, filtered_freq_bounds)
+end
 # markers
 markers_labels = [
     (:circle, ":circle"),
@@ -166,7 +174,7 @@ end
 
 # Create figures depending on the modes (loop).
 failure_modes = exp_params_dict[:failure_modes]
-freq_bounds = exp_params_dict[:freq_bounds]
+β_vals = exp_params_dict[:β]
 fig_lines_only, ax_lines_only, fig_nodes_only, ax_nodes_only, fig_lines_and_nodes, ax_lines_and_nodes = create_figs(failure_modes)
 
 df_avg_error = DataFrame(CSV.File(joinpath(RESULTS_DIR, exp_name_date, "avg_error.csv")))
