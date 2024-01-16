@@ -1,22 +1,22 @@
 #!/bin/bash
 
 #SBATCH --qos=short
-#SBATCH --time=0-20:00:00
+#SBATCH --time=1-00:00:00
 #SBATCH --job-name=WS_k=4_K=3
 #SBATCH --account=icone
 #SBATCH --output=%x-%A_%a-%N.out
 #SBATCH --error=%x-%A_%a-%N.err
-#SBATCH --workdir=/home/brandner/MA_data/results_NB/WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=4_20240115_180723.501/output
+#SBATCH --workdir=/home/brandner/MA_data/results_NB/WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=8_20240117_004312.058/output
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --array=1-1728
+#SBATCH --array=1-5040
 
 #SBATCH --mail-type=begin        # send email when job begins
 #SBATCH --mail-type=end          # send email when job ends
 #SBATCH --mail-type=FAIL         # send email when job fails
 #SBATCH --mail-user=brandner@pik-potsdam.de
 
-exp_name_date="WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=4_20240115_180723.501"
+exp_name_date="WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=8_20240117_004312.058"
 
 cd /home/brandner/DynamicCascades.jl/scripts/cluster/experiment_jarray
 
