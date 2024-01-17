@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --qos=short
-#SBATCH --time=1-00:00:00
+#SBATCH --time=0-23:00:00
 #SBATCH --job-name=WS_k=4_K=3
 #SBATCH --account=icone
 #SBATCH --output=%x-%A_%a-%N.out
