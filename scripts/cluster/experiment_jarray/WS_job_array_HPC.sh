@@ -6,7 +6,7 @@
 #SBATCH --account=icone
 #SBATCH --output=%x-%A_%a-%N.out
 #SBATCH --error=%x-%A_%a-%N.err
-#SBATCH --workdir=/home/brandner/MA_data/results_NB/WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=5_20240117_011507.94/output
+#SBATCH --workdir=/home/brandner/MA_data/results_NB/WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=5_20240117_013152.348/output
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --array=1-3150
@@ -16,7 +16,7 @@
 #SBATCH --mail-type=FAIL         # send email when job fails
 #SBATCH --mail-user=brandner@pik-potsdam.de
 
-exp_name_date="WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=5_20240117_011507.94"
+exp_name_date="WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=5_20240117_013152.348"
 
 cd /home/brandner/DynamicCascades.jl/scripts/cluster/experiment_jarray
 
