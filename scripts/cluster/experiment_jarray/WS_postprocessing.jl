@@ -20,7 +20,17 @@ exp_name_date = "WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=5_20240117_013152.348"
 # left out frequency values
 # left_out_frequencies = []
 # left_out_frequencies = [0.25, 0.1]
-left_out_frequencies = []
+left_out_frequencies = [0.001, 0.01, 0.03, 0.1, 0.3, 0.5]
+
+###########
+# 0.00100
+# 0.0100
+# 0.0300
+# 0.0500
+# 0.100
+# 0.300
+# 0.500
+###########
 
 # left out inertia values
 # left_out_inertia_values = [0.01]
