@@ -10,7 +10,7 @@ end
 # PARAMETERS ###################################################################
 # Experiment name
 name = "WS_testrun_params_k=4_narrow"
-long_name = "First run being close, narrow bounds." # for providing more details
+long_name = "First run being close, wide bounds." # for providing more details
 save_graph_and_filepath = false
 solver_name = "Rodas4P()"
 steadystate_choice = :rootfind # :relaxation
@@ -48,8 +48,8 @@ The value in numerator of round(0.1/(2*π) is the angular frequency =#
 # freq_bounds = [round(i/(2*π), digits=4) for i in [0.01, 0.1, 0.5, 1.0, 5.0]]
 # freq_bounds = [round(0.1/(2*π), digits=2), round(0.5/(2*π), digits=2), round(10.0/(2*π), digits=2)]
 # freq_bounds = [round(0.1/(2*π), digits=2)]
-freq_bounds = [0.005, 0.0075, 0.01, 0.015]#, 0.02, 0.025, 0.03]
-
+# freq_bounds = [0.005, 0.0075, 0.01, 0.015]#, 0.02, 0.025, 0.03]
+freq_bounds = [0.02, 0.025, 0.03]
 # failure_modes = [trip_lines, trip_nodes]
 failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
 # failure_modes = [[:dynamic, :dynamic], [:dynamic, :none]]
