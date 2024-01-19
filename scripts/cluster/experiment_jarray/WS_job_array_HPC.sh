@@ -1,14 +1,14 @@
 #!/bin/bash
 
-#SBATCH --qos=short
-#SBATCH --time=1-00:00:00
+#SBATCH --qos=medium
+#SBATCH --time=2-00:00:00
 #SBATCH --job-name=WS_k=4_K=3
 #SBATCH --account=icone
 #SBATCH --output=%x-%A_%a-%N.out
 #SBATCH --error=%x-%A_%a-%N.err
 #SBATCH --workdir=/home/brandner/MA_data/results_NB/WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=5_20240117_013152.348/output
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=2
 #SBATCH --array=1-3150
 
 #SBATCH --mail-type=begin        # send email when job begins

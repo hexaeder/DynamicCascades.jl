@@ -15,14 +15,12 @@ using CairoMakie
 # exp_name_date = "WS_testrun_params_K=6_pool_N_G=2_20240106_021205.818"
 # exp_name_date = "WS_testrun_paramsK=9_pool_N_G=2_20240106_020923.414"
 # exp_name_date = "WS_testrun_params_PIK_HPC_K_=6,N_G=4_20240107_000645.973"
-exp_name_date = "WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=4_20240115_180723.501"
+exp_name_date = "WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=5_20240117_013152.348"
 
 # left out frequency values
 # left_out_frequencies = []
-# left_out_frequencies = [0.0, 0.02, 0.08]
-# left_out_frequencies = [0.0, 0.02, 0.08]
-# left_out_frequencies = [0.05, 0.1] # wide bounds
-left_out_frequencies = [0.05, 0.1, 0.15] # narrow bounds
+# left_out_frequencies = [0.25, 0.1]
+left_out_frequencies = []
 
 # left out inertia values
 # left_out_inertia_values = [0.01]
