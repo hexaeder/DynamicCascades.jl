@@ -13,7 +13,8 @@ exp_name_date = ARGS[2]
 # read in SLURM_ARRAY_TASK_ID from `ARGS`
 task_id = parse(Int64, ARGS[1])
 # task_id = 1
-
+# if task_id > 10000
+#     task_id =7
 # load config file, and parameters
 df_config = DataFrame(CSV.File(joinpath(RESULTS_DIR, exp_name_date, "config.csv")))
 exp_params_dict = Serialization.deserialize(joinpath(RESULTS_DIR, exp_name_date, "exp.params"))

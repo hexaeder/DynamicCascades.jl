@@ -14,13 +14,15 @@ using CairoMakie
 # exp_name_date = "WS_testrun_params_k=10PIK_HPC_K_=1,N_G=4_20240107_003159.367"
 # exp_name_date = "WS_testrun_params_K=6_pool_N_G=2_20240106_021205.818"
 # exp_name_date = "WS_testrun_paramsK=9_pool_N_G=2_20240106_020923.414"
-# exp_name_date = "WS_testrun_params_PIK_HPC_K_=6,N_G=4_20240107_000645.973"
+# exp_name_date = "WS_testrun_params_K=3_pool_N_G=2_20240106_021759.114"
 exp_name_date = "WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=5_20240117_013152.348"
+# exp_name_date = "WS_testrun_params_k=4_narrowPIK_HPC_K_=3,N_G=10_20240119_192800.546"
+# exp_name_date = "WS_testrun_params_k=4_widePIK_HPC_K_=3,N_G=10_20240119_192910.398"
 
 # left out frequency values
 # left_out_frequencies = []
-# left_out_frequencies = [0.25, 0.1]
-left_out_frequencies = [0.001, 0.01, 0.03, 0.1, 0.3, 0.5]
+left_out_frequencies = [0.001, 0.01, 0.03, 0.05, 0.1, 0.3]
+# left_out_frequencies = [0.02, 0.025]
 
 ###########
 # 0.00100
@@ -35,6 +37,9 @@ left_out_frequencies = [0.001, 0.01, 0.03, 0.1, 0.3, 0.5]
 # left out inertia values
 # left_out_inertia_values = [0.01]
 left_out_inertia_values = []
+# left_out_inertia_values = [ ]
+
+left_out_β_values = [0.1]
 
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 
@@ -115,6 +120,7 @@ freq_bounds = exp_params_dict[:freq_bounds]
 
 filtered_freq_bounds = filter!(x->x ∉ left_out_frequencies, deepcopy(freq_bounds))
 filtered_inertia_values = filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values))
+filtered_β_values = filter!(x->x ∉ left_out_β_values, deepcopy(exp_params_dict[:β]))
 
 # Color coding of lines
 using Colors, ColorSchemes
@@ -213,6 +219,11 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
     if M ∈ left_out_inertia_values
         continue
     end
+    # β values
+    if β ∈ left_out_β_values
+        continue
+    end
+
 
     # Read out ensemble_avg and ensemble_standard_error
     push!(y_lines, df_avg_error[task_id, :ensemble_avg_line_failures])
@@ -221,7 +232,7 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
     push!(err_nodes, df_avg_error[task_id, :ensemble_SE_node_failures])
 
     # Only plot if all inertia values are pushed to `y_lines`, `y_nodes`, `err_lines`, `err_nodes`
-    if (task_id % length(inertia_values)) == 0
+    if M == maximum(filtered_inertia_values)
         # frequency argument first for a nice order in the legend
         N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
 
@@ -260,14 +271,13 @@ axislegend(ax_lines_and_nodes, position = :rt, labelsize=10)
 
 # Save plots
 k_str = string(exp_params_dict[:k])
-β_str = string(exp_params_dict[:β])
 filtered_freq_bounds_str = string(filtered_freq_bounds)
 
 K_str = string(exp_params_dict[:K])
 
-CairoMakie.save(joinpath(exp_data_dir, "lines_only_K=$K_str,k=$k_str,β=$β_str,f_b=$filtered_freq_bounds_str.pdf"),fig_lines_only)
-CairoMakie.save(joinpath(exp_data_dir, "nodes_only_K=$K_str,k=$k_str,β=$β_str,f_b=$filtered_freq_bounds_str.pdf"),fig_nodes_only)
-CairoMakie.save(joinpath(exp_data_dir, "lines+nodes_K=$K_str,k=$k_str,β=$β_str,f_b=$filtered_freq_bounds_str.pdf"),fig_lines_and_nodes)
+CairoMakie.save(joinpath(exp_data_dir, "lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_only)
+CairoMakie.save(joinpath(exp_data_dir, "nodes_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_nodes_only)
+CairoMakie.save(joinpath(exp_data_dir, "lines+nodes_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
 
 # # NOTE Further plotting options:
 # # Placing the legend besides the coordinate system.
