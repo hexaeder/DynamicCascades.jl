@@ -5,7 +5,6 @@ if ON_YOGA
 else # if on PIK-HPC or Pool
     Pkg.instantiate()
     # Pkg.precompile()
-    datetime = ARGS[1]
 end
 
 # PARAMETERS ###################################################################
