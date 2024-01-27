@@ -80,7 +80,7 @@ exp_name_date_dict = Dict(
     :exp_name_date => exp_name_date,
     )
 
-CSV.write("exp_name_date_dict_$datetime.csv", exp_name_date_dict, writeheader=false)
+CSV.write("$name.csv", exp_name_date_dict, writeheader=false)
 
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 ispath(exp_data_dir) || mkdir(exp_data_dir)
