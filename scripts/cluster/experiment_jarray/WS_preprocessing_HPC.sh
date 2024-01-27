@@ -7,7 +7,9 @@
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.err
 
+datetime=$1
+
 module purge
 module load julia/1.8.2
 
-julia WS_preprocessing.jl
+julia WS_preprocessing.jl $datetime

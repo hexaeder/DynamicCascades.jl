@@ -5,6 +5,7 @@ if ON_YOGA
 else # if on PIK-HPC or Pool
     Pkg.instantiate()
     # Pkg.precompile()
+    datetime = ARGS[1]
 end
 
 # PARAMETERS ###################################################################
@@ -71,7 +72,15 @@ time_long = "2-00:00:00"
 t=now()
 datetime = Dates.format(t, "_yyyymmdd_HHMMSS.s")
 exp_name_date = string(exp_name, datetime)
-println("exp_name_date, $exp_name_date")
+
+# datetime = ARGS[1]
+# println("exp_name_date,$exp_name_date")
+
+exp_name_date_dict = Dict(
+    :exp_name_date => exp_name_date,
+    )
+
+CSV.write("exp_name_date_dict_$datetime.csv", exp_name_date_dict, writeheader=false)
 
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 ispath(exp_data_dir) || mkdir(exp_data_dir)
