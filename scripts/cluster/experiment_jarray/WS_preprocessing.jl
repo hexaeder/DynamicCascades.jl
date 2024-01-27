@@ -30,7 +30,7 @@ k_vals = [4]
 # inertia_values = [0.2, 0.7, 5.0]
 # inertia_values = [0.2, 0.7]
 # inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
-inertia_values = [0.2, 15.0, 20.0]
+inertia_values = [0.2, 20.0]
 K_vals = 3 # coupling K
 γ_vals = 1 # damping swing equation nodes γ
 τ_vals = 1 # time constant τ
@@ -127,6 +127,27 @@ df_hpe[!, :graph_seed] .= 0; df_hpe[!, :distr_seed] .= 0; df_hpe[!, :filepath] .
 df_hpe[!, :ensemble_element] = vcat([fill(i, length(hyperparam)) for i in 1:N_ensemble_size]...)
 
 
+# Create and save dict for slurm queue-parameters
+indices_short = Int64[]
+indices_long = Int64[]
+for task_id in df_hpe.ArrayTaskID
+    M = df_hpe[task_id,:inertia_values]
+    if M <= thres_M
+        push!(indices_short, task_id)
+    else
+        push!(indices_long, task_id)
+    end
+end
+
+sbatch_dict = Dict(
+    :indices_short => indices_short,
+    :time_short => time_short,
+    :time_long => time_long,
+    :indices_long => indices_long,
+    )
+
+CSV.write(joinpath(exp_data_dir, "sbatch_dict.csv"), sbatch_dict, writeheader=false)
+
 # GENERATION OF NETWORKS #######################################################
 number_of_task_ids_between_graphs = length(inertia_values) * length(freq_bounds) * length(failure_modes)
 graph_seed = 0; distr_seed = 0
@@ -221,24 +242,3 @@ end
 
 # Save to CSV
 CSV.write(joinpath(exp_data_dir, "config.csv"), df_hpe)
-
-# Create and save dict for slurm queue-parameters
-indices_short = Int64[]
-indices_long = Int64[]
-for task_id in df_hpe.ArrayTaskID
-    M = df_hpe[task_id,:inertia_values]
-    if M <= thres_M
-        push!(indices_short, task_id)
-    else
-        push!(indices_long, task_id)
-    end
-end
-
-sbatch_dict = Dict(
-    :indices_short => indices_short,
-    :time_short => time_short,
-    :time_long => time_long,
-    :indices_long => indices_long,
-    )
-
-CSV.write(joinpath(exp_data_dir, "sbatch_dict.csv"), sbatch_dict, writeheader=false)
