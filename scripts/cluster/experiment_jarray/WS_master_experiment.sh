@@ -19,7 +19,7 @@ output_file=$(cat "/home/brandner/DynamicCascades.jl/scripts/cluster/experiment_
 exp_name_date=$(echo "$output_file" | grep 'exp_name_date' | cut -d ',' -f 2- | tr -d '[]' | sed 's/"//g')
 
 
-## Read in indices in bash-script
+# Read in indices in bash-script
 # Read the CSV file into a variable
 sbatch_dict=$(cat "/home/brandner/MA_data/results_NB/$exp_name_date/sbatch_dict.csv")
 
