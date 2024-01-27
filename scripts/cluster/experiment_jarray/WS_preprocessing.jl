@@ -21,7 +21,6 @@ N_nodes = 100
 # k = [4, 10]
 k_vals = [4]
 β_vals = [0.1, 0.5, 0.9]
-# β = [0.1, 0.5]
 
 # MetaGraph params ###############
 # inertia_values = [0.2, 0.5, 0.7, 0.9, 1.1, 1.4, 1.7, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 20.0]
@@ -62,6 +61,8 @@ exp_name = string(name, server_string, exp_name_params)
 
 # slurm queue parameters
 thres_M = 15
+#= NOTE following two lines not used: This is for defining time limits for slurm.
+This can be easily used in WS_master_experiment.sh if needed.=#
 time_short = "1-00:00:00"
 time_long = "2-00:00:00"
 
