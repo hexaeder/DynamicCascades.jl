@@ -2,10 +2,15 @@
 
 #SBATCH --qos=priority
 #SBATCH --time=0-02:00:00
-#SBATCH --job-name=test_preprocessing_master
+#SBATCH --job-name=preprocessing_master
 #SBATCH --account=icone
 #SBATCH --output=%x-%j-%N.out
 #SBATCH --error=%x-%j-%N.err
+
+echo "------------------------------------------------------------"
+echo "SLURM JOB ID: $SLURM_JOBID"
+echo "$SLURM_NTASKS tasks"
+echo "------------------------------------------------------------"
 
 
 module purge

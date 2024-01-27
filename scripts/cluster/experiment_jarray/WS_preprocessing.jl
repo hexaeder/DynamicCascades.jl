@@ -30,7 +30,7 @@ k_vals = [4]
 # inertia_values = [0.2, 0.7, 5.0]
 # inertia_values = [0.2, 0.7]
 # inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
-inertia_values = [0.2, 0.5, 0.7, 15.0, 20.0]
+inertia_values = [0.2, 15.0, 20.0]
 K_vals = 3 # coupling K
 γ_vals = 1 # damping swing equation nodes γ
 τ_vals = 1 # time constant τ
@@ -59,14 +59,20 @@ failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
 
 exp_name_params = "K_=$K_vals,N_G=$N_ensemble_size"
 exp_name = string(name, server_string, exp_name_params)
+
+# slurm queue parameters
+thres_M = 15
+time_short = "1-00:00:00"
+time_long = "2-00:00:00"
+
 ################################################################################
-
-
 
 # Create result directory
 t=now()
 datetime = Dates.format(t, "_yyyymmdd_HHMMSS.s")
 exp_name_date = string(exp_name, datetime)
+
+
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 ispath(exp_data_dir) || mkdir(exp_data_dir)
 
@@ -215,3 +221,24 @@ end
 
 # Save to CSV
 CSV.write(joinpath(exp_data_dir, "config.csv"), df_hpe)
+
+# Create and save dict for slurm queue-parameters
+indices_short = Int64[]
+indices_long = Int64[]
+for task_id in df_hpe.ArrayTaskID
+    M = df_hpe[task_id,:inertia_values]
+    if M <= thres_M
+        push!(indices_short, task_id)
+    else
+        push!(indices_long, task_id)
+    end
+end
+
+sbatch_dict = Dict(
+    :indices_short => indices_short,
+    :time_short => time_short,
+    :time_long => time_long,
+    :indices_long => indices_long,
+    )
+
+CSV.write(joinpath(exp_data_dir, "sbatch_dict.csv"), sbatch_dict, writeheader=false)
