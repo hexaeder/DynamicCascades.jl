@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ############################## Preprocessing ###################################
-name=WS_testrun_master # NOTE: use `name` from WS_preprocessing.jl!
+name=WS_k=4_exp01_ # NOTE: use `name` from WS_preprocessing.jl!
 echo "------------------------------------------------------------"
 echo "Running experiment: $name"
 echo "------------------------------------------------------------"
@@ -11,8 +11,8 @@ echo "------------------------------------------------------------"
 PREPROC=$(sbatch WS_preprocessing_HPC.sh | cut -f 4 -d' ')
 echo "SLURM JOB ID Preprocessing: $PREPROC"
 
-echo "Sleeping 300 seconds until variables for Slurm are assigned."
-sleep 300
+echo "Sleeping 200 seconds until variables for Slurm are assigned."
+sleep 200
 
 output_file=$(cat "/home/brandner/DynamicCascades.jl/scripts/cluster/experiment_jarray/$name.csv")
 # Extract index value as an array that may be passed to `--array`
@@ -33,10 +33,10 @@ sacct_dir=/home/brandner/MA_data/results_NB/$exp_name_date
 ############################## Core Simulation #################################
 # Submit job arrays
 # https://stackoverflow.com/questions/77479142/slurm-array-add-variable-in-sbatch-options?noredirect=1&lq=1
-MODEL_JOBARRAY1=$(sbatch --depend=afterany:$PREPROC --qos=priority --time=0-01:00:00 --job-name=test_master --workdir=$workdir --array="${indices_short}" --cpus-per-task=1 WS_job_array_HPC_for_master.sh $exp_name_date | cut -f 4 -d' ')
+MODEL_JOBARRAY1=$(sbatch --depend=afterany:$PREPROC --qos=short --time=1-00:00:00 --job-name=WS_k=4_exp01_short --workdir=$workdir --array="${indices_short}" --cpus-per-task=1 WS_job_array_HPC_for_master.sh $exp_name_date | cut -f 4 -d' ')
 echo "SLURM JOB ID JOBARRAY 1: $MODEL_JOBARRAY1"
 
-MODEL_JOBARRAY2=$(sbatch --depend=afterany:$PREPROC --qos=priority --time=0-01:00:00 --job-name=test_master --workdir=$workdir --array="${indices_long}" --cpus-per-task=1 WS_job_array_HPC_for_master.sh $exp_name_date | cut -f 4 -d' ')
+MODEL_JOBARRAY2=$(sbatch --depend=afterany:$PREPROC --qos=medium --time=2-00:00:00 --job-name=WS_k=4_exp01_medium --workdir=$workdir --array="${indices_long}" --cpus-per-task=2 WS_job_array_HPC_for_master.sh $exp_name_date | cut -f 4 -d' ')
 echo "SLURM JOB ID JOBARRAY 2: $MODEL_JOBARRAY2"
 
 echo "Files will be saved in this folder: $exp_name_date"

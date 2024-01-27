@@ -9,9 +9,8 @@ end
 
 # PARAMETERS ###################################################################
 # Experiment name
-# name = "WS_testrun_params_k=4_narrow"
-name = "WS_testrun_master"
-long_name = "Testrun." # for providing more details
+name = "WS_k=4_exp01_"
+long_name = "First longer run trying new pipeline and large ensemble." # for providing more details
 save_graph_and_filepath = false
 solver_name = "Rodas4P()"
 steadystate_choice = :rootfind # :relaxation
@@ -26,17 +25,14 @@ k_vals = [4]
 # inertia_values = [0.2, 0.5, 0.7, 0.9, 1.1, 1.4, 1.7, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 20.0]
 # inertia_values = [0.2, 1.0, 2.1, 3.0, 4.0, 5.0, 7.2, 11.0, 15.0, 21.0]
 # inertia_values = [0.2, 1.0, 5.0, 10.0, 15.0]
-# inertia_values = [0.2, 0.7, 5.0]
-# inertia_values = [0.2, 0.7]
-# inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
-inertia_values = [0.2, 20.0]
+inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
 K_vals = 3 # coupling K
 γ_vals = 1 # damping swing equation nodes γ
 τ_vals = 1 # time constant τ
 σ_vals = 1 # standard deviation σ
 μ_vals = 0 # mean μ
 
-N_ensemble_size = 2 # 100
+N_ensemble_size = 25 # 100
 
 # Cacading params ##############
 
@@ -73,8 +69,6 @@ t=now()
 datetime = Dates.format(t, "_yyyymmdd_HHMMSS.s")
 exp_name_date = string(exp_name, datetime)
 
-# datetime = ARGS[1]
-# println("exp_name_date,$exp_name_date")
 
 exp_name_date_dict = Dict(
     :exp_name_date => exp_name_date,
