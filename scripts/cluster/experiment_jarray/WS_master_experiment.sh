@@ -11,8 +11,8 @@ echo "------------------------------------------------------------"
 PREPROC=$(sbatch WS_preprocessing_HPC.sh | cut -f 4 -d' ')
 echo "SLURM JOB ID Preprocessing: $PREPROC"
 
-echo "Sleeping 200 seconds until variables for Slurm are assigned."
-sleep 200
+echo "Sleeping 400 seconds until variables for Slurm are assigned."
+sleep 400
 
 output_file=$(cat "/home/brandner/DynamicCascades.jl/scripts/cluster/experiment_jarray/$name.csv")
 # Extract index value as an array that may be passed to `--array`
