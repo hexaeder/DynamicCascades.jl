@@ -52,7 +52,8 @@ if steadystate_choice == :rootfind
 elseif steadystate_choice == :relaxation
     x_static = steadystate_relaxation(network; verbose=true) # "New" way, steady state more precise, less/no errors, probabyl slower
 end
-for i in 1:ne(network)
+# for i in 1:ne(network)
+for i in 1:2
     sol = simulate(network;
                    x_static=x_static,
                    initial_fail = Int[i],

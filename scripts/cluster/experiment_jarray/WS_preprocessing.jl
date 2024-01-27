@@ -71,7 +71,7 @@ time_long = "2-00:00:00"
 t=now()
 datetime = Dates.format(t, "_yyyymmdd_HHMMSS.s")
 exp_name_date = string(exp_name, datetime)
-
+println("exp_name_date, $exp_name_date")
 
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 ispath(exp_data_dir) || mkdir(exp_data_dir)

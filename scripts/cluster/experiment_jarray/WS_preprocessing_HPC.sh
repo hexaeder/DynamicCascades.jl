@@ -4,14 +4,8 @@
 #SBATCH --time=0-02:00:00
 #SBATCH --job-name=preprocessing_master
 #SBATCH --account=icone
-#SBATCH --output=%x-%j-%N.out
-#SBATCH --error=%x-%j-%N.err
-
-echo "------------------------------------------------------------"
-echo "SLURM JOB ID: $SLURM_JOBID"
-echo "$SLURM_NTASKS tasks"
-echo "------------------------------------------------------------"
-
+#SBATCH --output=%x-%j.out
+#SBATCH --error=%x-%j.err
 
 module purge
 module load julia/1.8.2
