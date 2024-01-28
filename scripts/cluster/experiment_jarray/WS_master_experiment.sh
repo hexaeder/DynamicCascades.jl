@@ -11,41 +11,63 @@ echo "------------------------------------------------------------"
 PREPROC=$(sbatch WS_preprocessing_HPC.sh | cut -f 4 -d' ')
 echo "SLURM JOB ID Preprocessing: $PREPROC"
 
-echo "Sleeping 400 seconds until variables for Slurm are assigned."
-sleep 400
+sleeptime=300
+echo "Sleeping $sleeptime seconds until variables for Slurm are assigned."
+sleep $sleeptime
 
-output_file=$(cat "/home/brandner/DynamicCascades.jl/scripts/cluster/experiment_jarray/$name.csv")
-# Extract index value as an array that may be passed to `--array`
-exp_name_date=$(echo "$output_file" | grep 'exp_name_date' | cut -d ',' -f 2- | tr -d '[]' | sed 's/"//g')
-
-
-# Read in indices in bash-script
 # Read the CSV file into a variable
-sbatch_dict=$(cat "/home/brandner/MA_data/results_NB/$exp_name_date/sbatch_dict.csv")
-
-# Extract index value as an array that may be passed to `--array` (explanations see below)
-indices_short=$(echo "$sbatch_dict" | grep 'indices_short' | cut -d ',' -f 2- | tr -d '[]' | sed 's/"//g')
-indices_long=$(echo "$sbatch_dict" | grep 'indices_long' | cut -d ',' -f 2- | tr -d '[]' | sed 's/"//g')
+sbatch_dict=$(cat "/home/brandner/DynamicCascades.jl/scripts/cluster/experiment_jarray/sbatch_dict_$name.csv")
+# Extract index value as an array that may be passed to `--array`
+exp_name_date=$(echo "$sbatch_dict" | grep 'exp_name_date' | cut -d ',' -f 2- | tr -d '[]' | sed 's/"//g')
+job_array_length=$(echo "$sbatch_dict" | grep 'job_array_length' | cut -d ',' -f 2- | tr -d '[]' | sed 's/"//g')
+N_inertia=$(echo "$sbatch_dict" | grep 'N_inertia' | cut -d ',' -f 2- | tr -d '[]' | sed 's/"//g')
 
 workdir=/home/brandner/MA_data/results_NB/$exp_name_date/output
 sacct_dir=/home/brandner/MA_data/results_NB/$exp_name_date
 
 ############################## Core Simulation #################################
-# Submit job arrays
-# https://stackoverflow.com/questions/77479142/slurm-array-add-variable-in-sbatch-options?noredirect=1&lq=1
-MODEL_JOBARRAY1=$(sbatch --depend=afterany:$PREPROC --qos=short --time=1-00:00:00 --job-name=WS_k=4_exp01_short --workdir=$workdir --array="${indices_short}" --cpus-per-task=1 WS_job_array_HPC_for_master.sh $exp_name_date | cut -f 4 -d' ')
-echo "SLURM JOB ID JOBARRAY 1: $MODEL_JOBARRAY1"
 
-MODEL_JOBARRAY2=$(sbatch --depend=afterany:$PREPROC --qos=medium --time=2-00:00:00 --job-name=WS_k=4_exp01_medium --workdir=$workdir --array="${indices_long}" --cpus-per-task=2 WS_job_array_HPC_for_master.sh $exp_name_date | cut -f 4 -d' ')
-echo "SLURM JOB ID JOBARRAY 2: $MODEL_JOBARRAY2"
+qos_array=(short short short short short short short medium medium)
+times_array=(1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 2-00:00:00 2-00:00:00)
+cpus_array=(1 1 1 1 1 1 1 2 2)
+
+# NOTE bash starts at index 0.
+for job_array_index in $(seq 1 1 $N_inertia); do
+    echo "Job array index $job_array_index"
+    qos=${qos_array[($job_array_index-1)]}
+    time=${times_array[($job_array_index-1)]}
+    job_name="$name,idx=$job_array_index"
+    cpus=${cpus_array[($job_array_index-1)]}
+    ############################## Core Simulation #############################
+    MODEL_JOBARRAY=$(sbatch --depend=afterany:$PREPROC --qos=$qos --time=$time --job-name=$job_name --workdir=$workdir --cpus-per-task=$cpus --array=1-$job_array_length WS_job_array_HPC_for_master.sh $exp_name_date $job_array_index | cut -f 4 -d' ')
+    echo "SLURM JOB ID JOBARRAY $job_array_index: $MODEL_JOBARRAY1"
+    ############################## Postprocessing ##############################
+    POSTPROC=$(sbatch --depend=afterany:$MODEL_JOBARRAY --workdir=$sacct_dir WS_sacct_postprocessing.sh $MODEL_JOBARRAY $sacct_dir | cut -f 4 -d' ')
+    echo "SLURM JOB ID Postprocessing $job_array_index: $POSTPROC"
+done
 
 echo "Files will be saved in this folder: $exp_name_date"
 
-############################## Postprocessing ##################################
-POSTPROC1=$(sbatch --depend=afterany:$MODEL_JOBARRAY1 --workdir=$sacct_dir WS_sacct_postprocessing.sh $MODEL_JOBARRAY1 $sacct_dir | cut -f 4 -d' ')
-echo "SLURM JOB ID Postprocessing 1: $POSTPROC1"
-POSTPROC2=$(sbatch --depend=afterany:$MODEL_JOBARRAY2 --workdir=$sacct_dir WS_sacct_postprocessing.sh $MODEL_JOBARRAY2 $sacct_dir | cut -f 4 -d' ')
-echo "SLURM JOB ID Postprocessing 1: $POSTPROC2"
+# MODEL_JOBARRAY1=$(sbatch --depend=afterany:$PREPROC --qos=short --time=1-00:00:00 --job-name="WS_k=4_exp01_idx=$job_array_index" --workdir=$workdir --cpus-per-task=1 --array=1-$job_array_length WS_job_array_HPC_for_master.sh $exp_name_date $job_array_index | cut -f 4 -d' ')
+# echo "SLURM JOB ID JOBARRAY 1: $MODEL_JOBARRAY1"
+# ###########################
+#
+#
+# # Submit job arrays
+# # https://stackoverflow.com/questions/77479142/slurm-array-add-variable-in-sbatch-options?noredirect=1&lq=1
+# MODEL_JOBARRAY1=$(sbatch --depend=afterany:$PREPROC --qos=short --time=1-00:00:00 --job-name=WS_k=4_exp01_short --workdir=$workdir --array="${indices_short}" --cpus-per-task=1 WS_job_array_HPC_for_master.sh $exp_name_date | cut -f 4 -d' ')
+# echo "SLURM JOB ID JOBARRAY 1: $MODEL_JOBARRAY1"
+#
+# MODEL_JOBARRAY2=$(sbatch --depend=afterany:$PREPROC --qos=medium --time=2-00:00:00 --job-name=WS_k=4_exp01_medium --workdir=$workdir --array="${indices_long}" --cpus-per-task=2 WS_job_array_HPC_for_master.sh $exp_name_date | cut -f 4 -d' ')
+# echo "SLURM JOB ID JOBARRAY 2: $MODEL_JOBARRAY2"
+#
+#
+#
+# ############################## Postprocessing ##################################
+# POSTPROC1=$(sbatch --depend=afterany:$MODEL_JOBARRAY1 --workdir=$sacct_dir WS_sacct_postprocessing.sh $MODEL_JOBARRAY1 $sacct_dir | cut -f 4 -d' ')
+# echo "SLURM JOB ID Postprocessing 1: $POSTPROC1"
+# POSTPROC2=$(sbatch --depend=afterany:$MODEL_JOBARRAY2 --workdir=$sacct_dir WS_sacct_postprocessing.sh $MODEL_JOBARRAY2 $sacct_dir | cut -f 4 -d' ')
+# echo "SLURM JOB ID Postprocessing 1: $POSTPROC2"
 
 exit 0
 
@@ -53,6 +75,7 @@ exit 0
 
 # Explanations
 
+# TODO adapt explanations
 # Explanations for `indices_short=$(echo "$sbatch_dict" | grep 'indices_short' | cut -d ',' -f 2- | tr -d '[]' | sed 's/"//g')`
 # `echo "$sbatch_dict"` Echo the content of the variable sbatch_dict to standard output.
 # `grep 'indices_short'` Use grep to filter lines containing the string 'indices_short'.

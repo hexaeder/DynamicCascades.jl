@@ -10,12 +10,20 @@ end
 # PARAMETERS ###################################################################
 exp_name_date = ARGS[2]
 
-# read in SLURM_ARRAY_TASK_ID from `ARGS`
-task_id = parse(Int64, ARGS[1])
-
 # load config file, and parameters
 df_config = DataFrame(CSV.File(joinpath(RESULTS_DIR, exp_name_date, "config.csv")))
 exp_params_dict = Serialization.deserialize(joinpath(RESULTS_DIR, exp_name_date, "exp.params"))
+
+# read in SLURM_ARRAY_TASK_ID from `ARGS`
+task_id = parse(Int64, ARGS[1])
+
+# using job_array indices for splitting experiment into multiple job arrays
+if length(ARGS) == 3
+    job_array_index = ARGS[3]
+    N_inertia = length(exp_params_dict[:inertia_values])
+    task_id = job_array_index + (task_id -1) * N_inertia
+end
+
 
 N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
 monitored_power_flow = exp_params_dict[:monitored_power_flow]

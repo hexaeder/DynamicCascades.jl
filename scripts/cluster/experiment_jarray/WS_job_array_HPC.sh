@@ -9,7 +9,7 @@
 #SBATCH --workdir=/home/brandner/MA_data/results_NB/WS_k=4_exp01_PIK_HPC_K_=3,N_G=25_20240128_095700.422/output
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --array=1,3200
+#SBATCH --array=1-5
 
 #SBATCH --mail-type=begin        # send email when job begins
 #SBATCH --mail-type=end          # send email when job ends

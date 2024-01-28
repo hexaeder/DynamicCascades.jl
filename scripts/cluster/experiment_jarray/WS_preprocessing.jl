@@ -32,7 +32,7 @@ K_vals = 3 # coupling K
 σ_vals = 1 # standard deviation σ
 μ_vals = 0 # mean μ
 
-N_ensemble_size = 25 # 100
+N_ensemble_size = 2 # 100
 
 # Cacading params ##############
 
@@ -69,12 +69,6 @@ t=now()
 datetime = Dates.format(t, "_yyyymmdd_HHMMSS.s")
 exp_name_date = string(exp_name, datetime)
 
-
-exp_name_date_dict = Dict(
-    :exp_name_date => exp_name_date,
-    )
-
-CSV.write("$name.csv", exp_name_date_dict, writeheader=false)
 
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 ispath(exp_data_dir) || mkdir(exp_data_dir)
@@ -130,26 +124,37 @@ df_hpe[!, :graph_seed] .= 0; df_hpe[!, :distr_seed] .= 0; df_hpe[!, :filepath] .
 df_hpe[!, :ensemble_element] = vcat([fill(i, length(hyperparam)) for i in 1:N_ensemble_size]...)
 
 
-# Create and save dict for slurm queue-parameters
-indices_short = Int64[]
-indices_long = Int64[]
-for task_id in df_hpe.ArrayTaskID
-    M = df_hpe[task_id,:inertia_values]
-    if M <= thres_M
-        push!(indices_short, task_id)
-    else
-        push!(indices_long, task_id)
-    end
-end
-
-sbatch_dict = Dict(
-    :indices_short => indices_short,
-    :time_short => time_short,
-    :time_long => time_long,
-    :indices_long => indices_long,
+N_jobs_total = nrow(df_hpe)
+N_inertia = length(inertia_values)
+job_array_length = Int64(N_jobs_total/N_inertia)
+exp_name_date_dict = Dict(
+    :exp_name_date => exp_name_date,
+    :job_array_length => job_array_length,
+    :N_inertia => N_inertia,
     )
 
-CSV.write(joinpath(exp_data_dir, "sbatch_dict.csv"), sbatch_dict, writeheader=false)
+CSV.write("sbatch_dict_$name.csv", exp_name_date_dict, writeheader=false)
+
+# # Create and save dict for slurm queue-parameters
+# indices_short = Int64[]
+# indices_long = Int64[]
+# for task_id in df_hpe.ArrayTaskID
+#     M = df_hpe[task_id,:inertia_values]
+#     if M <= thres_M
+#         push!(indices_short, task_id)
+#     else
+#         push!(indices_long, task_id)
+#     end
+# end
+
+# sbatch_dict = Dict(
+#     :indices_short => indices_short,
+#     :time_short => time_short,
+#     :time_long => time_long,
+#     :indices_long => indices_long,
+#     )
+#
+# CSV.write(joinpath(exp_data_dir, "sbatch_dict.csv"), sbatch_dict, writeheader=false)
 
 # GENERATION OF NETWORKS #######################################################
 number_of_task_ids_between_graphs = length(inertia_values) * length(freq_bounds) * length(failure_modes)
