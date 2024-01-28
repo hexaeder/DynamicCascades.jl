@@ -1,8 +1,7 @@
 #!/bin/bash
 
 #SBATCH --qos=priority
-#SBATCH --time=1-00:00:00
-#SBATCH --job-name=create_sacct_info
+#SBATCH --time=0-01:00:00
 #SBATCH --account=icone
 #SBATCH --output=%x-%A_%a-%N.out
 #SBATCH --error=%x-%A_%a-%N.err

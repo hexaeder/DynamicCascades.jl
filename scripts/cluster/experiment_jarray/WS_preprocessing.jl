@@ -127,10 +127,19 @@ df_hpe[!, :ensemble_element] = vcat([fill(i, length(hyperparam)) for i in 1:N_en
 N_jobs_total = nrow(df_hpe)
 N_inertia = length(inertia_values)
 job_array_length = Int64(N_jobs_total/N_inertia)
+
+qos_array = ["short", "short", "priority", "priority", "short", "short", "short", "medium", "medium"]
+times_array = ["0-00:10:00", "0-00:10:00", "1-00:00:00", "1-00:00:00", "1-00:00:00", "1-00:00:00", "1-00:00:00", "2-00:00:00", "2-00:00:00"]
+cpus_array = [1, 1, 1, 1, 1, 1, 1, 2, 2]
+
 exp_name_date_dict = Dict(
+    :name => name,
     :exp_name_date => exp_name_date,
     :job_array_length => job_array_length,
     :N_inertia => N_inertia,
+    :qos_array => qos_array,
+    :times_array => times_array,
+    :cpus_array => cpus_array,
     )
 
 CSV.write("sbatch_dict_$name.csv", exp_name_date_dict, writeheader=false)
