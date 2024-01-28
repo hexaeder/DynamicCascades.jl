@@ -34,8 +34,7 @@ K_vals = 3 # coupling K
 
 N_ensemble_size = 2 # 100
 
-# Cacading params ##############
-
+# Cascading params ##############
 init_pert = [:line] # initial perturbation set constant to an initial line failure
 α_vals = 0.7 # tuning parameter α, :rating = α*K
 monitored_power_flow = :active
@@ -55,12 +54,6 @@ failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
 exp_name_params = "K_=$K_vals,N_G=$N_ensemble_size"
 exp_name = string(name, server_string, exp_name_params)
 
-# slurm queue parameters
-thres_M = 15
-#= NOTE following two lines not used: This is for defining time limits for slurm.
-This can be easily used in WS_master_experiment.sh if needed.=#
-time_short = "1-00:00:00"
-time_long = "2-00:00:00"
 
 ################################################################################
 
@@ -128,42 +121,15 @@ N_jobs_total = nrow(df_hpe)
 N_inertia = length(inertia_values)
 job_array_length = Int64(N_jobs_total/N_inertia)
 
-qos_array = ["short", "short", "priority", "priority", "short", "short", "short", "medium", "medium"]
-times_array = ["0-00:10:00", "0-00:10:00", "1-00:00:00", "1-00:00:00", "1-00:00:00", "1-00:00:00", "1-00:00:00", "2-00:00:00", "2-00:00:00"]
-cpus_array = [1, 1, 1, 1, 1, 1, 1, 2, 2]
-
 exp_name_date_dict = Dict(
     :name => name,
     :exp_name_date => exp_name_date,
     :job_array_length => job_array_length,
     :N_inertia => N_inertia,
-    :qos_array => qos_array,
-    :times_array => times_array,
-    :cpus_array => cpus_array,
     )
 
 CSV.write("sbatch_dict_$name.csv", exp_name_date_dict, writeheader=false)
 
-# # Create and save dict for slurm queue-parameters
-# indices_short = Int64[]
-# indices_long = Int64[]
-# for task_id in df_hpe.ArrayTaskID
-#     M = df_hpe[task_id,:inertia_values]
-#     if M <= thres_M
-#         push!(indices_short, task_id)
-#     else
-#         push!(indices_long, task_id)
-#     end
-# end
-
-# sbatch_dict = Dict(
-#     :indices_short => indices_short,
-#     :time_short => time_short,
-#     :time_long => time_long,
-#     :indices_long => indices_long,
-#     )
-#
-# CSV.write(joinpath(exp_data_dir, "sbatch_dict.csv"), sbatch_dict, writeheader=false)
 
 # GENERATION OF NETWORKS #######################################################
 number_of_task_ids_between_graphs = length(inertia_values) * length(freq_bounds) * length(failure_modes)
