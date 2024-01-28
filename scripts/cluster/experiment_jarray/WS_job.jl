@@ -19,7 +19,7 @@ task_id = parse(Int64, ARGS[1])
 
 # using job_array indices for splitting experiment into multiple job arrays
 if length(ARGS) == 3
-    job_array_index = ARGS[3]
+    job_array_index = parse(Int64, ARGS[3])
     N_inertia = length(exp_params_dict[:inertia_values])
     task_id = job_array_index + (task_id -1) * N_inertia
 end

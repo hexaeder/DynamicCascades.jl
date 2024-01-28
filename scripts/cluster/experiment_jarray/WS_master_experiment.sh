@@ -2,8 +2,9 @@
 
 ############################## Parameters to be chosen #########################
 name=WS_k=4_exp01_
-qos_array=(short short priority priority short short short medium medium)
-times_array=(0-00:10:00 0-00:10:00 1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 2-00:00:00 2-00:00:00)
+# inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
+qos_array=(priority short short short short short short medium medium)
+times_array=(0-05:00:00 0-07:00:00 0-09:00:00 0-11:00:00 0-15:00:00 0-20:00:00 0-20:00:00 1-12:00:00 2-00:00:00)
 cpus_array=(1 1 1 1 1 1 1 2 2)
 
 ############################## Preprocessing ###################################
@@ -39,7 +40,7 @@ for job_array_index in $(seq 1 1 $N_inertia); do
     cpus=${cpus_array[($job_array_index-1)]}
     ############################## Core Simulation #############################
     MODEL_JOBARRAY=$(sbatch --depend=afterany:$PREPROC --qos=$qos --time=$time --job-name=$job_name --workdir=$workdir --cpus-per-task=$cpus --array=1-$job_array_length WS_job_array_HPC_for_master.sh $exp_name_date $job_array_index | cut -f 4 -d' ')
-    echo "SLURM JOB ID JOBARRAY $job_array_index: $MODEL_JOBARRAY1"
+    echo "SLURM JOB ID JOBARRAY $job_array_index: $MODEL_JOBARRAY"
     ############################## Postprocessing ##############################
     POSTPROC=$(sbatch --depend=afterany:$MODEL_JOBARRAY --job-name="sacct_infos_$job_name" --workdir=$sacct_dir WS_sacct_postprocessing.sh $MODEL_JOBARRAY $sacct_dir | cut -f 4 -d' ')
     echo "SLURM JOB ID Postprocessing $job_array_index: $POSTPROC"

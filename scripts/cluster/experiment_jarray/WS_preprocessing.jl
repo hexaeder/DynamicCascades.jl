@@ -32,7 +32,7 @@ K_vals = 3 # coupling K
 σ_vals = 1 # standard deviation σ
 μ_vals = 0 # mean μ
 
-N_ensemble_size = 2 # 100
+N_ensemble_size = 25 # 100
 
 # Cascading params ##############
 init_pert = [:line] # initial perturbation set constant to an initial line failure
