@@ -9,11 +9,11 @@ end
 
 # PARAMETERS ###################################################################
 # Experiment name
-complement_to_existing_exp = true
+complement_to_existing_exp = false
 # existing experiment
 existing_exp_name = "WS_k=4_exp01_PIK_HPC_K_=3,N_G=32_20240128_215811.815"
-name = "WS_k=4_exp01_"
-long_name = "First longer run trying new pipeline and large ensemble, additionally β=0.25." # for providing more details
+name = "WS_k=4_exp02_"
+long_name = "Uebergang frequency bounds." # for providing more details
 save_graph_and_filepath = false
 solver_name = "Rodas4P()"
 steadystate_choice = :rootfind # :relaxation
@@ -22,8 +22,9 @@ steadystate_choice = :rootfind # :relaxation
 N_nodes = 100
 # k = [4, 10]
 k_vals = [4]
-# β_vals = [0.1, 0.5, 0.9]
-β_vals = [0.25]
+# β_vals = [0.1, 0.25 0.5, 0.9]
+# β_vals = [0.25]
+β_vals = [0.5]
 
 # MetaGraph params ###############
 # inertia_values = [0.2, 0.5, 0.7, 0.9, 1.1, 1.4, 1.7, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 20.0]
@@ -49,11 +50,12 @@ The value in numerator of round(0.1/(2*π) is the angular frequency =#
 # freq_bounds = [round(0.1/(2*π), digits=2), round(0.5/(2*π), digits=2), round(10.0/(2*π), digits=2)]
 # freq_bounds = [round(0.1/(2*π), digits=2)]
 # freq_bounds = [0.005, 0.0075, 0.01, 0.015]#, 0.02, 0.025, 0.03]
-freq_bounds = [0.005, 0.03]
+# freq_bounds = [0.005, 0.03]
+freq_bounds = [0.005, 0.03, 0.8]
 # failure_modes = [trip_lines, trip_nodes]
-failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
+# failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
 # failure_modes = [[:dynamic, :dynamic], [:dynamic, :none]]
-# failure_modes = [[:dynamic, :dynamic]]
+failure_modes = [[:dynamic, :dynamic]]
 
 exp_name_params = "K_=$K_vals,N_G=$N_ensemble_size"
 exp_name = string(name, server_string, exp_name_params)

@@ -20,21 +20,21 @@ normalize = false
 # exp_name_date = "WS_testrun_params_k=10PIK_HPC_K_=1,N_G=4_20240107_003159.367"
 # exp_name_date = "WS_testrun_params_K=6_pool_N_G=2_20240106_021205.818"
 # exp_name_date = "WS_testrun_paramsK=9_pool_N_G=2_20240106_020923.414"
-# exp_name_date = "WS_testrun_params_K=3_pool_N_G=2_20240106_021759.114"
-exp_name_date = "WS_k=4_exp01_PIK_HPC_K_=3,N_G=32_20240128_215811.815"
+exp_name_date = "WS_testrun_params_K=3_pool_N_G=2_20240106_021759.114"
+# exp_name_date = "WS_k=4_exp01_PIK_HPC_K_=3,N_G=32_20240128_215811.815"
 # exp_name_date = "WS_testrun_params_k=4_narrowPIK_HPC_K_=3,N_G=10_20240119_192800.546"
 # exp_name_date = "WS_testrun_params_k=4_widePIK_HPC_K_=3,N_G=10_20240119_192910.398"
 
 # left out frequency values
 # left_out_frequencies = []
 # left_out_frequencies = [0.03]
-left_out_frequencies = []
+left_out_frequencies = [0.0, 0.02, 0.08]
 
 # left out inertia values
 # left_out_inertia_values = [20.0, 30.0]
 left_out_inertia_values = []
 
-left_out_β_values = []
+left_out_β_values = [0.1, 0.9]
 
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 
