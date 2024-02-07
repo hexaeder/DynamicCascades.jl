@@ -65,7 +65,7 @@ exp_name = string(name, server_string, exp_name_params)
 t=now()
 datetime = Dates.format(t, "_yyyymmdd_HHMMSS.s")
 # exp_name_date = string(exp_name, datetime)
-exp_name_date = complement_to_existing_exp ? existing_exp_name : string(exp_name, datetime),
+exp_name_date = complement_to_existing_exp ? existing_exp_name : string(exp_name, datetime)
 
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 ispath(exp_data_dir) || mkdir(exp_data_dir)
