@@ -9,8 +9,11 @@ end
 
 # PARAMETERS ###################################################################
 # Experiment name
+complement_to_existing_exp = true
+# existing experiment
+existing_exp_name = "WS_k=4_exp01_PIK_HPC_K_=3,N_G=32_20240128_215811.815"
 name = "WS_k=4_exp01_"
-long_name = "First longer run trying new pipeline and large ensemble." # for providing more details
+long_name = "First longer run trying new pipeline and large ensemble, additionally β=0.25." # for providing more details
 save_graph_and_filepath = false
 solver_name = "Rodas4P()"
 steadystate_choice = :rootfind # :relaxation
@@ -19,7 +22,8 @@ steadystate_choice = :rootfind # :relaxation
 N_nodes = 100
 # k = [4, 10]
 k_vals = [4]
-β_vals = [0.1, 0.5, 0.9]
+# β_vals = [0.1, 0.5, 0.9]
+β_vals = [0.25]
 
 # MetaGraph params ###############
 # inertia_values = [0.2, 0.5, 0.7, 0.9, 1.1, 1.4, 1.7, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 20.0]
@@ -60,8 +64,8 @@ exp_name = string(name, server_string, exp_name_params)
 # Create result directory
 t=now()
 datetime = Dates.format(t, "_yyyymmdd_HHMMSS.s")
-exp_name_date = string(exp_name, datetime)
-
+# exp_name_date = string(exp_name, datetime)
+exp_name_date = complement_to_existing_exp ? existing_exp_name : string(exp_name, datetime),
 
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 ispath(exp_data_dir) || mkdir(exp_data_dir)

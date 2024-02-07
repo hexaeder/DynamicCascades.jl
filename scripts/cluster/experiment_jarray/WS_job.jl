@@ -39,17 +39,18 @@ steadystate_choice = exp_params_dict[:steadystate_choice]
 # read in parameters from df_config
 network = import_system_wrapper(df_config, task_id)
 
-# Find numer of (potentially failing) generator nodes.
-if [get_prop(network,i,:type) for i in 1:nv(network)] == [:gen for i in 1:nv(network)]
-    # This is the case for WS networks where initially all nodes are swing equation nodes.
-    nr_gen_nodes = nv(network)
-else
-    # This is the case for the RTS testcases where initially NOT all nodes are swing equation nodes.
-    nd, = nd_model(network)
-    ω_state_idxs = idx_containing(nd, "ω")
-    gen_node_idxs = map(s -> parse(Int, String(s)[4:end]), nd.syms[ω_state_idxs])
-    nr_gen_nodes = length(gen_node_idxs)
-end
+# TODO remove this block
+# # Find numer of (potentially failing) generator nodes.
+# if [get_prop(network,i,:type) for i in 1:nv(network)] == [:gen for i in 1:nv(network)]
+#     # This is the case for WS networks where initially all nodes are swing equation nodes.
+#     nr_gen_nodes = nv(network)
+# else
+#     # This is the case for the RTS testcases where initially NOT all nodes are swing equation nodes.
+#     nd, = nd_model(network)
+#     ω_state_idxs = idx_containing(nd, "ω")
+#     gen_node_idxs = map(s -> parse(Int, String(s)[4:end]), nd.syms[ω_state_idxs])
+#     nr_gen_nodes = length(gen_node_idxs)
+# end
 
 number_failures_lines = Float64[]
 number_failures_nodes = Float64[]
@@ -79,13 +80,14 @@ df_failures = DataFrame()
 df_failures[!, :number_failures_lines] = number_failures_lines
 df_failures[!, :number_failures_nodes] = number_failures_nodes
 
-# calculate normalized average of failures
-# line failures
-df_failures[!, :norm_avg_line_failures] .= NaN
-df_failures[1, :norm_avg_line_failures] = mean(number_failures_lines)/(ne(network)-1)
-# node failures
-df_failures[!, :norm_avg_node_failures] .= NaN
-df_failures[1, :norm_avg_node_failures] = mean(number_failures_nodes)/nr_gen_nodes
+# TODO remove this block
+# # calculate normalized average of failures
+# # line failures
+# df_failures[!, :norm_avg_line_failures] .= NaN
+# df_failures[1, :norm_avg_line_failures] = mean(number_failures_lines)/(ne(network)-1)
+# # node failures
+# df_failures[!, :norm_avg_node_failures] .= NaN
+# df_failures[1, :norm_avg_node_failures] = mean(number_failures_nodes)/nr_gen_nodes
 
 # Write results to file
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)

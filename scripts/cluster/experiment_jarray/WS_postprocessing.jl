@@ -11,6 +11,12 @@ using GraphMakie
 using Colors
 using CairoMakie
 
+# plotting parameters
+create_posprocessing_data = true # set to `false` for fast plotting
+opacity = 0.2
+sum_lines_nodes = true
+normalize = false
+
 # exp_name_date = "WS_testrun_params_k=10PIK_HPC_K_=1,N_G=4_20240107_003159.367"
 # exp_name_date = "WS_testrun_params_K=6_pool_N_G=2_20240106_021205.818"
 # exp_name_date = "WS_testrun_paramsK=9_pool_N_G=2_20240106_020923.414"
@@ -20,24 +26,13 @@ exp_name_date = "WS_k=4_exp01_PIK_HPC_K_=3,N_G=32_20240128_215811.815"
 # exp_name_date = "WS_testrun_params_k=4_widePIK_HPC_K_=3,N_G=10_20240119_192910.398"
 
 # left out frequency values
-left_out_frequencies = [0.03]
-# left_out_frequencies = [0.001, 0.01, 0.03, 0.05, 0.1, 0.3]
-# left_out_frequencies = [0.02, 0.025]
-
-###########
-# 0.00100
-# 0.0100
-# 0.0300
-# 0.0500
-# 0.100
-# 0.300
-# 0.500
-###########
+# left_out_frequencies = []
+# left_out_frequencies = [0.03]
+left_out_frequencies = []
 
 # left out inertia values
-# left_out_inertia_values = [0.01]
-left_out_inertia_values = [20.0, 30.0]
-# left_out_inertia_values = [ ]
+# left_out_inertia_values = [20.0, 30.0]
+left_out_inertia_values = []
 
 left_out_β_values = []
 
@@ -46,70 +41,122 @@ exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 ################################################################################
 ###################### Calculate mean and standard error #######################
 ################################################################################
+if create_posprocessing_data == true
+    # load config file, and parameters
+    df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
+    exp_params_dict = Serialization.deserialize(joinpath(exp_data_dir, "exp.params"))
 
-# load config file, and parameters
-df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
-exp_params_dict = Serialization.deserialize(joinpath(exp_data_dir, "exp.params"))
+    N_ensemble_size = exp_params_dict[:N_ensemble_size]
+    num_parameter_combinations = Int(length(df_config[!,:ArrayTaskID])/N_ensemble_size)
 
-N_ensemble_size = exp_params_dict[:N_ensemble_size]
-num_parameter_combinations = Int(length(df_config[!,:ArrayTaskID])/N_ensemble_size)
+    df_avg_error = deepcopy(df_config)
 
-df_avg_error = deepcopy(df_config)
+    # Delete columns
+    select!(df_avg_error, Not([:graph_seed, :distr_seed, :filepath, :ensemble_element]))
 
-# Delete columns
-select!(df_avg_error, Not([:graph_seed, :distr_seed, :filepath, :ensemble_element]))
+    # Keep only the first N_rows rows
+    df_avg_error = df_avg_error[1:num_parameter_combinations, :]
 
-# Keep only the first N_rows rows
-df_avg_error = df_avg_error[1:num_parameter_combinations, :]
+    # add columns to df
+    # normalized
+    df_avg_error[!, :ensemble_avg_norm_avg_line_failures] .= NaN; df_avg_error[!, :ensemble_avg_norm_avg_node_failures] .= NaN;
+    df_avg_error[!, :ensemble_SE_norm_avg_line_failures] .= NaN; df_avg_error[!, :ensemble_SE_norm_avg_node_failures] .= NaN;
+    df_avg_error[!, :ensemble_SE_norm_avg_node_plus_line_failures] .= NaN
 
-# add columns to df
-df_avg_error[!, :ensemble_avg_line_failures] .= NaN; df_avg_error[!, :ensemble_avg_node_failures] .= NaN;
-df_avg_error[!, :ensemble_SE_line_failures] .= NaN; df_avg_error[!, :ensemble_SE_node_failures] .= NaN;
+    # not normalized
+    df_avg_error[!, :ensemble_avg_line_failures] .= NaN; df_avg_error[!, :ensemble_avg_node_failures] .= NaN;
+    df_avg_error[!, :ensemble_SE_line_failures] .= NaN; df_avg_error[!, :ensemble_SE_node_failures] .= NaN;
+    df_avg_error[!, :ensemble_SE_avg_node_plus_line_failures] .= NaN
 
-# DataFrame with failures for ALL ArrayTaskIDs
-df_all_failures = deepcopy(df_config)
-df_all_failures[!, :norm_avg_line_failures] .= NaN ; df_all_failures[!, :norm_avg_node_failures] .= NaN;
+    # DataFrame with failures for ALL ArrayTaskIDs
+    df_all_failures = deepcopy(df_config)
+    df_all_failures[!, :avg_line_failures] .= NaN ; df_all_failures[!, :avg_node_failures] .= NaN;
+    df_all_failures[!, :norm_avg_line_failures] .= NaN ; df_all_failures[!, :norm_avg_node_failures] .= NaN;
 
-for task_id in df_avg_error.ArrayTaskID
-    # loop over all elements of an ensemble
-    norm_avg_line_failures_ensemble = Float64[]
-    norm_avg_node_failures_ensemble = Float64[]
-    for i in 0:num_parameter_combinations:(length(df_config[!,:ArrayTaskID]) - 1)
-        # try...catch is for execution of postprocessing while not all jobs have finished
-        try
-            N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, (task_id + i))
-
-            exp_data = joinpath(RESULTS_DIR, exp_name_date)
-            graph_combinations_path = joinpath(exp_data, "k=$k,β=$β")
-
-            failure_mode_string = joinpath(graph_combinations_path, "trip_lines=$trip_lines,trip_nodes=$trip_nodes")
-            failure_mode_frequ_bound = joinpath(failure_mode_string, "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound")
-
-            filename = string("/", string_network_args(df_config, task_id +i), ".csv")
-            df_result = DataFrame(CSV.File(string(failure_mode_frequ_bound, filename)))
-
-            norm_avg_line_failures = df_result[1, :norm_avg_line_failures]
-            norm_avg_node_failures = df_result[1, :norm_avg_node_failures]
-
-            push!(norm_avg_line_failures_ensemble, norm_avg_line_failures)
-            push!(norm_avg_node_failures_ensemble, norm_avg_node_failures)
-
-            df_all_failures[(task_id + i), :norm_avg_line_failures] = norm_avg_line_failures
-            df_all_failures[(task_id + i), :norm_avg_node_failures] = norm_avg_node_failures
-        catch
-            continue
-        end
+    #= NOTE / ENHANCEMENT: [2024-02-04 So]
+    Here, `network` is only generated once. This is possible as all WS networks in one
+    experiment have the same number of lines and nodes. If other networks are used, where
+    in an ensemble of networks the number of lines and nodes varies (e.g. `:erdosrenyi`),
+    `network` has to be generated for each element of the ensemble. The optimal soulution
+    would the be to save `ne(network)` and `nv(network)` in df_config while preprocessing
+    (Straighforward to implement but not necessarily needed).
+    =#
+    network = import_system_wrapper(df_config, 1)
+    # Find numer of (potentially failing) generator nodes.
+    if [get_prop(network,i,:type) for i in 1:nv(network)] == [:gen for i in 1:nv(network)]
+        # This is the case for WS networks where initially all nodes are swing equation nodes.
+        nr_gen_nodes = nv(network)
+    else
+        # This is the case for the RTS testcases where initially NOT all nodes are swing equation nodes.
+        nd, = nd_model(network)
+        ω_state_idxs = idx_containing(nd, "ω")
+        gen_node_idxs = map(s -> parse(Int, String(s)[4:end]), nd.syms[ω_state_idxs])
+        nr_gen_nodes = length(gen_node_idxs)
     end
-    # Calculate ensemble_avg and ensemble_standard_error and write to df
-    df_avg_error[task_id,:ensemble_avg_line_failures] = mean(norm_avg_line_failures_ensemble)
-    df_avg_error[task_id,:ensemble_avg_node_failures] = mean(norm_avg_node_failures_ensemble)
-    df_avg_error[task_id,:ensemble_SE_line_failures] = 1 / sqrt(N_ensemble_size) * std(norm_avg_line_failures_ensemble; corrected=true)
-    df_avg_error[task_id,:ensemble_SE_node_failures] = 1 / sqrt(N_ensemble_size) * std(norm_avg_node_failures_ensemble; corrected=true)
+
+
+    for task_id in df_avg_error.ArrayTaskID
+        # loop over all elements of an ensemble
+        avg_line_failures_ensemble = Float64[]; avg_node_failures_ensemble = Float64[]
+        norm_avg_line_failures_ensemble = Float64[]; norm_avg_node_failures_ensemble = Float64[]
+        for i in 0:num_parameter_combinations:(length(df_config[!,:ArrayTaskID]) - 1)
+            # try...catch is for execution of postprocessing while not all jobs have finished
+            try
+                N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, (task_id + i))
+
+                exp_data = joinpath(RESULTS_DIR, exp_name_date)
+                graph_combinations_path = joinpath(exp_data, "k=$k,β=$β")
+
+                failure_mode_string = joinpath(graph_combinations_path, "trip_lines=$trip_lines,trip_nodes=$trip_nodes")
+                failure_mode_frequ_bound = joinpath(failure_mode_string, "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound")
+
+                filename = string("/", string_network_args(df_config, task_id +i), ".csv")
+                df_result = DataFrame(CSV.File(string(failure_mode_frequ_bound, filename)))
+                number_failures_lines = df_result[!, :number_failures_lines]
+                number_failures_nodes = df_result[!, :number_failures_nodes]
+
+                # average of a single run (one set of parameters, averaged over the number of lines of the network)
+                # normalized
+                norm_avg_line_failures = mean(number_failures_lines)/(ne(network)-1)
+                norm_avg_node_failures = mean(number_failures_nodes)/nr_gen_nodes
+                push!(norm_avg_line_failures_ensemble, norm_avg_line_failures)
+                push!(norm_avg_node_failures_ensemble, norm_avg_node_failures)
+                # not normalized
+                avg_line_failures = mean(number_failures_lines)
+                avg_node_failures = mean(number_failures_nodes)
+                push!(avg_line_failures_ensemble, avg_line_failures)
+                push!(avg_node_failures_ensemble, avg_node_failures)
+
+                # normalized
+                df_all_failures[(task_id + i), :norm_avg_line_failures] = norm_avg_line_failures
+                df_all_failures[(task_id + i), :norm_avg_node_failures] = norm_avg_node_failures
+                # not normalized
+                df_all_failures[(task_id + i), :avg_line_failures] = avg_line_failures
+                df_all_failures[(task_id + i), :avg_node_failures] = avg_node_failures
+
+            catch
+                continue
+            end
+        end
+        # Calculate ensemble_avg and ensemble_standard_error and write to df
+        # normalized
+        df_avg_error[task_id,:ensemble_avg_norm_avg_line_failures] = mean(norm_avg_line_failures_ensemble)
+        df_avg_error[task_id,:ensemble_avg_norm_avg_node_failures] = mean(norm_avg_node_failures_ensemble)
+        df_avg_error[task_id,:ensemble_SE_norm_avg_line_failures] = 1 / sqrt(N_ensemble_size) * std(norm_avg_line_failures_ensemble; corrected=true)
+        df_avg_error[task_id,:ensemble_SE_norm_avg_node_failures] = 1 / sqrt(N_ensemble_size) * std(norm_avg_node_failures_ensemble; corrected=true)
+        df_avg_error[task_id,:ensemble_SE_norm_avg_node_plus_line_failures] = 1 / sqrt(N_ensemble_size) * std((norm_avg_line_failures_ensemble + norm_avg_node_failures_ensemble); corrected=true)
+
+        # not normalized
+        df_avg_error[task_id,:ensemble_avg_line_failures] = mean(avg_line_failures_ensemble)
+        df_avg_error[task_id,:ensemble_avg_node_failures] = mean(avg_node_failures_ensemble)
+        df_avg_error[task_id,:ensemble_SE_line_failures] = 1 / sqrt(N_ensemble_size) * std(avg_line_failures_ensemble; corrected=true)
+        df_avg_error[task_id,:ensemble_SE_node_failures] = 1 / sqrt(N_ensemble_size) * std(avg_node_failures_ensemble; corrected=true)
+        df_avg_error[task_id,:ensemble_SE_avg_node_plus_line_failures] = 1 / sqrt(N_ensemble_size) * std((avg_line_failures_ensemble + avg_node_failures_ensemble); corrected=true)
+    end
+
+    CSV.write(joinpath(RESULTS_DIR, exp_name_date, "avg_error.csv"), df_avg_error)
+    CSV.write(joinpath(RESULTS_DIR, exp_name_date, "all_failures.csv"), df_all_failures)
 end
-
-
-CSV.write(joinpath(RESULTS_DIR, exp_name_date, "avg_error.csv"), df_avg_error)
-CSV.write(joinpath(RESULTS_DIR, exp_name_date, "all_failures.csv"), df_all_failures)
 
 
 ################################################################################
@@ -142,11 +189,12 @@ color_map = ColorSchemes.cividis
 
 # Generate distinct colors based on the filtered_freq_bounds
 if length(filtered_freq_bounds) == 1
-    line_colors = [RGBA{Float64}(1.0,0.9169,0.2731,1.0)]
+    line_colors = [RGBA{Float64}(0.0,0.1262,0.3015,1.0)]
 else
     line_colors = distinct_colors(color_map, filtered_freq_bounds)
 end
 # markers
+
 markers_labels = [
     (:circle, ":circle"),
     (:rect, ":rect"),
@@ -164,7 +212,7 @@ function create_figs(failure_modes)
                 # titlesize = 30,
                 xlabel = "scaling factor of inertia",
                 # xlabelsize = 30,
-                ylabel = "normalized average of line failures",
+                ylabel = normalize ? "normalized average of line failures" : "average of line failures",
                 # ylabelsize = 30
             )
         elseif i == [:none, :dynamic]
@@ -172,14 +220,14 @@ function create_figs(failure_modes)
             ax_nodes_only = Axis(fig_nodes_only[1, 1],
                 title = "Node failures",
                 xlabel = "scaling factor of inertia",
-                ylabel = "normalized average of node failures",
+                ylabel = normalize ? "normalized average of node failures" : "average of node failures",
             )
         elseif i == [:dynamic, :dynamic]
             fig_lines_and_nodes = Figure(fontsize = 28)
             ax_lines_and_nodes = Axis(fig_lines_and_nodes[1, 1],
-                title = "Line and node failures",
+                title = sum_lines_nodes ? "Summed line and node failures" : "Line and node failures",
                 xlabel = "scaling factor of inertia",
-                ylabel = "normalized average of failures",
+                ylabel = normalize ? "normalized average of failures" : "average of failures",
             )
         end
     end
@@ -200,13 +248,13 @@ failures (the latter for a single network) =#
 y_lines = Float64[]; y_nodes = Float64[]
 #= Different inertia values for: Ensemble standard error over normalized average
 of failures (the latter for a single network) =#
-err_lines = Float64[]; err_nodes = Float64[]
+err_lines = Float64[]; err_nodes = Float64[]; err_nodes_plus_lines = Float64[]
 for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an ArrayTaskID in the strict sense but an average over task IDs
     #= Empty arrays (after all inertia values of one configuration pushed to array)
     The entries in df_avg_error are ordered accordningly.=#
     if ((task_id-1) % length(inertia_values)) == 0
         y_lines = Float64[]; y_nodes = Float64[]
-        err_lines = Float64[]; err_nodes = Float64[]
+        err_lines = Float64[]; err_nodes = Float64[]; err_nodes_plus_lines = Float64[]
     end
 
     # Leave certain jobs out:
@@ -226,10 +274,19 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
 
 
     # Read out ensemble_avg and ensemble_standard_error
-    push!(y_lines, df_avg_error[task_id, :ensemble_avg_line_failures])
-    push!(y_nodes, df_avg_error[task_id, :ensemble_avg_node_failures])
-    push!(err_lines, df_avg_error[task_id, :ensemble_SE_line_failures])
-    push!(err_nodes, df_avg_error[task_id, :ensemble_SE_node_failures])
+    if normalize == true
+        push!(y_lines, df_avg_error[task_id, :ensemble_avg_norm_avg_line_failures])
+        push!(y_nodes, df_avg_error[task_id, :ensemble_avg_norm_avg_node_failures])
+        push!(err_lines, df_avg_error[task_id, :ensemble_SE_norm_avg_line_failures])
+        push!(err_nodes, df_avg_error[task_id, :ensemble_SE_norm_avg_node_failures])
+        push!(err_nodes_plus_lines, df_avg_error[task_id,:ensemble_SE_norm_avg_node_plus_line_failures])
+    else
+        push!(y_lines, df_avg_error[task_id, :ensemble_avg_line_failures])
+        push!(y_nodes, df_avg_error[task_id, :ensemble_avg_node_failures])
+        push!(err_lines, df_avg_error[task_id, :ensemble_SE_line_failures])
+        push!(err_nodes, df_avg_error[task_id, :ensemble_SE_node_failures])
+        push!(err_nodes_plus_lines, df_avg_error[task_id,:ensemble_SE_avg_node_plus_line_failures])
+    end
 
     # Only plot if all inertia values are pushed to `y_lines`, `y_nodes`, `err_lines`, `err_nodes`
     if M == maximum(filtered_inertia_values)
@@ -243,22 +300,30 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
         if (trip_lines == :dynamic &&  trip_nodes == :none)
             if freq_bound == filtered_freq_bounds[1]
                 scatterlines!(ax_lines_only, filtered_inertia_values, y_lines, marker = marker, label = "k=$k,β=$β")
-                errorbars!(ax_lines_only, filtered_inertia_values, y_lines, err_lines, color = :black,  whiskerwidth = 10)
+                # errorbars!(ax_lines_only, filtered_inertia_values, y_lines, err_lines, color = :black,  whiskerwidth = 10)
+                band!(ax_lines_only, filtered_inertia_values, y_lines + err_lines, y_lines - err_lines, transparency=true)
             end
         elseif (trip_lines == :none &&  trip_nodes == :dynamic)
             scatterlines!(ax_nodes_only, filtered_inertia_values, y_nodes, marker = marker, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
-            errorbars!(ax_nodes_only, filtered_inertia_values, y_nodes, err_nodes, color = :black,  whiskerwidth = 10)
+            band!(ax_nodes_only, filtered_inertia_values, y_nodes + err_nodes, y_nodes - err_nodes, transparency=true, color = (line_colors[color_index], opacity))
         elseif (trip_lines == :dynamic &&  trip_nodes == :dynamic)
-            scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines, linestyle=:dash, marker = marker, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
-            errorbars!(ax_lines_and_nodes, filtered_inertia_values, y_lines, err_lines, color = :black,  whiskerwidth = 10)
-            scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_nodes, marker = marker, color = line_colors[color_index])
-            errorbars!(ax_lines_and_nodes, filtered_inertia_values, y_nodes, err_nodes, color = :black,  whiskerwidth = 10)
+            if sum_lines_nodes == true
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes, marker = marker, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
+                band!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes + err_nodes_plus_lines, y_lines + y_nodes - err_nodes_plus_lines, transparency=true, color = (line_colors[color_index], opacity))
+            else
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines, linestyle=:dash, marker = marker, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
+                band!(ax_lines_and_nodes, filtered_inertia_values, y_lines + err_lines, y_lines - err_lines, transparency=true, color = (line_colors[color_index], opacity))
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_nodes, marker = marker, color = line_colors[color_index])
+                band!(ax_lines_and_nodes, filtered_inertia_values, y_nodes + err_nodes, y_nodes - err_nodes, transparency=true, color = (line_colors[color_index], opacity))
+            end
         end
     end
 end
 N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, 1)
 #  See https://docs.makie.org/stable/reference/blocks/legend/
-lines!(ax_lines_and_nodes, [NaN], [NaN]; label="node failures: ___ (solid) \nline failures:   ----- (dashed)", color=:white, linewidth=3)
+if sum_lines_nodes == false
+    lines!(ax_lines_and_nodes, [NaN], [NaN]; label="node failures: ___ (solid) \nline failures:   ----- (dashed)", color=:white, linewidth=3)
+end
 axislegend(ax_lines_only, position = :rb, labelsize=10)
 axislegend(ax_nodes_only, position = :rt, labelsize=10)
 axislegend(ax_lines_and_nodes, position = :rt, labelsize=10)
@@ -277,7 +342,7 @@ K_str = string(exp_params_dict[:K])
 
 CairoMakie.save(joinpath(exp_data_dir, "lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_only)
 CairoMakie.save(joinpath(exp_data_dir, "nodes_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_nodes_only)
-CairoMakie.save(joinpath(exp_data_dir, "lines+nodes_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
+CairoMakie.save(joinpath(exp_data_dir, "lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
 
 # # NOTE Further plotting options:
 # # Placing the legend besides the coordinate system.
