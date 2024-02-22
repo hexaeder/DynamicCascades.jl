@@ -24,6 +24,16 @@ if length(ARGS) == 3
     task_id = job_array_index + (task_id -1) * N_inertia
 end
 
+if length(ARGS) == 4
+    job_array_index = parse(Int64, ARGS[3])
+    freq_bound_index = parse(Int64, ARGS[4])
+    N_inertia = length(exp_params_dict[:inertia_values])
+    N_freq_bounds = length(exp_params_dict[:freq_bounds])
+    task_id = job_array_index + (task_id -1) * N_inertia * N_freq_bounds + N_inertia * (freq_bound_index - 1)
+end
+
+# in in WS_master_experiment.sh indices der neuen f_b Werte übergeben
+# evtl. auch übergeben, ob complementing run
 
 N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
 monitored_power_flow = exp_params_dict[:monitored_power_flow]

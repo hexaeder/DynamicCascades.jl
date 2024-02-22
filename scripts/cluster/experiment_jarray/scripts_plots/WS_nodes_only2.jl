@@ -1,4 +1,4 @@
-include("helpers_jarray.jl")
+include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
 
 if ON_YOGA
     using Revise
@@ -11,13 +11,14 @@ using GraphMakie
 using Colors
 using CairoMakie
 
+
 # plotting parameters
 create_posprocessing_data = false # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
 custom_colors = true
 predefined_colors = [Makie.wong_colors()[1], Makie.wong_colors()[2], Makie.wong_colors()[3], Makie.wong_colors()[4]]  # https://docs.makie.org/stable/explanations/colors/
-colormap_frequencies = false
+colormap_frequencies = true
 opacity = 0.3
 fontsize = labelsize = 24
 # markers
@@ -29,12 +30,11 @@ markers_labels = [
     (:utriangle, ":utriangle"),
 ]
 
-
 # exp_name_date = "WS_testrun_params_k=10PIK_HPC_K_=1,N_G=4_20240107_003159.367"
 # exp_name_date = "WS_testrun_params_K=6_pool_N_G=2_20240106_021205.818"
 # exp_name_date = "WS_testrun_paramsK=9_pool_N_G=2_20240106_020923.414"
 # exp_name_date = "WS_testrun_params_K=3_pool_N_G=2_20240106_021759.114"
-exp_name_date = "WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=5_20240117_013152.348"
+exp_name_date = "WS_k=4_exp01_PIK_HPC_K_=3,N_G=32_20240128_215811.815"
 # exp_name_date = "WS_testrun_params_k=4_narrowPIK_HPC_K_=3,N_G=10_20240119_192800.546"
 # exp_name_date = "WS_testrun_params_k=4_widePIK_HPC_K_=3,N_G=10_20240119_192910.398"
 # exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
@@ -42,17 +42,15 @@ exp_name_date = "WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=5_20240117_013152.348"
 # left out frequency values
 # left_out_frequencies = [0.03]
 # left_out_frequencies = [0.0, 0.02, 0.08]
-# left_out_frequencies = [0.005, 0.0075]
-left_out_frequencies = [0.001, 0.01, 0.03, 0.05]
+left_out_frequencies = []
 
 # left out inertia values
 # left_out_inertia_values = [20.0, 30.0]
 # left_out_inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0]
-left_out_inertia_values = [7.5, 10.0, 15, 20.0, 30.0]
-# left_out_inertia_values = []
+left_out_inertia_values = []
 
-left_out_β_values = [0.1, 0.9]
-# left_out_β_values = []
+# left_out_β_values = [0.1, 0.9]
+left_out_β_values = [0.25, 0.5, 0.9]
 
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 
@@ -228,7 +226,8 @@ end
 
 # Colormaps
 # color_map = ColorSchemes.plasma
-color_map = ColorSchemes.cividis
+# color_map = ColorSchemes.cividis
+color_map =  [Makie.wong_colors()[1], Makie.wong_colors()[5]]
 # color_map = :blues
 
 # Generate distinct colors based on the filtered_freq_bounds
@@ -385,13 +384,14 @@ filtered_freq_bounds_str = string(filtered_freq_bounds)
 
 K_str = string(exp_params_dict[:K])
 
-# CairoMakie.save(joinpath(exp_data_dir, "lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_only)
-# CairoMakie.save(joinpath(exp_data_dir, "nodes_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_nodes_only)
-# CairoMakie.save(joinpath(exp_data_dir, "lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
+# CairoMakie.save(joinpath(MA_DIR, "WS", "lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,M_left_out=$left_out_inertia_values.png"),fig_lines_only)
+# CairoMakie.save(joinpath(MA_DIR, "WS", "lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,M_left_out=$left_out_inertia_values.pdf"),fig_lines_only)
 
-CairoMakie.save(joinpath(exp_data_dir, "lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_only)
-CairoMakie.save(joinpath(exp_data_dir, "nodes_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_nodes_only)
-CairoMakie.save(joinpath(exp_data_dir, "lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
+CairoMakie.save(joinpath(MA_DIR, "WS", "nodes_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_nodes_only)
+CairoMakie.save(joinpath(MA_DIR, "WS", "nodes_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_nodes_only)
+
+# CairoMakie.save(joinpath(MA_DIR, "WS", "lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
+# CairoMakie.save(joinpath(MA_DIR, "WS", "lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
 
 # # NOTE Further plotting options:
 # # Placing the legend besides the coordinate system.

@@ -1,0 +1,4 @@
+name,WS_k=4_exp02_
+job_array_length,64
+exp_name_date,"WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
+N_inertia,9

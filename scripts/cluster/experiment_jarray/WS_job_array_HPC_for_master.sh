@@ -12,13 +12,14 @@
 
 exp_name_date=$1 # getting variable from master script
 job_array_index=$2
+freq_bound_index=$3
 
 cd /home/brandner/DynamicCascades.jl/scripts/cluster/experiment_jarray
 
 module purge
 module load julia/1.8.2
 
-julia WS_job.jl $SLURM_ARRAY_TASK_ID $exp_name_date $job_array_index
+julia WS_job.jl $SLURM_ARRAY_TASK_ID $exp_name_date $job_array_index $freq_bound_index
 
 # # Specify the path to the config file
 # config=231219_WS_test_config.csv
