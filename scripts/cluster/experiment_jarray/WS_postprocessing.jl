@@ -12,7 +12,7 @@ using Colors
 using CairoMakie
 
 # plotting parameters
-create_posprocessing_data = false # set to `false` for fast plotting
+create_posprocessing_data = true # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
 custom_colors = true
@@ -34,24 +34,25 @@ markers_labels = [
 # exp_name_date = "WS_testrun_params_K=6_pool_N_G=2_20240106_021205.818"
 # exp_name_date = "WS_testrun_paramsK=9_pool_N_G=2_20240106_020923.414"
 # exp_name_date = "WS_testrun_params_K=3_pool_N_G=2_20240106_021759.114"
-exp_name_date = "WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=5_20240117_013152.348"
+# exp_name_date = "WS_testrun_params_k=4_PIK_HPC_K_=3,N_G=5_20240117_013152.348"
 # exp_name_date = "WS_testrun_params_k=4_narrowPIK_HPC_K_=3,N_G=10_20240119_192800.546"
 # exp_name_date = "WS_testrun_params_k=4_widePIK_HPC_K_=3,N_G=10_20240119_192910.398"
 # exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
+exp_name_date = "WS_testrun_params_k=10PIK_HPC_K_=1,N_G=4_20240107_003159.367"
 
 # left out frequency values
 # left_out_frequencies = [0.03]
 # left_out_frequencies = [0.0, 0.02, 0.08]
 # left_out_frequencies = [0.005, 0.0075]
-left_out_frequencies = [0.001, 0.01, 0.03, 0.05]
+left_out_frequencies = []
 
 # left out inertia values
 # left_out_inertia_values = [20.0, 30.0]
 # left_out_inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0]
-left_out_inertia_values = [7.5, 10.0, 15, 20.0, 30.0]
+left_out_inertia_values = []
 # left_out_inertia_values = []
 
-left_out_β_values = [0.1, 0.9]
+left_out_β_values = []
 # left_out_β_values = []
 
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
