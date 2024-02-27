@@ -143,7 +143,7 @@ tmin = 0.0
 fps = 20 # 20,100
 trange = range(tmin, tmax, length=Int(T * fps))
 
-record(fig, joinpath(PLOT_DIR,"WS_2.mp4"), trange; framerate=30) do time
+record(fig, joinpath(PLOT_DIR,"WS_2_test.mp4"), trange; framerate=30) do time
     tobs[] = time
 end
 

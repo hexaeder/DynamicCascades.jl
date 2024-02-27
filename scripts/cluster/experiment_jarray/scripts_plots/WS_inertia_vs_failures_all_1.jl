@@ -1,4 +1,4 @@
-include("helpers_jarray.jl")
+include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
 
 if ON_YOGA
     using Revise
@@ -22,7 +22,7 @@ heatmap_logscale = true
 opacity = 0.3
 fontsize = labelsize = 24
 # markers
-markersize = 15
+markersize = 5
 markers_labels = [
     (:circle, ":circle"),
     (:rect, ":rect"),
@@ -31,6 +31,7 @@ markers_labels = [
 ]
 # Colormaps
 # color_map = ColorSchemes.plasma
+# color_map = ColorSchemes.cividis
 color_map = :cividis
 # color_map = :blues
 
@@ -47,25 +48,7 @@ color_map = :cividis
 exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
 
 # left out frequency values
-# left_out_frequencies = [0.03]
-# left_out_frequencies = [0.0, 0.02, 0.08]
-# left_out_frequencies = [0.005, 0.0075]
-# left_out_frequencies = [0.005, 0.01, 0.015, 0.02, 0.025, 0.8]
-
-# left_out_frequencies = [0.005, 0.01, 0.015, 0.025, 0.035, 0.04, 0.045,
-#     0.05, 0.055, 0.06, 0.065, 0.07, 0.075, 0.08, 0.085, 0.09, 0.095, 0.1,
-#     0.11, 0.12, 0.13, 0.14, 0.16, 0.17, 0.18, 0.19, 0.2,
-#     0.21, 0.22, 0.23, 0.24, 0.25, 0.26, 0.27, 0.28, 0.29, 0.3, 0.8]
-
-# heat map
-left_out_frequencies = [0.005, 0.01,
-    0.16, 0.17, 0.18, 0.19, 0.2, 0.21, 0.22, 0.23, 0.24, 0.25, 0.26, 0.27, 0.28, 0.29, 0.3, 0.8]
-
-# Uebergang 3 lines
-# left_out_frequencies = [0.005, 0.01, 0.015, 0.025, 0.035, 0.04, 0.045,
-#     0.05, 0.065, 0.07, 0.075, 0.08, 0.085, 0.09, 0.095, 0.1,
-#     0.12, 0.13, 0.14, 0.16, 0.17, 0.18, 0.19, 0.2,
-#     0.21, 0.22, 0.23, 0.24, 0.25, 0.26, 0.27, 0.28, 0.29, 0.3, 0.8]
+left_out_frequencies = [0.005,0.01,0.015,0.02]
 
 
 # left out inertia values
@@ -397,7 +380,7 @@ if sum_lines_nodes == false
 end
 # axislegend(ax_lines_only, position = :lt, labelsize=labelsize)
 # axislegend(ax_nodes_only, position = :rt, labelsize=labelsize)
-axislegend(ax_lines_and_nodes, position = :ct, labelsize=labelsize)
+# axislegend(ax_lines_and_nodes, position = :ct, labelsize=labelsize-10)
 
 # text!(ax_lines_and_nodes, 5.0, 0.02, text = "node failures: solid lines ___ \n line failures: dashed lines -----", align = (:center, :center), textsize=25)
 
@@ -418,11 +401,11 @@ K_str = string(exp_params_dict[:K])
 # CairoMakie.save(joinpath(exp_data_dir, "lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_only)
 # CairoMakie.save(joinpath(exp_data_dir, "nodes_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_nodes_only)
 # CairoMakie.save(joinpath(exp_data_dir, "lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=$left_out_frequencies,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
-CairoMakie.save(joinpath(exp_data_dir, "lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
+# CairoMakie.save(joinpath(exp_data_dir, "lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
 
 if length(filtered_freq_bounds) > 1
     # create heatmap
-    fig_hm = Figure(fontsize = fontsize)
+    fig_hm = Figure(fontsize = (fontsize-3))
     ax_hm = Axis(fig_hm[1, 1],
         title = "",
         xlabel = "scaling factor of inertia",
@@ -442,14 +425,15 @@ if length(filtered_freq_bounds) > 1
     Colorbar(fig_hm[:, end+1], hm, label = normalize ? "normalized average of failures" : (heatmap_logscale ? "log(average of failures + 1)" : "average of failures"))
 
     new_filtered_inertia_values = vcat(filtered_inertia_values[1], filtered_inertia_values[5], filtered_inertia_values[7:end])
-    ax_hm.xticks = new_filtered_inertia_values
+    # ax_hm.xticks = new_filtered_inertia_values
+    ax_hm.xticks = [0.2, 1.0, 3.0, 5.0, 7.5, 10.0]
     ax_hm.yticks = filtered_freq_bounds
-    fig_hm
-    # CairoMakie.save(joinpath(exp_data_dir, "heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=$left_out_frequencies,M_left_out=$left_out_inertia_values.pdf"),fig_hm)
-    CairoMakie.save(joinpath(exp_data_dir, "heatmap_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_hm)
+
+    # CairoMakie.save(joinpath(MA_DIR, "WS", "heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=$left_out_frequencies,M_left_out=$left_out_inertia_values.pdf"),fig_hm)
+    # CairoMakie.save(joinpath(exp_data_dir, "heatmap_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_hm)
 
     # create minimal failures (optimal inertia) vs. frequency bound f_b
-    fig_opt_inertia_vs_fb = Figure(fontsize = fontsize)
+    fig_opt_inertia_vs_fb = Figure(fontsize = (fontsize-3))
     ax_opt_inertia_vs_fb = Axis(fig_opt_inertia_vs_fb[1, 1],
         title = "",
         xlabel = "inertia value assosciated with minimum of failures",
@@ -457,26 +441,17 @@ if length(filtered_freq_bounds) > 1
     )
 
     scatter_colors = distinct_colors(color_map, min_failures)
+    ax_opt_inertia_vs_fb.xticks = [0.2, 1.0, 3.0, 5.0, 7.5, 10.0]
     ax_opt_inertia_vs_fb.yticks = filtered_freq_bounds
 
     for i in 1:length(filtered_freq_bounds)
         scatter!(ax_opt_inertia_vs_fb, opt_inertia[i], filtered_freq_bounds[i], color = scatter_colors[i], markersize = markersize)
     end
 
-    Colorbar(fig_opt_inertia_vs_fb[:, end+1], limits = (minimum(min_failures), maximum(min_failures)), colormap=color_map, label = normalize ? "normalized average of failures" : "average of failures")
+    Colorbar(fig_opt_inertia_vs_fb[:, end+1], limits = (minimum(min_failures), maximum(min_failures)), colormap=Reverse(color_map), label = normalize ? "normalized average of failures" : "average of failures")
     fig_opt_inertia_vs_fb
-    # CairoMakie.save(joinpath(exp_data_dir, "optimal_inertia_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=$left_out_frequencies,M_left_out=$left_out_inertia_values.pdf"),fig_opt_inertia_vs_fb)
-    CairoMakie.save(joinpath(exp_data_dir, "optimal_inertia_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_opt_inertia_vs_fb)
+    # CairoMakie.save(joinpath(MA_DIR, "WS", "optimal_inertia_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=$left_out_frequencies,M_left_out=$left_out_inertia_values.pdf"),fig_opt_inertia_vs_fb)
+    # CairoMakie.save(joinpath(exp_data_dir, "optimal_inertia_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_opt_inertia_vs_fb)
 end
 
-# # NOTE Further plotting options:
-# # Placing the legend besides the coordinate system.
-# leg_lines = Legend(fig_lines_only[1, 2], ax_lines_only, "Headline Legend", framevisible = false)
-# leg_nodes = Legend(fig_nodes_only[1, 2], ax_nodes_only)
-# leg_lines_and_nodes = Legend(fig_lines_and_nodes[1, 2], ax_lines_and_nodes)
-# axislegend("Legend headline", position = :rt)
-# # Template on how to put all plots in one single figure:
-# # https://docs.makie.org/stable/tutorials/layout-tutorial/#panel_a
-
-fig_hm
 fig_lines_and_nodes

@@ -37,12 +37,17 @@ exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
 # left out frequency values
 # left_out_frequencies = [0.03]
 # left_out_frequencies = [0.0, 0.02, 0.08]
-left_out_frequencies = []
+# left_out_frequencies = []
+left_out_frequencies = [0.005, 0.01, 0.015, 0.025, 0.035, 0.04, 0.045,
+    0.05, 0.055, 0.060, 0.065, 0.07, 0.075, 0.08, 0.085, 0.09, 0.095, 0.1,
+    0.11, 0.12, 0.13, 0.14, 0.16, 0.17, 0.18, 0.19, 0.2,
+    0.21, 0.22, 0.23, 0.24, 0.25, 0.26, 0.27, 0.28, 0.29, 0.3, 0.8]
+
 
 # left out inertia values
 # left_out_inertia_values = [20.0, 30.0]
 # left_out_inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0]
-left_out_inertia_values = []
+left_out_inertia_values = [20.,30.]
 
 # left_out_β_values = [0.1, 0.9]
 left_out_β_values = []
