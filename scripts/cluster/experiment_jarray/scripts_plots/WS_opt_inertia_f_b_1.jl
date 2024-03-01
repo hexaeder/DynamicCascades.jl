@@ -418,7 +418,11 @@ if length(filtered_freq_bounds) > 1
         scatter!(ax_opt_inertia_vs_fb, filtered_freq_bounds[i], opt_inertia[i], color = Makie.wong_colors()[1], markersize = markersize)
     end
 
-    vspan!([0.010, 0.0175, 0.0575], [0.0175, 0.0575, 0.155], color = [(:grey, c) for c in [0.1, 0.3, 0.5]])
+    vspan!([0.010, 0.0175, 0.0775], [0.0175, 0.0775, 0.155], color = [(:grey, c) for c in [0.1, 0.3, 0.5]])
+    # text!(ax_opt_inertia_vs_fb, 0.013, 8., text = "I", align = (:center, :center), rotation=π/2, textsize=35, color=:pink)
+    text!(ax_opt_inertia_vs_fb, 0.013, 8., text = L"I", align = (:center, :center), textsize=45)
+    text!(ax_opt_inertia_vs_fb, 0.035, 8., text = L"II", align = (:center, :center), textsize=45)
+    text!(ax_opt_inertia_vs_fb, 0.11, 8., text = L"III", align = (:center, :center), textsize=45)
 
     # Colorbar(fig_opt_inertia_vs_fb[:, end+1], limits = (minimum(min_failures), maximum(min_failures)), colormap=Reverse(color_map), label = normalize ? "normalized average of failures" : "average of failures")
     # Colorbar(fig_opt_inertia_vs_fb[:, end+1], limits = (minimum(min_failures), maximum(min_failures)), colormap=color_map, label = normalize ? "normalized average of failures" : "average of failures")
@@ -427,4 +431,3 @@ if length(filtered_freq_bounds) > 1
     CairoMakie.save(joinpath(MA_DIR, "WS", "optimal_inertia_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=$left_out_frequencies,M_left_out=$left_out_inertia_values.png"),fig_opt_inertia_vs_fb)
     # CairoMakie.save(joinpath(exp_data_dir, "optimal_inertia_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_opt_inertia_vs_fb)
 end
-fig_lines_and_nodes
