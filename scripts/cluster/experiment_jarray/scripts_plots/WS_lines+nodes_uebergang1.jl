@@ -13,7 +13,7 @@ using CairoMakie
 
 
 # plotting parameters
-create_posprocessing_data = false # set to `false` for fast plotting
+create_posprocessing_data = true # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
 custom_colors = true
@@ -264,8 +264,8 @@ function create_figs(failure_modes)
             fig_lines_and_nodes = Figure(fontsize = fontsize)
             ax_lines_and_nodes = Axis(fig_lines_and_nodes[1, 1],
                 title = sum_lines_nodes ? "Summed line and node failures" : "Line and node failures",
-                xlabel = "scaling factor of inertia",
-                ylabel = normalize ? "normalized average of failures" : "average of failures",
+                xlabel = L"Inertia I [$s^2$]",
+                ylabel = normalize ? "normalized average of failures" : L"Averaged failures $N_{fail}$",
             )
         end
     end

@@ -17,8 +17,8 @@ create_posprocessing_data = false # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
 custom_colors = true
-predefined_colors = [Makie.wong_colors()[1], Makie.wong_colors()[2], Makie.wong_colors()[3], Makie.wong_colors()[4]]  # https://docs.makie.org/stable/explanations/colors/
-colormap_frequencies = true
+predefined_colors = [Makie.wong_colors()[1], Makie.wong_colors()[2], Makie.wong_colors()[4], Makie.wong_colors()[3]]  # https://docs.makie.org/stable/explanations/colors/
+colormap_frequencies = false
 opacity = 0.3
 fontsize = labelsize = 24
 # markers
@@ -26,7 +26,7 @@ markersize = 15
 markers_labels = [
     (:circle, ":circle"),
     (:rect, ":rect"),
-    (:star5, "star5"),
+    # (:star5, "star5"),
     (:utriangle, ":utriangle"),
 ]
 
@@ -42,15 +42,19 @@ exp_name_date = "WS_k=4_exp01_PIK_HPC_K_=3,N_G=32_20240128_215811.815"
 # left out frequency values
 # left_out_frequencies = [0.03]
 # left_out_frequencies = [0.0, 0.02, 0.08]
-left_out_frequencies = []
+left_out_frequencies = [0.005, 0.010, 0.015, 0.020, 0.025, 0.035, 0.040,
+    0.045, 0.050, 0.055, 0.060, 0.065, 0.070, 0.075, 0.080, 0.085, 0.090, 0.095, 0.100,
+    0.110, 0.120, 0.130, 0.140, 0.150, 0.160, 0.170, 0.180, 0.190, 0.200,
+    0.210, 0.220, 0.230, 0.240, 0.250, 0.260, 0.270, 0.280, 0.290, 0.300, 0.800]
+
 
 # left out inertia values
 # left_out_inertia_values = [20.0, 30.0]
 # left_out_inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0]
-left_out_inertia_values = []
+# left_out_inertia_values = []
 
 # left_out_β_values = [0.1, 0.9]
-left_out_β_values = [0.25, 0.5, 0.9]
+left_out_β_values = [0.9]
 
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 
@@ -226,8 +230,7 @@ end
 
 # Colormaps
 # color_map = ColorSchemes.plasma
-# color_map = ColorSchemes.cividis
-color_map =  [Makie.wong_colors()[1], Makie.wong_colors()[5]]
+color_map = ColorSchemes.cividis
 # color_map = :blues
 
 # Generate distinct colors based on the filtered_freq_bounds
@@ -259,8 +262,8 @@ function create_figs(failure_modes)
             fig_nodes_only = Figure(fontsize = fontsize)
             ax_nodes_only = Axis(fig_nodes_only[1, 1],
                 title = "Node failures",
-                xlabel = "scaling factor of inertia",
-                ylabel = normalize ? "normalized average of node failures" : "average of node failures",
+                xlabel = L"Inertia I [$s^2$]",
+                ylabel = normalize ? "normalized average of node failures" : L"Averaged node failures $N_{fail}^N$",
             )
         elseif i == [:dynamic, :dynamic]
             fig_lines_and_nodes = Figure(fontsize = fontsize)
@@ -368,9 +371,9 @@ N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes
 if sum_lines_nodes == false
     lines!(ax_lines_and_nodes, [NaN], [NaN]; label="node failures: ___ (solid) \nline failures:   ----- (dashed)", color=:white, linewidth=3)
 end
-axislegend(ax_lines_only, position = :lt, labelsize=labelsize)
+# axislegend(ax_lines_only, position = :lt, labelsize=labelsize)
 axislegend(ax_nodes_only, position = :rt, labelsize=labelsize)
-axislegend(ax_lines_and_nodes, position = :ct, labelsize=labelsize)
+# axislegend(ax_lines_and_nodes, position = :ct, labelsize=labelsize)
 
 # text!(ax_lines_and_nodes, 5.0, 0.02, text = "node failures: solid lines ___ \n line failures: dashed lines -----", align = (:center, :center), textsize=25)
 

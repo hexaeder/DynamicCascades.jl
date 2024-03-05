@@ -403,9 +403,9 @@ if length(filtered_freq_bounds) > 1
     fig_opt_inertia_vs_fb = Figure(fontsize = (fontsize-3))
     ax_opt_inertia_vs_fb = Axis(fig_opt_inertia_vs_fb[1, 1], xticklabelrotation=π/2,
         title = "",
-        xlabel = L"$f_{b}$ [Hz]", # frequency bound f_b
+        xlabel = "Frequency bound f_b [Hz]", # frequency bound f_b
         xlabelsize = (fontsize + 5),
-        ylabel = L"$I_{min}$ [$s^2$]", # inertia value associated with minimum of failures
+        ylabel = L"Inertia $I_{min}$ [$s^2$]", # inertia value associated with minimum of failures
         ylabelsize = (fontsize + 5),
     )
 
@@ -427,7 +427,7 @@ if length(filtered_freq_bounds) > 1
     # Colorbar(fig_opt_inertia_vs_fb[:, end+1], limits = (minimum(min_failures), maximum(min_failures)), colormap=Reverse(color_map), label = normalize ? "normalized average of failures" : "average of failures")
     # Colorbar(fig_opt_inertia_vs_fb[:, end+1], limits = (minimum(min_failures), maximum(min_failures)), colormap=color_map, label = normalize ? "normalized average of failures" : "average of failures")
     fig_opt_inertia_vs_fb
-    CairoMakie.save(joinpath(MA_DIR, "WS", "optimal_inertia_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=$left_out_frequencies,M_left_out=$left_out_inertia_values.pdf"),fig_opt_inertia_vs_fb)
-    CairoMakie.save(joinpath(MA_DIR, "WS", "optimal_inertia_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=$left_out_frequencies,M_left_out=$left_out_inertia_values.png"),fig_opt_inertia_vs_fb)
+    CairoMakie.save(joinpath(MA_DIR, "WS", "optimal_inertia_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=[_],M_left_out=$left_out_inertia_values.pdf"),fig_opt_inertia_vs_fb)
+    CairoMakie.save(joinpath(MA_DIR, "WS", "optimal_inertia_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=[_],M_left_out=$left_out_inertia_values.png"),fig_opt_inertia_vs_fb)
     # CairoMakie.save(joinpath(exp_data_dir, "optimal_inertia_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_opt_inertia_vs_fb)
 end

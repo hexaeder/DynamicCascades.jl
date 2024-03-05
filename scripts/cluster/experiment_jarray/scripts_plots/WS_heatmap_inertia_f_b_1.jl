@@ -414,9 +414,9 @@ if length(filtered_freq_bounds) > 1
     fig_hm = Figure(fontsize = (fontsize-3))
     ax_hm = Axis(fig_hm[1, 1], xticklabelrotation=π/2,
         title = "",
-        xlabel = L"$f_{b}$ [Hz]", # frequency bound f_b
+        xlabel = "Frequency bound f_b [Hz]", # frequency bound f_b
         xlabelsize = (fontsize + 5),
-        ylabel = L"I [$s^2$]", # inertia value associated with minimum of failures
+        ylabel = L"Inertia I [$s^2$]", # inertia value associated with minimum of failures
         ylabelsize = (fontsize + 5),
     )
 
@@ -446,8 +446,8 @@ if length(filtered_freq_bounds) > 1
     ax_hm.xlabelpadding = 15
     ax_hm.yticks = [0.2, 1.0, 3.0, 5.0, 7.5, 10.0]
 
-    CairoMakie.save(joinpath(MA_DIR, "WS", "heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=$left_out_frequencies,M_left_out=$left_out_inertia_values.pdf"),fig_hm)
-    CairoMakie.save(joinpath(MA_DIR, "WS", "heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=$left_out_frequencies,M_left_out=$left_out_inertia_values.png"),fig_hm)
+    CairoMakie.save(joinpath(MA_DIR, "WS", "heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=[_],M_left_out=$left_out_inertia_values.pdf"),fig_hm)
+    CairoMakie.save(joinpath(MA_DIR, "WS", "heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=[_],M_left_out=$left_out_inertia_values.png"),fig_hm)
     # CairoMakie.save(joinpath(exp_data_dir, "heatmap_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_hm)
 
 

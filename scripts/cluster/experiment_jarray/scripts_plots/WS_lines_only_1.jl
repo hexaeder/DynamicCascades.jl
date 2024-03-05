@@ -16,7 +16,7 @@ create_posprocessing_data = false # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
 custom_colors = true
-predefined_colors = [Makie.wong_colors()[1], Makie.wong_colors()[2], Makie.wong_colors()[3], Makie.wong_colors()[4]]  # https://docs.makie.org/stable/explanations/colors/
+predefined_colors = [Makie.wong_colors()[1], Makie.wong_colors()[2], Makie.wong_colors()[4], Makie.wong_colors()[3]]  # https://docs.makie.org/stable/explanations/colors/
 colormap_frequencies = false
 opacity = 0.3
 fontsize = labelsize = 24
@@ -25,7 +25,7 @@ markersize = 15
 markers_labels = [
     (:circle, ":circle"),
     (:rect, ":rect"),
-    (:star5, "star5"),
+    # (:star5, "star5"),
     (:utriangle, ":utriangle"),
 ]
 
@@ -49,7 +49,7 @@ left_out_frequencies = []
 left_out_inertia_values = []
 
 # left_out_β_values = [0.1, 0.9]
-left_out_β_values = [0.5]
+left_out_β_values = [0.9]
 
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 
@@ -247,9 +247,9 @@ function create_figs(failure_modes)
             ax_lines_only = Axis(fig_lines_only[1, 1],
                 title = "Line failures",
                 # titlesize = 30,
-                xlabel = "scaling factor of inertia",
+                xlabel = L"Inertia I [$s^2$]",
                 # xlabelsize = 30,
-                ylabel = normalize ? "normalized average of line failures" : "average of line failures",
+                ylabel = normalize ? "normalized average of line failures" : L"Averaged line failures $N_{fail}^L$",
                 # ylabelsize = 30
             )
         elseif i == [:none, :dynamic]

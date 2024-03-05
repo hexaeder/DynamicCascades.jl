@@ -24,8 +24,8 @@ using CairoMakie
 # sol.load_S.t[1:time_stepsize:end]
 
 t_end = :plot_all_timesteps
-initial_fail = 10
-task_id = 1
+initial_fail = 78
+task_id = 418
 # task_id_array = [415, 418, 423]
 # for task_id in task_id_array
 exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
@@ -144,10 +144,25 @@ state_idx = idx_containing(nd, "ω") # array: indices of ω-states
 node_idx = map(s -> parse(Int, String(s)[4:end]), nd.syms[state_idx]) # array: indices of vertices that are generators
 for (i, l) in pairs([state_idx[findfirst(x -> x == i, node_idx)] for i in sol.failures_nodes.saveval])
     t, s = seriesforidx(sol.sol, l)
-    lines!(ax, t, s; label="frequency on node ($i)", linewidth=3)
+    single_node_idx = node_idx[i]
+    lines!(ax, t, s; label="frequency on node $single_node_idx", linewidth=3)
     scatter!(ax, (t[end], s[end]); marker=:star5, markersize=25)
+    bla=findfirst(x -> x == l, state_idx)
+    println("bla=$bla")
 end
 vlines!(ax, tobs; color=:black, linewidth=1)
+
+#######
+pairs([state_idx[findfirst(x -> x == i, node_idx)] for i in sol.failures_nodes.saveval])
+fig
+nd.syms
+sol.failures_nodes.saveval
+sol.sol.t
+sol.sol.u
+axislegend(ax, position = :rt)
+fig
+seriesforidx(sol.sol, 58)
+######
 
 # # plot frequencies of all load nodes
 # fig[1,3] = ax = Axis(fig; xlabel="time t in s", ylabel="angular frequency ω", title="frequency transients of all load nodes")
