@@ -72,5 +72,5 @@ df_failures[!, :number_failures_nodes] = number_failures_nodes
 # Write results to file
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 failure_mode_frequ_bound = joinpath(exp_data_dir, "trip_lines=$trip_lines,trip_nodes=$trip_nodes", "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound")
-filename = string("/", string_network_args(df_config, task_id), ".csv")
+filename = string("/", RTS_string_network_args(df_config, task_id), ".csv")
 CSV.write(string(failure_mode_frequ_bound, filename), df_failures)
