@@ -1,10 +1,10 @@
 #!/bin/bash
 
 ############################## Parameters to be chosen #########################
-name=WS_k=4_exp02_
-# inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
-qos_array=(short short short short short short short medium medium)
-times_array=(0-05:00:00 0-07:00:00 0-09:00:00 0-11:00:00 0-15:00:00 0-20:00:00 0-22:00:00 1-12:00:00 2-00:00:00)
+name=RTS_exp01_
+inertia_values = [0.2, 0.5, 0.8, 1.1, 1.4, 1.7, 2.0, 3.0, 4.0, 5.1, 6.1, 7.1, 8.0, 9.0, 10.0, 15.0, 21.0]
+qos_array=(short short short short short short short short short short short short short short short short short)
+times_array=(0-05:00:00 0-05:00:00 0-05:00:00 0-05:00:00 0-07:00:00 0-07:00:00 0-07:00:00 0-07:00:00 0-07:00:00 0-07:00:00 0-07:00:00 0-15:00:00 0-15:00:00 0-20:00:00 0-20:00:00 1-00:00:00 1-00:00:00)
 cpus_array=(1 1 1 1 1 1 1 2 2)
 
 ############################## Preprocessing ###################################
@@ -14,10 +14,10 @@ echo "------------------------------------------------------------"
 
 # `cut -f 4 -d' '` extracts the job ID from the output of the `sbatch` command.
 # The job ID is stored in the variable PREPROC.
-PREPROC=$(sbatch WS_preprocessing_HPC.sh | cut -f 4 -d' ')
+PREPROC=$(sbatch RTS_preprocessing_HPC.sh | cut -f 4 -d' ')
 echo "SLURM JOB ID Preprocessing: $PREPROC"
 
-sleeptime=400
+sleeptime=200
 echo "Sleeping $sleeptime seconds until variables for Slurm are assigned."
 sleep $sleeptime
 
@@ -39,7 +39,7 @@ for job_array_index in $(seq 1 1 $N_inertia); do
     job_name="$name,idx=$job_array_index"
     cpus=${cpus_array[($job_array_index-1)]}
     ############################## Core Simulation #############################
-    MODEL_JOBARRAY=$(sbatch --depend=afterany:$PREPROC --qos=$qos --time=$time --job-name=$job_name --workdir=$workdir --cpus-per-task=$cpus --array=1-$job_array_length WS_job_array_HPC_for_master.sh $exp_name_date $job_array_index | cut -f 4 -d' ')
+    MODEL_JOBARRAY=$(sbatch --depend=afterany:$PREPROC --qos=$qos --time=$time --job-name=$job_name --workdir=$workdir --cpus-per-task=$cpus --array=1-$job_array_length RTS_job_array_HPC_for_master.sh $exp_name_date $job_array_index | cut -f 4 -d' ')
     echo "SLURM JOB ID JOBARRAY $job_array_index: $MODEL_JOBARRAY"
     ############################## Postprocessing ##############################
     POSTPROC=$(sbatch --depend=afterany:$MODEL_JOBARRAY --job-name="sacct_infos_$job_name" --workdir=$sacct_dir sacct_postprocessing.sh $MODEL_JOBARRAY $sacct_dir $job_array_index | cut -f 4 -d' ')

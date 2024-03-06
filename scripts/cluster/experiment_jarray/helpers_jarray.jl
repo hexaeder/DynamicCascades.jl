@@ -36,6 +36,7 @@ using DataFrames
 using CSV
 using Serialization
 
+# Watts-Strogatz
 function get_network_args(df::DataFrame, task_id::Int)
     N=df[task_id,:N_nodes]
     k=df[task_id,:k]
@@ -81,4 +82,43 @@ end
 function string_metagraph_args(df::DataFrame, task_id::Int)
     N,k,β,graph_seed,μ,σ,distr_seed,K,_,M,γ,τ,_,_,_,_ = get_network_args_stripped(df, task_id)
     return "N=$N,k=$k,β=$β,graph_seed=$graph_seed,μ=$μ,σ=$σ,distr_seed=$distr_seed,K=$K,M=$M,γ=$γ,τ=$τ"
+end
+
+# RTS-GMCL testcase
+function RTS_get_network_args(df::DataFrame, task_id::Int)
+    M=df[task_id,:inertia_values]*1u"s^2"
+    γ=df[task_id,:γ]*1u"s"
+    τ=df[task_id,:τ]*1u"s"
+    freq_bound=df[task_id,:freq_bounds]
+    trip_lines=Symbol(eval(Meta.parse(string(df[task_id,:failure_modes])))[1])
+    trip_nodes=Symbol(eval(Meta.parse(string(df[task_id,:failure_modes])))[2])
+    init_pert=Symbol(df[task_id,:init_pert])
+    ensemble_element=df[task_id,:ensemble_element]
+
+    return M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element
+end
+
+function RTS_import_system_wrapper(df::DataFrame, task_id::Int)
+    M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = RTS_get_network_args(df, task_id)
+    M = ustrip(u"s^2", M)
+    return import_system(:rtsgmlc; damping=γ, scale_inertia = M, tconst = τ)
+end
+
+# Removing units.
+function RTS_get_network_args_stripped(df::DataFrame, task_id::Int)
+    M_,γ_,τ_,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = RTS_get_network_args(df, task_id)
+    M = ustrip(u"s^2", M_)
+    τ = ustrip(u"s", τ_)
+    γ = ustrip(u"s", γ_)
+    return M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element
+end
+
+function RTS_string_network_args(df::DataFrame, task_id::Int)
+    M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = RTS_get_network_args_stripped(df, task_id)
+    return "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound,M=$M,γ=$γ,τ=$τ,init_pert=$init_pert,ensemble_element=$ensemble_element"
+end
+
+function RTS_string_metagraph_args(df::DataFrame, task_id::Int)
+    M,γ,τ,_,_,_,_ = RTS_get_network_args_stripped(df, task_id)
+    return "M=$M,γ=$γ,τ=$τ"
 end
