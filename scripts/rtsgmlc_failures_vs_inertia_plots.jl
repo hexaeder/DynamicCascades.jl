@@ -159,11 +159,12 @@ ang_freq_bounds = [0.48]
 
 # lower bounds
 directories = [
-            "/results_plotting/line+node_failures/20230728_013046.031inertia_vs_line+node_failures_f_bound=0.16",
-            "/results_plotting/line+node_failures/20230728_013105.59inertia_vs_line+node_failures_f_bound=0.32",
-            "/results_plotting/line+node_failures/20230728_013105.412inertia_vs_line+node_failures_f_bound=0.48"
+            "/results_plotting/line+node_failures/20230728_013046.031inertia_vs_line+node_failures_f_bound=0.16"
+            # "/results_plotting/line+node_failures/20230728_013105.59inertia_vs_line+node_failures_f_bound=0.32"
+            # "/results_plotting/line+node_failures/20230728_013105.412inertia_vs_line+node_failures_f_bound=0.48"
             ]
-ang_freq_bounds = [0.16, 0.32, 0.48]
+# ang_freq_bounds = [0.16, 0.32, 0.48]
+ang_freq_bounds = [0.32]
 
 # larger bounds
 directories = [
@@ -179,12 +180,12 @@ ang_freq_bounds = [0.64, 0.95, 1.27,  1.91]
 # only one wide and one narrow bound
 directories = [
             # "/results_plotting/line+node_failures/20230728_013105.59inertia_vs_line+node_failures_f_bound=0.32",
-            "/results_plotting/line+node_failures/20230728_013105.412inertia_vs_line+node_failures_f_bound=0.48",
-            "/results_plotting/line+node_failures/20230730_082824.996inertia_vs_line+node_failures_f_bound=0.64"
+            "/results_plotting/line+node_failures/20230728_013105.412inertia_vs_line+node_failures_f_bound=0.48" # NOTE: Falsche Daten!
+            # "/results_plotting/line+node_failures/20230730_082824.996inertia_vs_line+node_failures_f_bound=0.64"
             # "/results_plotting/line+node_failures/20230730_083925.633inertia_vs_line+node_failures_f_bound=0.8"
             ]
-ang_freq_bounds = [0.48, 0.64]
-
+ang_freq_bounds = [0.48]
+# ang_freq_bounds = [0.48, 0.64]
 
 norm_values = (ang_freq_bounds .- minimum(ang_freq_bounds)) ./ (maximum(ang_freq_bounds) - minimum(ang_freq_bounds))
 

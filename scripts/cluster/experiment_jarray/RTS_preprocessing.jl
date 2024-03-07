@@ -19,8 +19,8 @@ N_new_freq_bounds = length([2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
 ################################################################################
 
 # Experiment name
-name = "RTS_exp01_"
-long_name = "Uebergang frequency bounds further values for f_b." # for providing more details
+name = "RTS_exp02_"
+long_name = "Uebergang ... and even more values for f_b." # for providing more details
 solver_name = "Rodas4P()"
 steadystate_choice = :rootfind # :relaxation
 
@@ -38,8 +38,8 @@ init_pert = [:line] # initial perturbation set constant to an initial line failu
 monitored_power_flow = :reactive
 
 # frequency bounds
-freq_bounds = [0.40, 0.42, 0.44, 0.46, 0.48, 0.49, 0.50, 0.51, 0.52, 0.53, 0.54, 0.55, 0.56, 0.57, 0.58, 0.59, 0.60, 0.61, 0.62, 0.63, 0.64, 0.66, 0.68, 0.70]
-
+# freq_bounds = [0.40, 0.42, 0.44, 0.46, 0.48, 0.49, 0.50, 0.51, 0.52, 0.53, 0.54, 0.55, 0.56, 0.57, 0.58, 0.59, 0.60, 0.61, 0.62, 0.63, 0.64, 0.66, 0.68, 0.70]
+freq_bounds = [0.01, 0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20, 0.22, 0.24, 0.26, 0.28, 0.30, 0.32, 0.34, 0.36, 0.38, 0.72, 0.74, 0.8, 0.85, 0.90, 1.00, 1.2, 1.4, 1.6, 1.8, 2.0]
 # failure_modes = [trip_lines, trip_nodes]
 # failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
 # failure_modes = [[:dynamic, :dynamic], [:dynamic, :none]]
