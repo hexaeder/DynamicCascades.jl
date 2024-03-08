@@ -19,8 +19,8 @@ N_new_freq_bounds = length([2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
 ################################################################################
 
 # Experiment name
-name = "RTS_exp04_"
-long_name = "Node failures only" # for providing more details
+name = "RTS_exp05_"
+long_name = "Node failures only, more memory, 4 CPUs" # for providing more details
 solver_name = "Rodas4P()"
 steadystate_choice = :rootfind # :relaxation
 
