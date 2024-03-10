@@ -1,3 +1,8 @@
+"""
+Watts-Strogatz example networks with N=10 for showing the effect of different
+β-values
+"""
+
 using Graphs
 using CairoMakie
 using GraphMakie

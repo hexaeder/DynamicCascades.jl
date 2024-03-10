@@ -6,15 +6,10 @@
 /docs/src/generated/
 /docs/LocalPreferences.toml
 
-/src/tryout.jl
-/src/MWE_vccb.jl
-/src/test_new.txt
-/src/test_old.txt
+/scripts/tryout.jl
+/scripts/MWE_vccb.jl
+/scripts/MWE_WS_plot.jl
 .username
 *scratch*
 
-/scripts/cluster/cluster_only
-/scripts/cluster/experiment_jarray/WS_pipeline_tryout.jl
-/scripts/cluster/experiment_jarray/MWE_WS_plot.jl
-/scripts/cluster/experiment_jarray/WS_job_debug.jl
 /scripts/delete_soon

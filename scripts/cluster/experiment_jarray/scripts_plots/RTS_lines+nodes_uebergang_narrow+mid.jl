@@ -1,3 +1,8 @@
+"""
+RTS-GMLC-Testcase: Using job array framework. Transition that appears when varying the frequency bounds.
+Line and node failures summed. Narrow and intermediate bound.
+"""
+
 include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
 
 if ON_YOGA
@@ -8,44 +13,26 @@ else # if on PIK-HPC or Pool
 end
 
 using GraphMakie
-using Colors
+using Colors, ColorSchemes
 using CairoMakie
 
 # plotting parameters
 create_posprocessing_data = false # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
-custom_colors = true
-predefined_colors = [Makie.wong_colors()[1], Makie.wong_colors()[2], Makie.wong_colors()[3], Makie.wong_colors()[4]]  # https://docs.makie.org/stable/explanations/colors/
-colormap_frequencies = true
-heatmap_logscale = true
 opacity = 0.3
-fontsize = labelsize = 24
+fontsize = labelsize = 26
+line_colors = [Makie.wong_colors()[3], Makie.wong_colors()[5], Makie.wong_colors()[6]]
 # markers
 markersize = 15
-markers_labels = [
-    (:circle, ":circle"),
-    (:rect, ":rect"),
-    (:star5, "star5"),
-    (:utriangle, ":utriangle"),
-]
-marker = markers_labels[1]
-# Colormaps
-# color_map = ColorSchemes.plasma
-color_map = :cividis
-# color_map = :blues
 
-exp_name_date = "RTS_exp01_PIK_HPC__20240306_170018.47"
-
-# left out frequency values
-left_out_frequencies = []
-left_out_frequencies = [0.4, 0.42, 0.44, 0.46, 0.48, 0.49, 0.50, 0.51, 0.52, 0.53, 0.54, 0.56, 0.57, 0.58, 0.59, 0.60, 0.61, 0.62, 0.63, 0.64, 0.66, 0.68, 0.70]
-
-
-# left out inertia values
-left_out_inertia_values = []
-
+exp_name_date = "RTS_exp01+exp02_uebergang_frequency"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
+left_out_frequencies = [0.01, 0.08, 0.1, 0.12, 0.16, 0.18, 0.20, 0.22, 0.24, 0.26, 0.28, 0.30,
+    0.32, 0.34, 0.36, 0.38, 0.40, 0.44, 0.46, 0.48, 0.49, 0.50, 0.51, 0.52, 0.53, 0.54, 0.55,
+    0.56, 0.57, 0.58, 0.59, 0.60, 0.61, 0.62, 0.63, 0.64, 0.66, 0.68, 0.70, 0.72, 0.74,
+    0.8, 0.85, 0.90, 1.00, 1.2, 1.4, 1.6, 1.8, 2.0] # combined runs
+left_out_inertia_values = []
 
 ################################################################################
 ###################### Calculate mean and standard error #######################
@@ -119,30 +106,6 @@ if create_posprocessing_data == true
                 failure_mode_string = joinpath(graph_combinations_path, "trip_lines=$trip_lines,trip_nodes=$trip_nodes")
                 failure_mode_frequ_bound = joinpath(failure_mode_string, "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound")
 
-                # NOTE use this only WHEN MERGING TWO EXPERIMENTS ###############
-                # NOTE needs to be adapted for RTS
-                # # This is a bit hacky...
-                # file_path = ""
-                # test_counter = 0
-                # # read out all parameters , exept of seeds, read out ensemble_element find file in folder that matches both
-                # N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, (task_id + i))
-                # string1 = "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound,N=$N,k=$k,β=$β"
-                # string2 = "μ=$μ,σ=$σ"
-                # string3 = "K=$K,α=$α,M=$M,γ=$γ,τ=$τ,init_pert=$init_pert,ensemble_element=$ensemble_element."
-                # strings_to_match = [string1, string2, string3]
-                # files_in_dir = readdir(failure_mode_frequ_bound)
-                # for file_name in files_in_dir
-                #     if all(x -> x == true, [occursin(s, file_name) for s in strings_to_match])
-                #         file_path = joinpath(failure_mode_frequ_bound, file_name)
-                #         test_counter += 1
-                #         if test_counter > 1
-                #             error("Two files with the same parameters!")
-                #         end
-                #     end
-                # end
-                # df_result = DataFrame(CSV.File(file_path))
-                # ################################################################
-
                 # USE THIS ONLY FOR SINGLE EXPERIMENT ###############################
                 filename = string("/", RTS_string_network_args(df_config, task_id + i), ".csv")
                 df_result = DataFrame(CSV.File(string(failure_mode_frequ_bound, filename)))
@@ -203,69 +166,18 @@ freq_bounds = exp_params_dict[:freq_bounds]
 filtered_freq_bounds = filter!(x->x ∉ left_out_frequencies, deepcopy(freq_bounds))
 filtered_inertia_values = filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values))
 
-# Color coding of lines
-using Colors, ColorSchemes
+fig_lines_and_nodes = Figure(fontsize = fontsize)
+ax_lines_and_nodes = Axis(fig_lines_and_nodes[1, 1],
+    xlabel = "Scaling factor of inertia",
+    ylabel = normalize ? "normalized average of failures" : L"Averaged failures $N_{fail}$",
+)
 
-# Function to generate distinct colors based on a color map and normalization
-function distinct_colors(color_map, values)
-    norm_values = (values .- minimum(values)) ./ (maximum(values) - minimum(values))
-
-    colors = [cgrad(color_map, 101; categorical = true, rev=false)[Int(ceil(i*100)+1)] for i in norm_values]
-    return colors
-end
-
-# Generate distinct colors based on the filtered_freq_bounds
-if colormap_frequencies
-    if length(filtered_freq_bounds) == 1
-        # line_colors = [RGBA{Float64}(0.0,0.1262,0.3015,1.0)]
-        line_colors = scatter_colors = [Makie.wong_colors()[1]]
-    else
-        line_colors = distinct_colors(color_map, filtered_freq_bounds)
-    end
-elseif custom_colors
-    line_colors = predefined_colors
-end
-
-function create_figs(failure_modes)
-    fig_lines_only = Figure(); fig_nodes_only = Figure(); fig_lines_and_nodes= Figure();
-    ax_lines_only = Axis(fig_lines_only[1, 1]); ax_nodes_only = Axis(fig_nodes_only[1, 1]); ax_lines_and_nodes = Axis(fig_lines_and_nodes[1, 1])
-    for i in exp_params_dict[:failure_modes]
-        if i == [:dynamic, :none]
-            fig_lines_only = Figure(fontsize = fontsize)
-            ax_lines_only = Axis(fig_lines_only[1, 1],
-                title = "Line failures",
-                # titlesize = 30,
-                xlabel = "scaling factor of inertia",
-                # xlabelsize = 30,
-                ylabel = normalize ? "normalized average of line failures" : "average of line failures",
-                # ylabelsize = 30
-            )
-        elseif i == [:none, :dynamic]
-            fig_nodes_only = Figure(fontsize = fontsize)
-            ax_nodes_only = Axis(fig_nodes_only[1, 1],
-                title = "Node failures",
-                xlabel = "scaling factor of inertia",
-                ylabel = normalize ? "normalized average of node failures" : "average of node failures",
-            )
-        elseif i == [:dynamic, :dynamic]
-            fig_lines_and_nodes = Figure(fontsize = fontsize)
-            ax_lines_and_nodes = Axis(fig_lines_and_nodes[1, 1],
-                title = sum_lines_nodes ? "Summed line and node failures" : "Line and node failures",
-                xlabel = "scaling factor of inertia",
-                ylabel = normalize ? "normalized average of failures" : "average of failures",
-            )
-        end
-    end
-    return fig_lines_only, ax_lines_only, fig_nodes_only, ax_nodes_only, fig_lines_and_nodes, ax_lines_and_nodes
-end
 
 # Create figures depending on the modes (loop).
 failure_modes = exp_params_dict[:failure_modes]
-fig_lines_only, ax_lines_only, fig_nodes_only, ax_nodes_only, fig_lines_and_nodes, ax_lines_and_nodes = create_figs(failure_modes)
 
 df_avg_error = DataFrame(CSV.File(joinpath(RESULTS_DIR, exp_name_date, "avg_error.csv")))
 inertia_values = exp_params_dict[:inertia_values]
-
 
 #= Different inertia values for: Ensemble average over normalized average of
 failures (the latter for a single network) =#
@@ -273,8 +185,6 @@ y_lines = Float64[]; y_nodes = Float64[]
 #= Different inertia values for: Ensemble standard error over normalized average
 of failures (the latter for a single network) =#
 err_lines = Float64[]; err_nodes = Float64[]; err_nodes_plus_lines = Float64[]
-all_failures_heatmap = Float64[]
-min_failures = Float64[]; opt_inertia = Float64[]
 for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an ArrayTaskID in the strict sense but an average over task IDs
     #= Empty arrays (after all inertia values of one configuration pushed to array)
     The entries in df_avg_error are ordered accordningly.=#
@@ -314,19 +224,8 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
         # frequency argument first for a nice order in the legend
         M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = RTS_get_network_args_stripped(df_config, task_id)
 
-        color_index = 1
-
-        # if colormap_frequencies
-        #     color_index = findfirst(x -> x == freq_bound, filtered_freq_bounds)
-        # end
-        if (trip_lines == :dynamic &&  trip_nodes == :none)
-            if freq_bound == filtered_freq_bounds[1]
-                scatterlines!(ax_lines_only, filtered_inertia_values, y_lines, marker = marker, markersize = markersize, label = "", color = line_colors[color_index])
-                # errorbars!(ax_lines_only, filtered_inertia_values, y_lines, err_lines, color = :black,  whiskerwidth = 10)
-            end
-        elseif (trip_lines == :none &&  trip_nodes == :dynamic)
-            scatterlines!(ax_nodes_only, filtered_inertia_values, y_nodes, marker = marker,  markersize = markersize, label = "f_b=$freq_bound", color = line_colors[color_index])
-        elseif (trip_lines == :dynamic &&  trip_nodes == :dynamic)
+        color_index = findfirst(x -> x == freq_bound, filtered_freq_bounds)
+        if (trip_lines == :dynamic &&  trip_nodes == :dynamic)
             if sum_lines_nodes == true
                 # scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes, marker = marker, markersize = markersize, label = "f_b=$freq_bound", color = line_colors[color_index])
                 scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes, color = line_colors[color_index], label = "f_b=$freq_bound")
@@ -344,18 +243,11 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
     end
 end
 M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = RTS_get_network_args_stripped(df_config, 1)
-#  See https://docs.makie.org/stable/reference/blocks/legend/
-if sum_lines_nodes == false
-    lines!(ax_lines_and_nodes, [NaN], [NaN]; label="node failures: ___ (solid) \nline failures:   ----- (dashed)", color=:white, linewidth=3)
-end
-
 axislegend(ax_lines_and_nodes, position = :ct, labelsize=labelsize)
-
-# text!(ax_lines_and_nodes, 5.0, 0.02, text = "node failures: solid lines ___ \n line failures: dashed lines -----", align = (:center, :center), textsize=25)
 
 # Save plots
 filtered_freq_bounds_str = string(filtered_freq_bounds)
-
-# CairoMakie.save(joinpath(exp_data_dir, "lines+nodes_sumlinesnodes=$sum_lines_nodes,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
-# CairoMakie.save(joinpath(exp_data_dir, "lines+nodes_sumlinesnodes=$sum_lines_nodes,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
+# filtered_freq_bounds_str = "all_frequencies"
+CairoMakie.save(joinpath(MA_DIR, "RTS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
+CairoMakie.save(joinpath(MA_DIR, "RTS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
 fig_lines_and_nodes

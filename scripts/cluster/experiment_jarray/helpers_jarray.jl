@@ -1,3 +1,7 @@
+"""
+Helper functions used by WS- and RTS-job array framework.
+"""
+
 # @assert VERSION == v"1.8.4"
 const ON_YOGA = occursin("Yoga", gethostname())
 const ON_PIK_HPC = occursin("cs-", gethostname())
