@@ -117,6 +117,7 @@ fig = Figure(resolution=(2100,1500), fontsize= fontsize)
 # frequencies of failed gen nodes I=0.2 s^2
 sol = sol415
 fig[1,1] = ax = Axis(fig; title=L"Inertia $I=0.2$ $s^2$", titlealign = :left, titlesize = titlesize)
+network = import_system_wrapper(df_config, 1)
 (nd, p, overload_cb) = nd_model(network)
 state_idx = idx_containing(nd, "ω") # array: indices of ω-states
 node_idx = map(s -> parse(Int, String(s)[4:end]), nd.syms[state_idx]) # array: indices of vertices that are generators
@@ -191,7 +192,7 @@ axislegend(ax, position = (0.9,0.92), nbanks = 6, labelsize=22)
 
 # failed power flows I=3.0 s^2
 sol = sol418
-fig[2,2] = ax = Axis(fig; ylabel="Active power flow [p.u.]", title=L"Inertia $I=0.2$ $s^2$", titlealign = :left, titlesize = titlesize)
+fig[2,2] = ax = Axis(fig; ylabel="Active power flow [p.u.]", title=L"Inertia $I=3.0$ $s^2$", titlealign = :left, titlesize = titlesize)
 # failing_lines_idxs = sol.failures.saveval
 failing_lines_idxs = all_failing_lines_idxs
 for (i, l) in pairs(failing_lines_idxs)
@@ -207,7 +208,7 @@ ax.xticks = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.1, 1.3, 1.5]
 
 # failed power flows I=30.0 s^2
 sol = sol423
-fig[3,2] = ax = Axis(fig; xlabel="Time [s]", title=L"Inertia $I=0.2$ $s^2$", titlealign = :left, titlesize = titlesize)
+fig[3,2] = ax = Axis(fig; xlabel="Time [s]", title=L"Inertia $I=30.0$ $s^2$", titlealign = :left, titlesize = titlesize)
 # failing_lines_idxs = sol.failures.saveval
 failing_lines_idxs = all_failing_lines_idxs
 for (i, l) in pairs(failing_lines_idxs)

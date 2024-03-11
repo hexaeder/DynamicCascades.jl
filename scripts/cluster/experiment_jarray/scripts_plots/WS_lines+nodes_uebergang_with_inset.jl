@@ -1,6 +1,6 @@
 """
-Watts-Strogatz-Network-Ensemble: Using job array framework.
-Heatmap: x: frequency bound f_b, y: Inertia I, z: log(sum of line + node failres + 1)
+Watts-Strogatz-Network-Ensemble: Using job array framework. Transition that appears
+when varying the frequency bounds. Line and node failures summed.
 """
 
 include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
@@ -13,24 +13,29 @@ else # if on PIK-HPC or Pool
 end
 
 using GraphMakie
-using Colors
+using Colors, ColorSchemes
 using CairoMakie
+
 
 # plotting parameters
 create_posprocessing_data = false # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
-heatmap_logscale = true
-opacity = 0.3
-fontsize = labelsize = 24
+line_colors = [Makie.wong_colors()[3], Makie.wong_colors()[5], Makie.wong_colors()[6]]
+colormap_frequencies = true
+opacity = 0.15
+fontsize = labelsize = 26
 # markers
 markersize = 15
+markers_labels = [(:star5, "star5")]
 
 exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
-left_out_frequencies = [0.005, 0.010,
-    0.16, 0.17, 0.18, 0.19, 0.2, 0.21, 0.22, 0.23, 0.24, 0.25, 0.26, 0.27, 0.28, 0.29, 0.3, 0.8]
-left_out_inertia_values = [20.0, 30.0]
+left_out_frequencies = [0.005, 0.015, 0.02, 0.025, 0.035, 0.04, 0.045,
+    0.05, 0.055, 0.060, 0.065, 0.07, 0.075, 0.08, 0.085, 0.09, 0.095, 0.1,
+    0.11, 0.12, 0.13, 0.14, 0.16, 0.17, 0.18, 0.19, 0.2,
+    0.21, 0.22, 0.23, 0.24, 0.25, 0.26, 0.27, 0.28, 0.29, 0.3, 0.8]
+left_out_inertia_values = []
 left_out_β_values = []
 
 ################################################################################
@@ -190,6 +195,34 @@ filtered_freq_bounds = filter!(x->x ∉ left_out_frequencies, deepcopy(freq_boun
 filtered_inertia_values = filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values))
 filtered_β_values = filter!(x->x ∉ left_out_β_values, deepcopy(exp_params_dict[:β]))
 
+fig_lines_and_nodes = Figure(fontsize = fontsize)
+ax_lines_and_nodes = Axis(fig_lines_and_nodes[1, 1],
+    # title = sum_lines_nodes ? "Summed line and node failures" : "Line and node failures",
+    xlabel = L"Inertia I [$s^2$]",
+    ylabel = normalize ? "normalized average of failures" : L"Averaged failures $N_{fail}$",
+)
+# hidedecorations!(ax_lines_and_nodes, grid=false)
+
+# Create inset
+# The inset axis
+inset_ax = Axis(fig_lines_and_nodes[1, 1],
+    # xlabel = L"Inertia I [$s^2$]",
+    # ylabel = normalize ? "normalized average of failures" : L"Averaged failures $N_{fail}$",
+    width=Relative(0.5),
+    height=Relative(0.5),
+    halign=0.95,
+    valign=0.95,
+    backgroundcolor=(:grey, 0.05),
+    xgridvisible = false,
+    ygridvisible = false,
+    )
+
+
+# hidedecorations!(inset_ax)
+xlims!(inset_ax, 0, 30)
+ylims!(inset_ax, 0, 7.5)
+
+
 # Create figures depending on the modes (loop).
 failure_modes = exp_params_dict[:failure_modes]
 β_vals = exp_params_dict[:β]
@@ -197,15 +230,12 @@ failure_modes = exp_params_dict[:failure_modes]
 df_avg_error = DataFrame(CSV.File(joinpath(RESULTS_DIR, exp_name_date, "avg_error.csv")))
 inertia_values = exp_params_dict[:inertia_values]
 
-
 #= Different inertia values for: Ensemble average over normalized average of
 failures (the latter for a single network) =#
 y_lines = Float64[]; y_nodes = Float64[]
 #= Different inertia values for: Ensemble standard error over normalized average
 of failures (the latter for a single network) =#
 err_lines = Float64[]; err_nodes = Float64[]; err_nodes_plus_lines = Float64[]
-all_failures_heatmap = Float64[]
-min_failures = Float64[]; opt_inertia = Float64[]
 for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an ArrayTaskID in the strict sense but an average over task IDs
     #= Empty arrays (after all inertia values of one configuration pushed to array)
     The entries in df_avg_error are ordered accordningly.=#
@@ -250,69 +280,35 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
         # frequency argument first for a nice order in the legend
         N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
 
+        marker_index = findfirst(x -> x == β, β_vals)
+        marker = markers_labels[marker_index][1]
+        marker_label = markers_labels[marker_index][2]
+        color_index = colormap_frequencies ? findfirst(x -> x == freq_bound, filtered_freq_bounds) : marker_index
+
         if (trip_lines == :dynamic &&  trip_nodes == :dynamic)
             if sum_lines_nodes == true
-                # heatmap
-                append!(all_failures_heatmap, (y_lines + y_nodes))
-                # optimal inertia vs. f_b
-                push!(min_failures, minimum(y_lines + y_nodes))
-                push!(opt_inertia, filtered_inertia_values[argmin(y_lines + y_nodes)])
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes, marker = marker, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
+                band!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes + err_nodes_plus_lines, y_lines + y_nodes - err_nodes_plus_lines, transparency=true, color = (line_colors[color_index], opacity))
+                # inset plot
+                scatterlines!(inset_ax, filtered_inertia_values, y_lines + y_nodes, marker = marker, markersize = markersize, color = line_colors[color_index])
+                band!(inset_ax, filtered_inertia_values, y_lines + y_nodes + err_nodes_plus_lines, y_lines + y_nodes - err_nodes_plus_lines, transparency=true, color = (line_colors[color_index], opacity))
+            else
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines, linestyle=:dash, marker = marker, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
+                band!(ax_lines_and_nodes, filtered_inertia_values, y_lines + err_lines, y_lines - err_lines, transparency=true, color = (line_colors[color_index], opacity))
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_nodes, marker = marker, markersize = markersize, color = line_colors[color_index])
+                band!(ax_lines_and_nodes, filtered_inertia_values, y_nodes + err_nodes, y_nodes - err_nodes, transparency=true, color = (line_colors[color_index], opacity))
             end
         end
     end
 end
 N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, 1)
+# axislegend(ax_lines_and_nodes, position = :lt, labelsize=labelsize)
+axislegend(ax_lines_and_nodes, position = (0.08,0.99), labelsize=labelsize-5)
 
 k_str = string(exp_params_dict[:k])
 filtered_freq_bounds_str = string(filtered_freq_bounds)
 K_str = string(exp_params_dict[:K])
 
-
-if length(filtered_freq_bounds) > 1
-    # create heatmap
-    fig_hm = Figure(fontsize = (fontsize-3))
-    ax_hm = Axis(fig_hm[1, 1], xticklabelrotation=π/2,
-        title = "",
-        xlabel = "Frequency bound f_b [Hz]", # frequency bound f_b
-        xlabelsize = (fontsize + 5),
-        ylabel = L"Inertia I [$s^2$]", # inertia value associated with minimum of failures
-        ylabelsize = (fontsize + 5),
-    )
-
-    xs = filtered_freq_bounds
-    ys = filtered_inertia_values
-    data = transpose(reshape(all_failures_heatmap, length(filtered_inertia_values), length(filtered_freq_bounds)))
-
-    # hm = heatmap!(ax_hm, xs, ys, data, colormap = Reverse(:blues))
-    # hm = heatmap!(ax_hm, xs, ys, data, colormap = Reverse(color_map))
-    # hm = heatmap!(ax_hm, xs, ys, heatmap_logscale ? log10.(data.+1) : data, colormap = Reverse(color_map))
-
-    # Colormaps
-    # color_map = ColorSchemes.plasma
-    # color_map = ColorSchemes.cividis
-    # color_map = :cividis
-    # color_map = :blues
-    # color_map = :grays
-
-    hm = heatmap!(ax_hm, xs, ys, heatmap_logscale ? log10.(data.+1) : data, colormap = :grays)
-    # fig_hm, ax_hm, hm = heatmap!(ax_hm, xs, ys, data, colormap = :blues)
-    # fig_hm, ax, hm = heatmap(xs, ys, data)
-    # https://docs.makie.org/stable/reference/blocks/colorbar/
-
-    # create minimal failures (optimal inertia) vs. frequency bound f_b
-    for i in 1:length(filtered_freq_bounds)
-        if i == 1
-            scatter!(ax_hm, filtered_freq_bounds[i], opt_inertia[i], color = Makie.wong_colors()[1], label = L"$I_{min}$: Inertia value associated with minimum of failures", markersize = markersize)
-        end
-        scatter!(ax_hm, filtered_freq_bounds[i], opt_inertia[i], color = Makie.wong_colors()[1], markersize = markersize)
-    end
-    axislegend(ax_hm, position = :rt, labelsize=(labelsize-8))
-    Colorbar(fig_hm[:, end+1], hm, label = normalize ? L"normalized $N_{fail}$" : (heatmap_logscale ? L"$\log(N_{fail}+1)$" : L"$N_{fail}$"))
-
-    ax_hm.xticks = filtered_freq_bounds
-    ax_hm.xlabelpadding = 15
-    ax_hm.yticks = [1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
-end
-CairoMakie.save(joinpath(MA_DIR, "WS", "heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=[_],M_left_out=$left_out_inertia_values.pdf"),fig_hm)
-CairoMakie.save(joinpath(MA_DIR, "WS", "heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=[_],M_left_out=$left_out_inertia_values.png"),fig_hm)
-fig_hm
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
+fig_lines_and_nodes

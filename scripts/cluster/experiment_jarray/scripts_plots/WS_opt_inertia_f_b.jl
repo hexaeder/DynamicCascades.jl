@@ -31,7 +31,7 @@ markersize = 15
 
 exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
-left_out_frequencies = [0.005, 0.01,
+left_out_frequencies = [
     0.16, 0.17, 0.18, 0.19, 0.2, 0.21, 0.22, 0.23, 0.24, 0.25, 0.26, 0.27, 0.28, 0.29, 0.3, 0.8]
 left_out_inertia_values = []
 left_out_β_values = []
@@ -281,20 +281,20 @@ if length(filtered_freq_bounds) > 1
         ylabelsize = (fontsize + 5),
     )
 
-    scatter_colors = distinct_colors(color_map, min_failures)
     ax_opt_inertia_vs_fb.xticks = filtered_freq_bounds
+    ax_opt_inertia_vs_fb.yticks = [0.2, 3.0, 5.0, 10.0, 30.0]
 
     for i in 1:length(filtered_freq_bounds)
         scatter!(ax_opt_inertia_vs_fb, filtered_freq_bounds[i], opt_inertia[i], color = Makie.wong_colors()[1], markersize = markersize)
     end
 
-    vspan!([0.010, 0.0175, 0.0775], [0.0175, 0.0775, 0.155], color = [(:grey, c) for c in [0.1, 0.3, 0.5]])
+    vspan!([0.0025, 0.0125, 0.0775], [0.0125, 0.0775, 0.155], color = [(:grey, c) for c in [0.1, 0.3, 0.5]])
     # text!(ax_opt_inertia_vs_fb, 0.013, 8., text = "I", align = (:center, :center), rotation=π/2, textsize=35, color=:pink)
-    text!(ax_opt_inertia_vs_fb, 0.013, 8., text = L"I", align = (:center, :center), textsize=45)
-    text!(ax_opt_inertia_vs_fb, 0.035, 8., text = L"II", align = (:center, :center), textsize=45)
-    text!(ax_opt_inertia_vs_fb, 0.11, 8., text = L"III", align = (:center, :center), textsize=45)
+    text!(ax_opt_inertia_vs_fb, 0.007, 25., text = L"I", align = (:center, :center), textsize=45)
+    text!(ax_opt_inertia_vs_fb, 0.035, 25., text = L"II", align = (:center, :center), textsize=45)
+    text!(ax_opt_inertia_vs_fb, 0.11, 25., text = L"III", align = (:center, :center), textsize=45)
 
-    # CairoMakie.save(joinpath(MA_DIR, "WS", "optimal_inertia_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=[_],M_left_out=$left_out_inertia_values.pdf"),fig_opt_inertia_vs_fb)
-    # CairoMakie.save(joinpath(MA_DIR, "WS", "optimal_inertia_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=[_],M_left_out=$left_out_inertia_values.png"),fig_opt_inertia_vs_fb)
+    CairoMakie.save(joinpath(MA_DIR, "WS", "optimal_inertia_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=[_],M_left_out=$left_out_inertia_values.pdf"),fig_opt_inertia_vs_fb)
+    CairoMakie.save(joinpath(MA_DIR, "WS", "optimal_inertia_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=[_],M_left_out=$left_out_inertia_values.png"),fig_opt_inertia_vs_fb)
 end
 fig_opt_inertia_vs_fb
