@@ -28,10 +28,10 @@ fontsize = labelsize = 26
 # markers
 markersize = 15
 markers_labels = [
-    (:circle, ":circle"),
+    (:utriangle, ":utriangle"),
     (:rect, ":rect"),
     # (:star5, "star5"),
-    (:utriangle, ":utriangle"),
+    (:circle, ":circle"),
 ]
 
 exp_name_date = "WS_k=4_exp01_PIK_HPC_K_=3,N_G=32_20240128_215811.815"

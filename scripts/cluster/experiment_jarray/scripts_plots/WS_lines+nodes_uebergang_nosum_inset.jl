@@ -19,8 +19,8 @@ using CairoMakie
 
 # plotting parameters
 create_posprocessing_data = false # set to `false` for fast plotting
-sum_lines_nodes = true
-normalize = false
+sum_lines_nodes = false
+normalize = true
 line_colors = [Makie.wong_colors()[3], Makie.wong_colors()[5], Makie.wong_colors()[6]]
 colormap_frequencies = true
 opacity = 0.15
@@ -199,7 +199,7 @@ fig_lines_and_nodes = Figure(fontsize = fontsize)
 ax_lines_and_nodes = Axis(fig_lines_and_nodes[1, 1],
     # title = sum_lines_nodes ? "Summed line and node failures" : "Line and node failures",
     xlabel = L"Inertia I [$s^2$]",
-    ylabel = normalize ? "normalized average of failures" : L"Averaged failures $N_{fail}$",
+    ylabel = normalize ? "Normalized average of failures" : L"Averaged failures $N_{fail}$",
 )
 # hidedecorations!(ax_lines_and_nodes, grid=false)
 
@@ -220,8 +220,7 @@ inset_ax = Axis(fig_lines_and_nodes[1, 1],
 
 # hidedecorations!(inset_ax)
 xlims!(inset_ax, 0, 30)
-ylims!(inset_ax, 0, 7.5)
-
+ylims!(inset_ax, 0, 0.036)
 
 # Create figures depending on the modes (loop).
 failure_modes = exp_params_dict[:failure_modes]
@@ -293,17 +292,22 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
                 scatterlines!(inset_ax, filtered_inertia_values, y_lines + y_nodes, marker = marker, markersize = markersize, color = line_colors[color_index])
                 band!(inset_ax, filtered_inertia_values, y_lines + y_nodes + err_nodes_plus_lines, y_lines + y_nodes - err_nodes_plus_lines, transparency=true, color = (line_colors[color_index], opacity))
             else
-                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines, linestyle=:dash, marker = marker, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines, linestyle=:dash, marker = :dtriangle, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β Line failures (dashed)", color = line_colors[color_index])
                 band!(ax_lines_and_nodes, filtered_inertia_values, y_lines + err_lines, y_lines - err_lines, transparency=true, color = (line_colors[color_index], opacity))
-                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_nodes, marker = marker, markersize = markersize, color = line_colors[color_index])
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_nodes, marker = marker, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β Node failures (solid)", color = line_colors[color_index])
                 band!(ax_lines_and_nodes, filtered_inertia_values, y_nodes + err_nodes, y_nodes - err_nodes, transparency=true, color = (line_colors[color_index], opacity))
+                # inset plot
+                scatterlines!(inset_ax, filtered_inertia_values, y_lines, linestyle=:dash, marker = :dtriangle, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β Line failures (dashed)", color = line_colors[color_index])
+                band!(inset_ax, filtered_inertia_values, y_lines + err_lines, y_lines - err_lines, transparency=true, color = (line_colors[color_index], opacity))
+                scatterlines!(inset_ax, filtered_inertia_values, y_nodes, marker = marker, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β Node failures (solid)", color = line_colors[color_index])
+                band!(inset_ax, filtered_inertia_values, y_nodes + err_nodes, y_nodes - err_nodes, transparency=true, color = (line_colors[color_index], opacity))
             end
         end
     end
 end
 N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, 1)
-# axislegend(ax_lines_and_nodes, position = :lt, labelsize=labelsize)
-axislegend(ax_lines_and_nodes, position = (0.08,0.99), labelsize=labelsize-5)
+# axislegend(ax_lines_and_nodes, position = (0.08,0.99), labelsize=labelsize-5)
+axislegend(ax_lines_and_nodes, position = (0.98,0.12), labelsize=labelsize-9)
 
 k_str = string(exp_params_dict[:k])
 filtered_freq_bounds_str = string(filtered_freq_bounds)

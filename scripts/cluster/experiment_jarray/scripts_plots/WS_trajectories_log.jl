@@ -94,12 +94,13 @@ deleteat!(line_colors, 2) # delete yellow
 fontsize = 26
 titlesize = (fontsize+5)
 linewidth = 3.5
+xscale=log
 fig = Figure(resolution=(2100,1500), fontsize= fontsize)
 
 # FREQUENCIES ########################################################################
 # frequencies of failed gen nodes I=0.2 s^2
 sol = sol415
-fig[1,1] = ax = Axis(fig; title=L"Inertia $I=0.2$ $s^2$", titlealign = :left, titlesize = titlesize)
+fig[1,1] = ax = Axis(fig; title=L"Inertia $I=0.2$ $s^2$", titlealign = :left, titlesize = titlesize, xscale=xscale)
 network = import_system_wrapper(df_config, 1)
 (nd, p, overload_cb) = nd_model(network)
 state_idx = idx_containing(nd, "ω") # array: indices of ω-states
@@ -108,51 +109,57 @@ node_idx = map(s -> parse(Int, String(s)[4:end]), nd.syms[state_idx]) # array: i
 failing_nodes_idxs = all_failing_nodes_idxs
 for (i, l) in pairs([state_idx[findfirst(x -> x == i, node_idx)] for i in failing_nodes_idxs])
     t, s = seriesforidx(sol.sol, l)
+    t = t[2:end]
+    s = s[2:end]
     s = s./(2*π)
     node_idx = failing_nodes_idxs[i]
     lines!(ax, t, s; label="Node $node_idx", color=node_colors[i], linewidth=linewidth)
     scatter!(ax, (t[end], s[end]); color=node_colors[i], marker=:star5, markersize=25)
 end
-xlims!(ax, 0, 1.3)
-ax.xticks = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.1]
+xlims!(ax, 0.09, 1.3)
+ax.xticks = [0.1, 0.3, 0.5, 0.7, 0.9, 1.1]
 ax.yticks = [-0.03, -0.02, -0.01, 0.00, 0.01, 0.02, 0.03]
 axislegend(ax, position = :rt, nbanks = 2)
 
 # frequencies of failed gen nodes I=3.0 s^2
 sol = sol418
-fig[2,1] = ax = Axis(fig; ylabel="Frequency [Hz]", title=L"Inertia $I=3.0$ $s^2$", titlealign = :left, titlesize = titlesize)
+fig[2,1] = ax = Axis(fig; ylabel="Frequency [Hz]", title=L"Inertia $I=3.0$ $s^2$", titlealign = :left, titlesize = titlesize, xscale=xscale)
 (nd, p, overload_cb) = nd_model(network)
 state_idx = idx_containing(nd, "ω") # array: indices of ω-states
 node_idx = map(s -> parse(Int, String(s)[4:end]), nd.syms[state_idx]) # array: indices of vertices that are generators
 failing_nodes_idxs = all_failing_nodes_idxs
 for (i, l) in pairs([state_idx[findfirst(x -> x == i, node_idx)] for i in failing_nodes_idxs])
     t, s = seriesforidx(sol.sol, l)
+    t = t[2:end]
+    s = s[2:end]
     s = s./(2*π)
     node_idx = failing_nodes_idxs[i]
     lines!(ax, t, s; label="Node $node_idx", color=node_colors[i], linewidth=linewidth)
     scatter!(ax, (t[end], s[end]); color=node_colors[i], marker=:star5, markersize=25)
 end
-xlims!(ax, 0, 5.0)
+xlims!(ax, 0.09, 5.0)
 ax.xticks = [0.1, 1, 2, 3, 4]
 ax.yticks = [-0.03, -0.02, -0.01, 0.00, 0.01, 0.02, 0.03]
 # axislegend(ax, position = :rt, nbanks = 2)
 
 # frequencies of failed gen nodes I=30.0 s^2
 sol = sol423
-fig[3,1] = ax = Axis(fig; xlabel="Time [s]", title=L"Inertia $I=30.0$ $s^2$", titlealign = :left, titlesize = titlesize)
+fig[3,1] = ax = Axis(fig; xlabel="Time [s]", title=L"Inertia $I=30.0$ $s^2$", titlealign = :left, titlesize = titlesize, xscale=xscale)
 (nd, p, overload_cb) = nd_model(network)
 state_idx = idx_containing(nd, "ω") # array: indices of ω-states
 node_idx = map(s -> parse(Int, String(s)[4:end]), nd.syms[state_idx]) # array: indices of vertices that are generators
 failing_nodes_idxs = all_failing_nodes_idxs
 for (i, l) in pairs([state_idx[findfirst(x -> x == i, node_idx)] for i in failing_nodes_idxs])
     t, s = seriesforidx(sol.sol, l)
+    t = t[2:end]
+    s = s[2:end]
     s = s./(2*π)
     node_idx = failing_nodes_idxs[i]
     lines!(ax, t, s; label="Node $node_idx", color=node_colors[i], linewidth=linewidth)
     scatter!(ax, (t[end], s[end]); color=node_colors[i], marker=:star5, markersize=25)
 end
-xlims!(ax, 0, 75.0)
-ax.xticks = [0, 25, 50, 75, 100]
+xlims!(ax, 0.09, 75.0)
+ax.xticks = [25, 50, 75, 100]
 ax.yticks = [-0.03, -0.02, -0.01, 0.00, 0.01, 0.02, 0.03]
 # axislegend(ax, position = :rt, nbanks = 2)
 
@@ -203,10 +210,10 @@ end
 # xlims!(ax, 0, 1.7)
 # ax.xticks = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.1]
 # axislegend(ax, position = :rt, nbanks = 3)
-fig
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_traj,lines+nodes,task_ids=$task_id_array,init_fail=$initial_fail.pdf"),fig)
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_traj,lines+nodes,task_ids=$task_id_array,init_fail=$initial_fail.png"),fig)
 
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_traj_log,lines+nodes,task_ids=$task_id_array,init_fail=$initial_fail.pdf"),fig)
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_traj_log,lines+nodes,task_ids=$task_id_array,init_fail=$initial_fail.png"),fig)
+fig
 
 ################################################################################
 ############################ Nodes only ########################################

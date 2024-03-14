@@ -28,9 +28,9 @@ markersize = 15
 
 exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
-left_out_frequencies = [0.005, 0.010,
+left_out_frequencies = [
     0.16, 0.17, 0.18, 0.19, 0.2, 0.21, 0.22, 0.23, 0.24, 0.25, 0.26, 0.27, 0.28, 0.29, 0.3, 0.8]
-left_out_inertia_values = [20.0, 30.0]
+left_out_inertia_values = []
 left_out_β_values = []
 
 ################################################################################
@@ -313,6 +313,6 @@ if length(filtered_freq_bounds) > 1
     ax_hm.xlabelpadding = 15
     ax_hm.yticks = [1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
 end
-CairoMakie.save(joinpath(MA_DIR, "WS", "heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=[_],M_left_out=$left_out_inertia_values.pdf"),fig_hm)
-CairoMakie.save(joinpath(MA_DIR, "WS", "heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=[_],M_left_out=$left_out_inertia_values.png"),fig_hm)
+# CairoMakie.save(joinpath(MA_DIR, "WS", "heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=[_],M_left_out=$left_out_inertia_values.pdf"),fig_hm)
+# CairoMakie.save(joinpath(MA_DIR, "WS", "heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=[_],M_left_out=$left_out_inertia_values.png"),fig_hm)
 fig_hm
