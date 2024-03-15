@@ -18,11 +18,9 @@ using CairoMakie
 
 
 # plotting parameters
-create_posprocessing_data = false # set to `false` for fast plotting
+create_posprocessing_data = true # set to `false` for fast plotting
 sum_lines_nodes = false
 normalize = true
-line_colors = [Makie.wong_colors()[3], Makie.wong_colors()[5], Makie.wong_colors()[6]]
-colormap_frequencies = true
 opacity = 0.30
 fontsize = labelsize = 26
 # markers
@@ -33,7 +31,6 @@ exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 left_out_frequencies = [
     0.16, 0.17, 0.18, 0.19, 0.2, 0.21, 0.22, 0.23, 0.24, 0.25, 0.26, 0.27, 0.28, 0.29, 0.3, 0.8]
-left_out_inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0]
 left_out_β_values = []
 
 ################################################################################
@@ -184,21 +181,23 @@ end
 
 
 ################################################################################
-################################ Plotting  #####################################
+################################## Plotting ####################################
 ################################################################################
 inertia_values = exp_params_dict[:inertia_values]
 freq_bounds = exp_params_dict[:freq_bounds]
 
-for filtered_inertia_values in inertia_values
+for i in inertia_values
     filtered_freq_bounds = filter!(x->x ∉ left_out_frequencies, deepcopy(freq_bounds))
-    # filtered_inertia_values = filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values))
     filtered_β_values = filter!(x->x ∉ left_out_β_values, deepcopy(exp_params_dict[:β]))
+    # filtered_inertia_values = filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values))
+    left_out_inertia_values = filter(x -> x != i, deepcopy(inertia_values))
+
 
     fig_lines_and_nodes = Figure(fontsize = fontsize)
     ax_lines_and_nodes = Axis(fig_lines_and_nodes[1, 1], xticklabelrotation=π/2,
-        # title = sum_lines_nodes ? "Summed line and node failures" : "Line and node failures",
-        xlabel = "Frequency bound f_b [Hz]",
-        ylabel = normalize ? "Normalized average of failures" : L"Averaged failures $N_{fail}$",
+    # title = sum_lines_nodes ? "Summed line and node failures" : "Line and node failures",
+    xlabel = "Frequency bound f_b [Hz]",
+    ylabel = normalize ? "Normalized average of failures" : L"Averaged failures $N_{fail}$",
     )
 
     # Create figures depending on the modes (loop).
@@ -215,7 +214,6 @@ for filtered_inertia_values in inertia_values
     of failures (the latter for a single network) =#
     err_lines = Float64[]; err_nodes = Float64[]; err_nodes_plus_lines = Float64[]
     for task_id in df_avg_error.ArrayTaskID
-
         # Leave certain jobs out:
         N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
         # frequency bounds
@@ -247,12 +245,13 @@ for filtered_inertia_values in inertia_values
         end
     end
 
-    inertia_value = filtered_inertia_values[1]
+    filtered_freq_bounds
+    (y_lines + y_nodes)
     if sum_lines_nodes == true
-        scatterlines!(ax_lines_and_nodes, filtered_freq_bounds, (y_lines + y_nodes), markersize = markersize, color=:black, label = "I=$inertia_value,k=$k,β=$β")
+        scatterlines!(ax_lines_and_nodes, filtered_freq_bounds, (y_lines + y_nodes), markersize = markersize, color=:black, label = "I=$i,k=$k,β=$β")
         band!(ax_lines_and_nodes, filtered_freq_bounds, y_lines + y_nodes + err_nodes_plus_lines, y_lines + y_nodes - err_nodes_plus_lines, color=(:black, opacity), transparency=true)
     else
-        lines!(ax_lines_and_nodes, [NaN], [NaN]; label="I=$inertia_value,k=$k,β=$β", color=:white, linewidth=3)
+        lines!(ax_lines_and_nodes, [NaN], [NaN]; label="I=$i,k=$k,β=$β", color=:white, linewidth=3)
         scatterlines!(ax_lines_and_nodes, filtered_freq_bounds, y_lines, linestyle=:dash, markersize = markersize, color=:black, label = "Line failures (dashed)")
         band!(ax_lines_and_nodes, filtered_freq_bounds, y_lines + err_lines, y_lines - err_lines, color=(:black, opacity), transparency=true)
 
@@ -272,7 +271,7 @@ for filtered_inertia_values in inertia_values
     filtered_freq_bounds_str = string(filtered_freq_bounds)
     K_str = string(exp_params_dict[:K])
 
-    CairoMakie.save(joinpath(MA_DIR, "WS", "fb_vs_failures", "WS_f_b_vs_failures_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,I=$filtered_inertia_values.png"),fig_lines_and_nodes)
-    CairoMakie.save(joinpath(MA_DIR, "WS", "fb_vs_failures", "WS_f_b_vs_failures_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,I=$filtered_inertia_values.pdf"),fig_lines_and_nodes)
+    CairoMakie.save(joinpath(MA_DIR, "WS", "fb_vs_failures", "WS_f_b_vs_failures_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,I=$i.png"),fig_lines_and_nodes)
+    CairoMakie.save(joinpath(MA_DIR, "WS", "fb_vs_failures", "WS_f_b_vs_failures_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,I=$i.pdf"),fig_lines_and_nodes)
     # fig_lines_and_nodes
 end
