@@ -183,8 +183,6 @@ y_lines = Float64[]; y_nodes = Float64[]
 #= Different inertia values for: Ensemble standard error over normalized average
 of failures (the latter for a single network) =#
 err_lines = Float64[]; err_nodes = Float64[]; err_nodes_plus_lines = Float64[]
-all_failures_heatmap = Float64[]
-min_failures = Float64[]; opt_inertia = Float64[]
 for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an ArrayTaskID in the strict sense but an average over task IDs
     #= Empty arrays (after all inertia values of one configuration pushed to array)
     The entries in df_avg_error are ordered accordningly.=#
@@ -225,14 +223,12 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
         M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = RTS_get_network_args_stripped(df_config, task_id)
 
         if (trip_lines == :dynamic &&  trip_nodes == :none)
-            if freq_bound == filtered_freq_bounds[1]
-                scatterlines!(ax_lines_only, filtered_inertia_values, y_lines, label = "", color = Makie.wong_colors()[1], linewidth = 3.5)
-            end
+            scatterlines!(ax_lines_only, filtered_inertia_values, y_lines, label = "", color = Makie.wong_colors()[1], linewidth = 3.5)
         end
     end
 end
 M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = RTS_get_network_args_stripped(df_config, 1)
 
-CairoMakie.save(joinpath(MA_DIR, "RTS_lines_only_M_left_out=$left_out_inertia_values.png"),fig_lines_only)
-CairoMakie.save(joinpath(MA_DIR, "RTS_lines_only_M_left_out=$left_out_inertia_values.pdf"),fig_lines_only)
+# CairoMakie.save(joinpath(MA_DIR, "RTS_lines_only_M_left_out=$left_out_inertia_values.png"),fig_lines_only)
+# CairoMakie.save(joinpath(MA_DIR, "RTS_lines_only_M_left_out=$left_out_inertia_values.pdf"),fig_lines_only)
 fig_lines_only
