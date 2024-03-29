@@ -229,15 +229,10 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
             if sum_lines_nodes == true
                 # scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes, marker = marker, markersize = markersize, label = "f_b=$freq_bound", color = line_colors[color_index])
                 scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes, color = line_colors[color_index], label = "f_b=$freq_bound")
-                # heatmap
-                append!(all_failures_heatmap, (y_lines + y_nodes))
-                # optimal inertia vs. f_b
-                push!(min_failures, minimum(y_lines + y_nodes))
-                push!(opt_inertia, filtered_inertia_values[argmin(y_lines + y_nodes)])
             else
-                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines, linestyle=:dash, marker = marker, markersize = markersize, label = "f_b=$freq_bound", color = line_colors[color_index])
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines, linestyle=:dash, label = "f_b=$freq_bound", color = line_colors[color_index])
                 band!(ax_lines_and_nodes, filtered_inertia_values, y_lines + err_lines, y_lines - err_lines, transparency=true, color = (line_colors[color_index], opacity))
-                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_nodes, marker = marker, markersize = markersize, color = line_colors[color_index])
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_nodes, color = line_colors[color_index])
             end
         end
     end
@@ -247,7 +242,6 @@ axislegend(ax_lines_and_nodes, position = :lt, labelsize=labelsize)
 
 # Save plots
 filtered_freq_bounds_str = string(filtered_freq_bounds)
-# filtered_freq_bounds_str = "all_frequencies"
-CairoMakie.save(joinpath(MA_DIR, "RTS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
-CairoMakie.save(joinpath(MA_DIR, "RTS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
+# CairoMakie.save(joinpath(MA_DIR, "RTS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
+# CairoMakie.save(joinpath(MA_DIR, "RTS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
 fig_lines_and_nodes
