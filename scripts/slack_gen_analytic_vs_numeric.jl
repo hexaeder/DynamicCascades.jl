@@ -22,13 +22,14 @@ M = 1.0
 D = 0.5
 K = 1.0
 P0 = 0.0
-P1 = P_perturb = 1.0
+P1 = P_perturb = 0.93
 failtime = 1.0
 Z = 4*M*K - D^2
 
 ################################################################################
 ############################ numeric vs. analytic model ########################
 ################################################################################
+# NOTE NOTE NOTE NOTE in ND_model.jl uncomment `load_model = :slack`
 network = import_system(:nadir_sim; M=float(M)u"s^2", γ=float(D)u"s", K=K, tconst=0.1u"s")
 sol = simulate(network;
     initial_fail = [1],
@@ -42,12 +43,12 @@ sol = simulate(network;
     solverargs = (; dtmax = 0.01));
 
 # plot solution
-fig = Figure(resolution=(1800,500), fontsize=35)
+fig = Figure(resolution=(1800,500), fontsize=45)
 # fig = Figure(fontsize=35)
 
 # phase | flow #################################################################
 # fig[1,1] = ax = Axis(fig; xlabel="time t in s", ylabel="phase angle θ | apparent power flow in p.u.", title="Phase | Power flow")
-fig[1,1] = ax = Axis(fig; xlabel="time t [s]", ylabel="phase angle θ [rad]", title="Phase")
+fig[1,1] = ax = Axis(fig; xlabel= L"Time $t$ [s]", ylabel=L"$\theta$ [rad]")
 # phase of gen
 t = sol.sol.t
 y_numeric = [sol.sol.u[i][1] for i in 1:length(sol.sol.t)]
@@ -78,12 +79,14 @@ lines!(ax, t, y_powerflow_analytic; label="analytic flow", color=:black, linewid
 
 # add parameters/coefficients to legend
 R_2 = round(R_squared(y_analytic, y_numeric), digits = 3)
-lines!(ax, [NaN], [NaN]; label="R^2=$R_2", color=:white, linewidth=3)
-ylims!(-1, 20)
-axislegend()
+lines!(ax, [NaN], [NaN]; label="R²=$R_2, P'=$P1", color=:white, linewidth=3)
+# ylims!(-1, 15)
+# xlims!(0, 32)
+# axislegend(ax, position = :rb, nbanks=2, labelsize=32)
+axislegend(ax, position = :rt, nbanks=1, labelsize=32)
 fig
 # frequency ####################################################################
-fig[1,2] = ax = Axis(fig; xlabel="time t [s]", ylabel="ang. frequency ω [rad/s]", title="Frequency")
+fig[1,2] = ax = Axis(fig; xlabel=L"Time $t$ [s]", ylabel=L"$\omega$ [rad/s]")
 # frequency of gen
 t = sol.sol.t
 y_numeric = [sol.sol.u[i][2] for i in 1:length(sol.sol.t)]
@@ -100,11 +103,14 @@ lines!(ax, t, y_analytic; label="analytic", linewidth=3)
 
 # add parameters/coefficients to legend
 R_2 = round(R_squared(y_analytic, y_numeric), digits = 3)
-lines!(ax, [NaN], [NaN]; label="R^2=$R_2", color=:white, linewidth=3)
-axislegend()
+lines!(ax, [NaN], [NaN]; label="R²=$R_2, P'=$P1", color=:white, linewidth=3)
+axislegend(ax, labelsize=32)
+# xlims!(0, 32)
+# axislegend(ax, position=(1.0,.35), labelsize=32)
+fig
 
 # # RoCoF ########################################################################
-# fig[2,2] = ax = Axis(fig; xlabel="time t [s]", ylabel="RoCoF [rad/s^2]", title="Rate of change of angular frequency")
+# fig[1,3] = ax = Axis(fig; xlabel="time t [s]", ylabel="RoCoF [rad/s^2]", title="Rate of change of angular frequency")
 # t = sol.sol.t
 # y_numeric = [sol.sol(t[i], Val{1})[2] for i in 1:length(sol.sol.t)]
 # lines!(ax, t, y_numeric; label="numeric", linewidth=3)
@@ -116,14 +122,15 @@ axislegend()
 # # add parameters/coefficients to legend
 # R_2 = round(R_squared(y_analytic, y_numeric), digits = 3)
 # lines!(ax, [NaN], [NaN]; label="R^2=$R_2", color=:white, linewidth=3)
-axislegend()
-
-# parameters = "Parameters: inertia M=$M [s^2], damping D=$D [s], coupling K=$K, power perturbation P_perturb=$P_perturb [p.u.]"
-# supertitle = Label(fig[0, :], parameters)
-# sideinfo = Label(fig[3, 1:2], parameters)
-fig
+# axislegend()
+#
+# # parameters = "Parameters: inertia M=$M [s^2], damping D=$D [s], coupling K=$K, power perturbation P_perturb=$P_perturb [p.u.]"
+# # supertitle = Label(fig[0, :], parameters)
+# # sideinfo = Label(fig[3, 1:2], parameters)
+# fig
 
 save(joinpath(MA_DIR, "nadir_sim_M=$M,D=$D,K=$K,P_perturb=$P_perturb.pdf"), fig)
+save(joinpath(MA_DIR, "nadir_sim_M=$M,D=$D,K=$K,P_perturb=$P_perturb.png"), fig)
 
 ################################################################################
 ################### Testing if nadirs are computed correctly ###################
@@ -161,17 +168,18 @@ save(joinpath(PLOT_DIR, "test_frequency_nadir_M=$M,D=$D,K=$K,P_perturb=$P_pertur
 ############################### plot nadirs ####################################
 ################################################################################
 # phase nadir
-fig = Figure(fontsize = 30)
-ax = Axis(fig[1, 1]; xlabel="inertia I [s^2]", ylabel="max. absolute phase deviation ΔΘ", xticks=1:1:12)
+fig = Figure(fontsize = 40)
+ax = Axis(fig[1, 1]; xlabel= L"Inertia I [$s^2$]", ylabel= L"$\Delta \theta$ [rad]", xticks=1:1:12)
 x = range(0.0, 12, length=1200)
-D_values = [0.1, 0.5, 1.0, 2.0, 3.0]
+D_values = [0.1, 0.5, 1.0, 2.0]
 for D in D_values
     y = phase_nadir.(x, D, K, P0, P1)
     lines!(ax, x, y; label="D=$D", linewidth=4)
 end
-axislegend()
+axislegend(ax, position=:rb, nbanks = 2)
 fig
 save(joinpath(MA_DIR, "phase_nadir_different_dampings.pdf"), fig)
+save(joinpath(MA_DIR, "phase_nadir_different_dampings.png"), fig)
 
 fig = Figure(fontsize = 30)
 ax = Axis(fig[1, 1]; xlabel="damping D", ylabel="max. absolute phase deviation ΔΘ", xticks=1:1:12)
@@ -186,8 +194,8 @@ fig
 save(joinpath(MA_DIR, "phase_nadir_different_inertia.pdf"), fig)
 
 # frequency nadir
-fig = Figure(fontsize = 30)
-ax = Axis(fig[1, 1]; xlabel="inertia I [s^2]", ylabel="max. absolute frequency deviation Δf", xticks=1:1:12)
+fig = Figure(fontsize = 40)
+ax = Axis(fig[1, 1]; xlabel= L"Inertia I [$s^2$]", ylabel= L"$\Delta \omega$ [rad/s]", xticks=1:1:12)
 x = range(0.0, 12, length=1200)
 D_values = [0.1, 0.5, 1.0, 2.0]
 for D in D_values
@@ -197,6 +205,7 @@ end
 axislegend()
 fig
 save(joinpath(MA_DIR, "frequency_nadir_different_dampings.pdf"), fig)
+save(joinpath(MA_DIR, "frequency_nadir_different_dampings.png"), fig)
 
 fig = Figure(fontsize = 30)
 ax = Axis(fig[1, 1]; xlabel="damping D", ylabel="max. absolute frequency deviation Δf", xticks=1:1:12)
@@ -249,12 +258,18 @@ save(joinpath(MA_DIR, "zoomed_heatmap_frequency_K=$K,P_perturb=$P_perturb.png"),
 
 ##################### border complex and real eigenvalues ######################
 fig = Figure(fontsize=30)
-ax = Axis(fig[1, 1]; xlabel="inertia I [s^2]", ylabel="damping D [s]",
-                    title="Complex (oscillating) vs. real eigenvalues (overdamped), K=$K",
-                    titlesize=20)
+ax = Axis(fig[1, 1]; xlabel=L"Inertia I [$s^2$]", ylabel=L"Damping D [$s$]",
+                    # title="Complex (oscillating) vs. real eigenvalues (overdamped), K=$K",
+                    # titlesize=20
+                    xgridvisible = false,
+                    ygridvisible = false,
+                    )
 x = range(0.0, 6, length=600)
 y = border_complex_real.(x, K)
-lines!(ax, x, y, linewidth=4)
+lines!(ax, x, y, linewidth=4, label = L"$D=2\sqrt{IK}$")
+text!(ax, 1.7, 4., text = "Real-valued (overdamped)", align = (:center, :center), textsize=30)
+text!(ax, 3.5, 2., text = "Complex-valued (oscillating)", align = (:center, :center), textsize=30)
+axislegend(ax, position=(1.,0.75))
 fig
 save(joinpath(MA_DIR, "complex_vs_real_eigenvalues_K=$K.pdf"), fig)
 save(joinpath(MA_DIR, "complex_vs_real_eigenvalues_K=$K.png"), fig)
