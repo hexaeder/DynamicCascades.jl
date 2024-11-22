@@ -21,7 +21,7 @@ create_posprocessing_data = false # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
 opacity = 0.3
-fontsize = labelsize = 26
+fontsize = labelsize = 40
 line_colors = [Makie.wong_colors()[3], Makie.wong_colors()[5], Makie.wong_colors()[6]]
 # markers
 markersize = 15
@@ -229,11 +229,6 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
             if sum_lines_nodes == true
                 # scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes, marker = marker, markersize = markersize, label = "f_b=$freq_bound", color = line_colors[color_index])
                 scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes, color = line_colors[color_index], label = "f_b=$freq_bound")
-                # heatmap
-                append!(all_failures_heatmap, (y_lines + y_nodes))
-                # optimal inertia vs. f_b
-                push!(min_failures, minimum(y_lines + y_nodes))
-                push!(opt_inertia, filtered_inertia_values[argmin(y_lines + y_nodes)])
             else
                 scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines, linestyle=:dash, marker = marker, markersize = markersize, label = "f_b=$freq_bound", color = line_colors[color_index])
                 band!(ax_lines_and_nodes, filtered_inertia_values, y_lines + err_lines, y_lines - err_lines, transparency=true, color = (line_colors[color_index], opacity))

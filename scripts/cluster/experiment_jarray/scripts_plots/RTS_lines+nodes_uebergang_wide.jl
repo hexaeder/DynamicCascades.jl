@@ -17,11 +17,11 @@ using Colors, ColorSchemes
 using CairoMakie
 
 # plotting parameters
-create_posprocessing_data = true # set to `false` for fast plotting
+create_posprocessing_data = false # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
 opacity = 0.3
-fontsize = labelsize = 26
+fontsize = labelsize = 40
 line_colors = [Makie.wong_colors()[6]]
 # markers
 markersize = 15
@@ -242,6 +242,6 @@ axislegend(ax_lines_and_nodes, position = :lt, labelsize=labelsize)
 
 # Save plots
 filtered_freq_bounds_str = string(filtered_freq_bounds)
-# CairoMakie.save(joinpath(MA_DIR, "RTS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
-# CairoMakie.save(joinpath(MA_DIR, "RTS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
+CairoMakie.save(joinpath(MA_DIR, "RTS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
+CairoMakie.save(joinpath(MA_DIR, "RTS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
 fig_lines_and_nodes
