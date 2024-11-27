@@ -28,7 +28,7 @@ using CairoMakie
 
 initial_fail = 78
 task_id_array = [415, 418, 423]
-task_id = 418
+task_id = 423
 exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
 
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
@@ -41,27 +41,27 @@ steadystate_choice = exp_params_dict[:steadystate_choice]
 
 #= Generate and save sol-Objects, the data for the plots. Only use this for recreating
 the solution objects =#
-# network = import_system_wrapper(df_config, task_id)
-#
-# if steadystate_choice == :rootfind
-#     x_static = steadystate(network; verbose=true) # "Old" way: leads to some errors, thus the `catch`-option below
-# elseif steadystate_choice == :relaxation
-#     x_static = steadystate_relaxation(network; verbose=true) # "New" way, steady state more precise, less/no errors, probabyl slower
-# end
-#
-# sol = simulate(network;
-#                x_static=x_static,
-#                initial_fail = [initial_fail],
-#                init_pert = init_pert,
-#                tspan = (0, 100000),
-#                trip_lines = trip_lines,
-#                trip_nodes = trip_nodes,
-#                trip_load_nodes = :none,
-#                monitored_power_flow = monitored_power_flow,
-#                f_min = -freq_bound,
-#                f_max = freq_bound,
-#                solverargs = (;dtmax=0.01),
-#                verbose = true);
+network = import_system_wrapper(df_config, task_id)
+
+if steadystate_choice == :rootfind
+    x_static = steadystate(network; verbose=true) # "Old" way: leads to some errors, thus the `catch`-option below
+elseif steadystate_choice == :relaxation
+    x_static = steadystate_relaxation(network; verbose=true) # "New" way, steady state more precise, less/no errors, probabyl slower
+end
+
+sol = simulate(network;
+               x_static=x_static,
+               initial_fail = [initial_fail],
+               init_pert = init_pert,
+               tspan = (0, 10),
+               trip_lines = trip_lines,
+               trip_nodes = trip_nodes,
+               trip_load_nodes = :none,
+               monitored_power_flow = monitored_power_flow,
+               f_min = -freq_bound,
+               f_max = freq_bound,
+               solverargs = (;dtmax=0.01),
+               verbose = true);
 #
 # Serialization.serialize(joinpath(exp_data_dir, "trajectories", "task_id=$task_id.sol"), sol)
 
@@ -69,7 +69,6 @@ the solution objects =#
 sol415 = Serialization.deserialize(joinpath(exp_data_dir, "trajectories", "task_id=415.sol"))
 sol418 = Serialization.deserialize(joinpath(exp_data_dir, "trajectories", "task_id=418.sol"))
 sol423 = Serialization.deserialize(joinpath(exp_data_dir, "trajectories", "task_id=423.sol"))
-
 
 # 78: initial trigger line
 lines_task_id_415 = [78] # sol415.failures.saveval
@@ -195,10 +194,10 @@ fig[3,2] = ax = Axis(fig; xlabel="Time [s]", ylabel="Active power flow [p.u.]")
 # failing_lines_idxs = sol.failures.saveval
 failing_lines_idxs = all_failing_lines_idxs
 for (i, l) in pairs(failing_lines_idxs)
-    t, s = seriesforidx(sol.load_S, l)
+    t, s = seriesforidx(sol.load_P, l)
     line_idx = failing_lines_idxs[i]
-    lines!(ax, t, s; label="Line $line_idx", color=line_colors[i], linewidth=linewidth)
-    scatter!(ax, (t[end], s[end]); color=line_colors[i], marker=:star5, markersize=25)
+    lines!(ax, t, abs.(s); label="Line $line_idx", color=line_colors[i], linewidth=linewidth)
+    scatter!(ax, (t[end], abs(s[end])); color=line_colors[i], marker=:star5, markersize=25)
 end
 xlims!(ax, -1., 36.0)
 ax.xticks = [0.0, 5., 10., 15., 20., 25., 30., 35.]
@@ -206,138 +205,6 @@ ax.xticks = [0.0, 5., 10., 15., 20., 25., 30., 35.]
 fig
 # CairoMakie.save(joinpath(MA_DIR, "WS", "VE", "WS_traj,lines+nodes,task_ids=$task_id_array,init_fail=$initial_fail.pdf"),fig)
 # CairoMakie.save(joinpath(MA_DIR, "WS", "VE", "WS_traj,lines+nodes,task_ids=$task_id_array,init_fail=$initial_fail.png"),fig)
-
-################################################################################
-############################ Nodes only ########################################
-################################################################################
-
-fontsize = 26
-titlesize = (fontsize+5)
-linewidth = 3.5
-fig = Figure(resolution=(1000,1300), fontsize= fontsize)
-# fig = Figure(fontsize= fontsize)
-# FREQUENCIES ########################################################################
-# frequencies of failed gen nodes I=0.2 s^2
-sol = sol415
-fig[1,1] = ax = Axis(fig; title=L"Inertia $I=0.2$ $s^2$", titlealign = :left, titlesize = titlesize)
-(nd, p, overload_cb) = nd_model(network)
-state_idx = idx_containing(nd, "ω") # array: indices of ω-states
-node_idx = map(s -> parse(Int, String(s)[4:end]), nd.syms[state_idx]) # array: indices of vertices that are generators
-# failing_nodes_idxs = sol.failures_nodes.saveval
-failing_nodes_idxs = all_failing_nodes_idxs
-for (i, l) in pairs([state_idx[findfirst(x -> x == i, node_idx)] for i in failing_nodes_idxs])
-    t, s = seriesforidx(sol.sol, l)
-    s = s./(2*π)
-    node_idx = failing_nodes_idxs[i]
-    lines!(ax, t, s; label="Node $node_idx", color=node_colors[i], linewidth=linewidth)
-    scatter!(ax, (t[end], s[end]); color=node_colors[i], marker=:star5, markersize=25)
-end
-xlims!(ax, 0, 1.3)
-ax.xticks = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.1]
-ax.yticks = [-0.03, -0.02, -0.01, 0.00, 0.01, 0.02, 0.03]
-axislegend(ax, position = :rt, nbanks = 2)
-
-# frequencies of failed gen nodes I=3.0 s^2
-sol = sol418
-fig[2,1] = ax = Axis(fig; ylabel="Frequency [Hz]", title=L"Inertia $I=3.0$ $s^2$", titlealign = :left, titlesize = titlesize)
-(nd, p, overload_cb) = nd_model(network)
-state_idx = idx_containing(nd, "ω") # array: indices of ω-states
-node_idx = map(s -> parse(Int, String(s)[4:end]), nd.syms[state_idx]) # array: indices of vertices that are generators
-failing_nodes_idxs = all_failing_nodes_idxs
-for (i, l) in pairs([state_idx[findfirst(x -> x == i, node_idx)] for i in failing_nodes_idxs])
-    t, s = seriesforidx(sol.sol, l)
-    s = s./(2*π)
-    node_idx = failing_nodes_idxs[i]
-    lines!(ax, t, s; label="Node $node_idx", color=node_colors[i], linewidth=linewidth)
-    scatter!(ax, (t[end], s[end]); color=node_colors[i], marker=:star5, markersize=25)
-end
-xlims!(ax, 0, 5.0)
-ax.xticks = [0.1, 1, 2, 3, 4]
-ax.yticks = [-0.03, -0.02, -0.01, 0.00, 0.01, 0.02, 0.03]
-# axislegend(ax, position = :rt, nbanks = 2)
-
-# frequencies of failed gen nodes I=30.0 s^2
-sol = sol423
-fig[3,1] = ax = Axis(fig; xlabel="Time [s]", title=L"Inertia $I=30.0$ $s^2$", titlealign = :left, titlesize = titlesize)
-(nd, p, overload_cb) = nd_model(network)
-state_idx = idx_containing(nd, "ω") # array: indices of ω-states
-node_idx = map(s -> parse(Int, String(s)[4:end]), nd.syms[state_idx]) # array: indices of vertices that are generators
-failing_nodes_idxs = all_failing_nodes_idxs
-for (i, l) in pairs([state_idx[findfirst(x -> x == i, node_idx)] for i in failing_nodes_idxs])
-    t, s = seriesforidx(sol.sol, l)
-    s = s./(2*π)
-    node_idx = failing_nodes_idxs[i]
-    lines!(ax, t, s; label="Node $node_idx", color=node_colors[i], linewidth=linewidth)
-    scatter!(ax, (t[end], s[end]); color=node_colors[i], marker=:star5, markersize=25)
-end
-xlims!(ax, 0, 75.0)
-ax.xticks = [0, 25, 50, 75, 100]
-ax.yticks = [-0.03, -0.02, -0.01, 0.00, 0.01, 0.02, 0.03]
-# axislegend(ax, position = :rt, nbanks = 2)
-
-# CairoMakie.save(joinpath(MA_DIR, "WS", "VE", "WS_traj,nodes_only,task_ids=$task_id_array,init_fail=$initial_fail.pdf"),fig)
-# CairoMakie.save(joinpath(MA_DIR, "WS", "VE", "WS_traj,nodes_only,task_ids=$task_id_array,init_fail=$initial_fail.png"),fig)
-
-
-################################################################################
-############################ Lines only ########################################
-################################################################################
-
-fontsize = 26
-titlesize = (fontsize+5)
-linewidth = 3.5
-fig = Figure(resolution=(1100,1400), fontsize= fontsize)
-# FLOWS ########################################################################
-# failed power flows I=0.2 s^2
-sol = sol415
-fig[1,1] = ax = Axis(fig; title=L"Inertia $I=0.2$ $s^2$", titlealign = :left, titlesize = titlesize)
-# failing_lines_idxs = sol.failures.saveval
-failing_lines_idxs = all_failing_lines_idxs
-for (i, l) in pairs(failing_lines_idxs)
-    t, s = seriesforidx(sol.load_S, l)
-    line_idx = failing_lines_idxs[i]
-    lines!(ax, t, s; label="Line $line_idx", color=line_colors[i], linewidth=linewidth)
-    scatter!(ax, (t[end], s[end]); color=line_colors[i], marker=:star5, markersize=25)
-end
-xlims!(ax, 0, 1.1)
-ax.xticks = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.1]
-# hlines!(ax, 2.1; color=:red, linestyle=:dash, linewidth=linewidth, label="Rating")
-axislegend(ax, position = (0.9,0.93), nbanks = 6, labelsize=22)
-
-# failed power flows I=3.0 s^2
-sol = sol418
-fig[2,1] = ax = Axis(fig; ylabel="Active power flow [p.u.]", title=L"Inertia $I=3.0$ $s^2$", titlealign = :left, titlesize = titlesize)
-# failing_lines_idxs = sol.failures.saveval
-failing_lines_idxs = all_failing_lines_idxs
-for (i, l) in pairs(failing_lines_idxs)
-    t, s = seriesforidx(sol.load_S, l)
-    line_idx = failing_lines_idxs[i]
-    lines!(ax, t, s; label="Line $line_idx", color=line_colors[i], linewidth=linewidth)
-    scatter!(ax, (t[end], s[end]); color=line_colors[i], marker=:star5, markersize=25)
-end
-xlims!(ax, 0, 1.5)
-ax.xticks = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.1, 1.3, 1.5]
-
-# axislegend(ax, position = :rt, nbanks = 3)
-
-# failed power flows I=30.0 s^2
-sol = sol423
-fig[3,1] = ax = Axis(fig; xlabel="Time [s]", title=L"Inertia $I=30.0$ $s^2$", titlealign = :left, titlesize = titlesize)
-# failing_lines_idxs = sol.failures.saveval
-failing_lines_idxs = all_failing_lines_idxs
-for (i, l) in pairs(failing_lines_idxs)
-    t, s = seriesforidx(sol.load_S, l)
-    line_idx = failing_lines_idxs[i]
-    lines!(ax, t, s; label="Line $line_idx", color=line_colors[i], linewidth=linewidth)
-    scatter!(ax, (t[end], s[end]); color=line_colors[i], marker=:star5, markersize=25)
-end
-# xlims!(ax, 0, 1.7)
-# ax.xticks = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.1]
-# axislegend(ax, position = :rt, nbanks = 3)
-
-# CairoMakie.save(joinpath(MA_DIR, "WS", "VE", "WS_traj,lines_only,task_ids=$task_id_array,init_fail=$initial_fail.pdf"),fig)
-# CairoMakie.save(joinpath(MA_DIR, "WS", "VE", "WS_traj,lines_only,task_ids=$task_id_array,init_fail=$initial_fail.png"),fig)
-
 
 # # plot all power flows # NOTE This takes really long
 # fig[2,2] = ax = Axis(fig; xlabel="time t in s", ylabel="apparent power flow in p.u.", title="power flow of all lines")

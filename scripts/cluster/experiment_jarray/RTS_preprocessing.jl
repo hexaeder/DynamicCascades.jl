@@ -35,7 +35,7 @@ N_ensemble_size = 1 # 100
 # Cascading params ##############
 init_pert = [:line] # initial perturbation set constant to an initial line failure
 
-monitored_power_flow = :reactive
+monitored_power_flow = :reactive # NOTE I meant "apparent" here.
 
 # frequency bounds
 # freq_bounds = [0.40, 0.42, 0.44, 0.46, 0.48, 0.49, 0.50, 0.51, 0.52, 0.53, 0.54, 0.55, 0.56, 0.57, 0.58, 0.59, 0.60, 0.61, 0.62, 0.63, 0.64, 0.66, 0.68, 0.70]
