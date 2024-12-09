@@ -235,7 +235,7 @@ function simulate(network;
                   trip_lines=:dynamic,
                   trip_nodes=:dynamic,
                   trip_load_nodes=:dynamic,
-                  monitored_power_flow =:apparent,
+                  monitored_power_flow =:apparent, #NOTE NOT WORKING!
                   f_min = -2.5,
                   f_max = 1.5,
                   filename=nothing,
@@ -622,25 +622,25 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
 
         ## dynamic line condition
         if trip_lines == :dynamic
-            if monitored_power_flow == :apparent
-                condition = let _current_load = zeros(ne(network)), _network = network, _rating = get_prop(network, edges(network), :rating)
-                    (out, u, t, integrator) -> begin
-                        # upcrossing through zero triggers condition
-                        calculate_apparent_power!(_current_load, u, integrator.p, t, integrator.f.f, _network)
-                        out .= _current_load .- _rating
-                        nothing
-                    end
-                end
-            elseif monitored_power_flow == :active
-                condition = let _current_load = zeros(ne(network)), _network = network, _rating = get_prop(network, edges(network), :rating)
-                    (out, u, t, integrator) -> begin
-                        # upcrossing through zero triggers condition
-                        calculate_active_power!(_current_load, u, integrator.p, t, integrator.f.f, _network)
-                        out .= _current_load .- _rating
-                        nothing
-                    end
-                end
-            end
+            # if monitored_power_flow == :apparent
+            #     condition = let _current_load = zeros(ne(network)), _network = network, _rating = get_prop(network, edges(network), :rating)
+            #         (out, u, t, integrator) -> begin
+            #             # upcrossing through zero triggers condition
+            #             calculate_apparent_power!(_current_load, u, integrator.p, t, integrator.f.f, _network)
+            #             out .= _current_load .- _rating
+            #             nothing
+            #         end
+            #     end
+            # elseif monitored_power_flow == :active
+            #     condition = let _current_load = zeros(ne(network)), _network = network, _rating = get_prop(network, edges(network), :rating)
+            #         (out, u, t, integrator) -> begin
+            #             # upcrossing through zero triggers condition
+            #             calculate_active_power!(_current_load, u, integrator.p, t, integrator.f.f, _network)
+            #             out .= _current_load .- _rating
+            #             nothing
+            #         end
+            #     end
+            # end
 
             function condition(out, u, t, integrator)
                 current_load = zeros(ne(network))
