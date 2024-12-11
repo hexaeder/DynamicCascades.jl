@@ -52,21 +52,132 @@ elseif steadystate_choice == :relaxation
     x_static = steadystate_relaxation(network; verbose=true) # "New" way, steady state more precise, less/no errors, probabyl slower
 end
 
-# sol = simulate(network;
-#                x_static=x_static,
-#                initial_fail = [initial_fail],
-#                init_pert = init_pert,
-#                tspan = (0, 100000),
-#                trip_lines = trip_lines,
-#                trip_nodes = trip_nodes,
-#                trip_load_nodes = :none,
-#                monitored_power_flow = monitored_power_flow,
-#                f_min = -freq_bound,
-#                f_max = freq_bound,
-#                solverargs = (;dtmax=0.01),
-#                verbose = true);
+
+
+sol = simulate(network;
+               x_static=x_static,
+               initial_fail = [initial_fail],
+               init_pert = init_pert,
+               tspan = (0, 10),
+               trip_lines = trip_lines,
+               trip_nodes = trip_nodes,
+               trip_load_nodes = :none,
+               monitored_power_flow = monitored_power_flow,
+               f_min = -freq_bound,
+               f_max = freq_bound,
+               solverargs = (;dtmax=0.01),
+               verbose = true);
 #
 # Serialization.serialize(joinpath(exp_data_dir, "trajectories", "task_id=$task_id.sol"), sol)
+
+
+################################################################################
+####################################  WS1   #####################################
+################################################################################
+
+initial_fail = 78
+task_id_array = [415, 418, 423]
+task_id = 423
+exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
+
+exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
+df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
+exp_params_dict = Serialization.deserialize(joinpath(exp_data_dir, "exp.params"))
+
+N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
+monitored_power_flow = exp_params_dict[:monitored_power_flow]
+# steadystate_choice = exp_params_dict[:steadystate_choice]
+steadystate_choice = :relaxation
+
+#= Generate and save sol-Objects, the data for the plots. Only use this for recreating
+the solution objects =#
+network = import_system_wrapper(df_config, task_id)
+
+# network is balanced
+sum([get_prop(network, i, :P) for i in 1:nv(network)]) # 3.3306690738754696e-15
+
+if steadystate_choice == :rootfind
+    x_static = steadystate(network; verbose=true) # "Old" way: leads to some errors, thus the `catch`-option below
+elseif steadystate_choice == :relaxation
+    x_static = steadystate_relaxation(network; verbose=true) # "New" way, steady state more precise, less/no errors, probabyl slower
+end
+
+sol = simulate(network;
+               x_static=x_static,
+               initial_fail = [initial_fail],
+               init_pert = init_pert,
+               tspan = (0, 0.11),
+               trip_lines = trip_lines,
+               trip_nodes = trip_nodes,
+               trip_load_nodes = :none,
+               monitored_power_flow = monitored_power_flow,
+               f_min = -freq_bound,
+               f_max = freq_bound,
+               solverargs = (;dtmax=0.01),
+               verbose = true);
+
+node_idx = 1
+tstep = 5
+all_neighbors(network, node_idx)
+P_i = get_prop(network, node_idx, :P)
+sol.sol.prob.p[1][1][2]
+sol.sol[tstep][1:2]
+all_edges = collect(edges(network.graph))
+sol.load_P.saveval[tstep][1] + sol.load_P.saveval[tstep][2] + sol.load_P.saveval[tstep][3] + sol.load_P.saveval[tstep][4] + sol.load_P.saveval[tstep][5]
+get_ΔP_ΔS_at_node(3, sol, network)
+maximum([get_ΔP_ΔS_at_node(i, sol, network)[1][1] for i in 1:100])
+################################################################################
+####################################  WS2 (longer time)   #####################################
+################################################################################
+
+initial_fail = 78
+task_id_array = [415, 418, 423]
+task_id = 423
+exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
+
+exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
+df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
+exp_params_dict = Serialization.deserialize(joinpath(exp_data_dir, "exp.params"))
+
+N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
+monitored_power_flow = exp_params_dict[:monitored_power_flow]
+steadystate_choice = exp_params_dict[:steadystate_choice]
+
+#= Generate and save sol-Objects, the data for the plots. Only use this for recreating
+the solution objects =#
+network = import_system_wrapper(df_config, task_id)
+
+# network is balanced
+sum([get_prop(network, i, :P) for i in 1:nv(network)]) # 3.3306690738754696e-15
+
+if steadystate_choice == :rootfind
+    x_static = steadystate(network; verbose=true) # "Old" way: leads to some errors, thus the `catch`-option below
+elseif steadystate_choice == :relaxation
+    x_static = steadystate_relaxation(network; verbose=true) # "New" way, steady state more precise, less/no errors, probabyl slower
+end
+
+sol = simulate(network;
+               x_static=x_static,
+               initial_fail = [initial_fail],
+               init_pert = init_pert,
+               tspan = (0, 20),
+               trip_lines = trip_lines,
+               trip_nodes = trip_nodes,
+               trip_load_nodes = :none,
+               monitored_power_flow = monitored_power_flow,
+               f_min = -freq_bound,
+               f_max = freq_bound,
+               solverargs = (;dtmax=0.01),
+               verbose = true);
+
+node_idx = 98
+tstep = 5
+all_neighbors(network, node_idx) # 29, 58, 92, 100
+P_i = get_prop(network, node_idx, :P)
+sol.sol.prob.p[1][node_idx][2]
+sol.sol[tstep][1:2]
+all_edges = collect(edges(network.graph))
+sol.load_P.saveval[tstep][29] + sol.load_P.saveval[tstep][58] + sol.load_P.saveval[tstep][3] + sol.load_P.saveval[tstep][4] + sol.load_P.saveval[tstep][5]
 
 ################################################################################
 #################################### debug #####################################
@@ -80,8 +191,61 @@ P_i = get_prop(network, node_idx, :P) # -0.06805549534093086
 all_edges = collect(edges(network.graph)) # First three elements: [Edge 1 => 2, Edge 1 => 77, Edge 1 => 100, ...]
 P_i + (sol.load_P.saveval[tstep][1] + sol.load_P.saveval[tstep][2] + sol.load_P.saveval[tstep][3]) == 0 # false
 
+sol.sol.prob.p[1][1][2] - (sol.load_P.saveval[tstep][1] + sol.load_P.saveval[tstep][2] + sol.load_P.saveval[tstep][3]) == 0
+
+sol.sol.prob.p
+(sol.load_P.saveval[tstep][1] + sol.load_P.saveval[tstep][2] + sol.load_P.saveval[tstep][3])
+sol.sol.prob
+
+sol.sol.prob.p[1][1][2] # -1.9201689338202725
+sol.sol[5][1:2]
+
+(nd, p, overload_cb) = nd_model(network);
+p[1][1][2]
+
+edge_p = set_coupling!(network)
+
+sol.failures_nodes.t
+sol.sol.prob.p[2]
 
 
+
+
+################################################################################
+################################  rtsgmlc   ####################################
+################################################################################
+damping = 0.1u"s"
+scale_inertia = 1.1
+network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.01u"s")
+
+sol = simulate(network;
+               initial_fail = Int[11],
+               failtime=0.1,
+               init_pert = :line,
+               tspan = (0, 3),
+               terminate_steady_state=true,
+               trip_lines = :dynamic,
+               trip_nodes = :dynamic,
+               trip_load_nodes = :none,
+               monitored_power_flow = :apparent,
+               f_min = -2.5,
+               f_max = 1.5,
+               solverargs = (;),#(;reltol=1e-7, abstol=1e-7),
+               verbose = true);
+
+sol.sol.prob.p
+
+node_idx = 1
+tstep = 1
+all_neighbors(network, node_idx) # [2, 3, 5]
+P_i = get_prop(network, node_idx, :P) # 0.570281423304538 p.u.
+sol.sol.prob.p[1][1][2] # 0.570281423304538
+sol.sol.t
+sol.sol[tstep][1:2]
+all_edges = collect(edges(network.graph)) # [Edge 1 => 2, Edge 1 => 3, Edge 1 => 5, ... ]
+sol.load_P.saveval[tstep][1] + sol.load_P.saveval[tstep][2] + sol.load_P.saveval[tstep][3] # 0.5702814233045225
+
+get_ΔP_ΔS_at_node(70, sol, network)
 
 ################################################################################
 ################################################################################
@@ -120,9 +284,9 @@ function get_ΔP_ΔS_at_node(node_idx, sol, network)
             end
         end
         # add power injection
-        ΔP = P_i + P_e # TODO check
+        ΔP = P_i - P_e # TODO check
         append!(s_ΔP, ΔP)
-        ΔS = P_i + S_e # TODO check
+        ΔS = P_i - S_e # TODO check
         append!(s_ΔS, ΔS)
     end
     s_ΔP, s_ΔS
@@ -144,6 +308,7 @@ nodes_task_id_423 = [98, 59, 62, 61, 60] # sol423.failures_nodes.saveval
 
 # all_failing_lines_idxs = [14, 78, 106, 131, 135, 146, 147, 148, 149, 194, 199]
 # all_failing_nodes_idxs = [29, 58, 59, 60, 61, 62, 92, 98]
+all_failing_nodes_idxs = [1, 2, 3, 4, 5, 6, 7, 9]
 all_failing_lines_idxs = Int64[1:200...]
 all_failing_nodes_idxs = Int64[1:100...]
 
@@ -311,7 +476,7 @@ xlims!(ax, 0, 4.1)
 # ax.xticks = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.1, 1.3, 1.5]
 
 # ΔP trajectories I=30.0 s^2
-sol = sol423
+# sol = sol423
 fig[2,3] = ax = Axis(fig; xlabel="Time [s]", ylabel="ΔP [p.u.]")
 # failing_nodes_idxs = sol.failures_nodes.saveval
 failing_nodes_idxs = all_failing_nodes_idxs
@@ -330,3 +495,4 @@ xlims!(ax, -1., xlim_30)
 fig
 # CairoMakie.save(joinpath("/home/brandner/nb_data/repos/Private_MA/paper/", "WS_traj,lines+nodes,task_ids=$task_id_array,init_fail=$initial_fail,_DeltaP_all_inertia_all_lines+nodes_long2.pdf"),fig)
 # CairoMakie.save(joinpath("/home/brandner/nb_data/repos/Private_MA/paper/", "WS_traj,lines+nodes,task_ids=$task_id_array,init_fail=$initial_fail,_DeltaP_all_inertia_all_lines+nodes_long2.png"),fig)
+get_ΔP_ΔS_at_node(99, sol, network)

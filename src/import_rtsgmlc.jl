@@ -95,7 +95,7 @@ function import_system(::Val{:rtsgmlc}; losses=false, scale_inertia=1.0, kwargs.
 end
 
 export balance_power!, lossless!
-function balance_power!(network) # s. Schmierzettel S. 7
+function balance_power!(network) # s. Schmierzettel S. 7, 7a
     nodes = describe_nodes(network)
     imbalance = sum(nodes.P)
     if imbalance ≈ 0
@@ -105,9 +105,12 @@ function balance_power!(network) # s. Schmierzettel S. 7
     genidx = findall(!ismissing, nodes.P_inj)
 
     # relative_inj = nodes.P_inj[genidx] ./ sum(nodes.P_inj[genidx]) # old code
+    # only `P_inj` is adapted, `P_load` stays constant
     relative_inj = abs.(nodes.P_inj[genidx]) ./ sum(abs.(nodes.P_inj[genidx]))
 
     newp = copy(nodes.P)
+    #= NOTE More natural would be to apply the following line of code to `P_inj`
+    only and then do P = P_inj - P_load again. =#
     newp[genidx] .-= relative_inj .* imbalance
 
     @assert isapprox(sum(newp), 0, atol=1e-8) "Could not balance power! Sum is $(sum(newp))"

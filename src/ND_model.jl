@@ -752,7 +752,7 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
             vccb_nodes_min = nothing
         end
 
-        ## dynamic load node condition
+        ## dynamic load node condition # NOTE not used for simulations and thoroughly tested!
         if trip_load_nodes == :dynamic
             function load_node_condition_max(out, u, t, integrator)
                 out .= load_frequencies(u, t, integrator) .- ω_max
