@@ -47,11 +47,11 @@ network = import_system_wrapper(df_config, task_id)
 # network is balanced
 sum([get_prop(network, i, :P) for i in 1:nv(network)]) # 3.3306690738754696e-15
 
-if steadystate_choice == :rootfind
-    x_static = steadystate(network; verbose=true) # "Old" way: leads to some errors, thus the `catch`-option below
-elseif steadystate_choice == :relaxation
-    x_static = steadystate_relaxation(network; verbose=true) # "New" way, steady state more precise, less/no errors, probabyl slower
-end
+# if steadystate_choice == :rootfind
+#     x_static = steadystate(network; verbose=true) # "Old" way: leads to some errors, thus the `catch`-option below
+# elseif steadystate_choice == :relaxation
+#     x_static = steadystate_relaxation(network; verbose=true) # "New" way, steady state more precise, less/no errors, probabyl slower
+# end
 
 # sol = simulate(network;
 #                x_static=x_static,
@@ -79,6 +79,25 @@ sol423 = Serialization.deserialize(joinpath(exp_data_dir, "trajectories", "task_
 ########################### nodal P trajectories ###############################
 ################################################################################
 
+
+################################################################################
+################################################################################
+################################################################################
+(nd, p) = nd_model(network)
+sol = sol423
+tstep = 64425
+x = sol.sol[tstep]
+t = sol.sol.t[tstep]
+
+gd_nd = nd(x, p, t, GetGD)
+e_values = gd_nd.gdb.e_array
+
+sol.load_P.saveval[tstep][135]
+
+# lines_task_id_423 = [78, 199, 194, 131, 147, 146, 14, 106, 135, 149, 148]
+################################################################################
+################################################################################
+################################################################################
 
 function get_ΔP_ΔS_at_node(node_idx, sol, network)
     all_edges = collect(edges(network.graph))
@@ -325,5 +344,5 @@ xlims!(ax, -1., xlim_30)
 # ax.xticks = [0.0, 5., 10., 15., 20., 25., 30., 35.]get_ΔP_ΔS_at_node(99, sol, network)
 
 fig
-CairoMakie.save(joinpath("/home/brandner/nb_data/repos/Private_MA/paper/", "WS_traj,lines+nodes,task_ids=$task_id_array,init_fail=$initial_fail,_DeltaP_all_inertia_all_lines+nodes_long3.pdf"),fig)
-CairoMakie.save(joinpath("/home/brandner/nb_data/repos/Private_MA/paper/", "WS_traj,lines+nodes,task_ids=$task_id_array,init_fail=$initial_fail,_DeltaP_all_inertia_all_lines+nodes_long3.png"),fig)
+CairoMakie.save(joinpath("/home/brandner/nb_data/repos/Private_MA/paper/nodal_P_trajectories", "WS_traj,lines+nodes,task_ids=$task_id_array,init_fail=$initial_fail,_DeltaP_all_inertia_all_lines+nodes_long3.pdf"),fig)
+CairoMakie.save(joinpath("/home/brandner/nb_data/repos/Private_MA/paper/nodal_P_trajectories", "WS_traj,lines+nodes,task_ids=$task_id_array,init_fail=$initial_fail,_DeltaP_all_inertia_all_lines+nodes_long3.png"),fig)

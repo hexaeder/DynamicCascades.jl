@@ -2,6 +2,8 @@
 Watts-Strogatz-Network-Ensemble: Using job array framework. Transition that appears
 when varying the frequency bounds. Line and node failures summed.
 """
+# NOTE Check normalized sum of lines and nodes again.
+
 
 include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
 
@@ -286,7 +288,7 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
         color_index = colormap_frequencies ? findfirst(x -> x == freq_bound, filtered_freq_bounds) : marker_index
 
         if (trip_lines == :dynamic &&  trip_nodes == :dynamic)
-            if sum_lines_nodes == true
+            if sum_lines_nodes == true # NOTE For the normalized version this might be wrong s. Schmierzettel S. 23.
                 scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes, marker = marker, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
                 band!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes + err_nodes_plus_lines, y_lines + y_nodes - err_nodes_plus_lines, transparency=true, color = (line_colors[color_index], opacity))
                 # inset plot

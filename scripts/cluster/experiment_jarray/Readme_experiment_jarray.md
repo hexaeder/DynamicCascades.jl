@@ -12,7 +12,7 @@
     (execute as `./WS_master_experiment_complement_sims.sh`, without `sbatch`)
     creates job array for each inertia value and also for every frequency bound.
     This was used when adding missing freuquency bounds to an already existing
-    simulation data avoiding to restructure to postprocessing script. In same cases
+    simulation data avoiding to restructure to postprocessing script. In some cases
     its easier to copy around new simulation data by hand. Slurm parameters need
     to be adapted
     for each inertia value and the new indices for the frequency bounds to be simulated
