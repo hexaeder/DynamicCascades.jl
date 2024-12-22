@@ -11,4 +11,4 @@
 module purge
 module load julia/1.8.2
 
-julia WS_preprocessing.jl
+julia WS_preprocessing_I_over_D^2.jl

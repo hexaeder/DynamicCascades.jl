@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ############################## Parameters to be chosen #########################
-name=WS_k=4_exp02_
+name=WS_k=4_exp03_I_over_D^2_test_
 # inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
 qos_array=(short short short short short short short medium medium)
 times_array=(0-05:00:00 0-07:00:00 0-09:00:00 0-11:00:00 0-15:00:00 0-20:00:00 0-22:00:00 1-12:00:00 2-00:00:00)
@@ -14,10 +14,10 @@ echo "------------------------------------------------------------"
 
 # `cut -f 4 -d' '` extracts the job ID from the output of the `sbatch` command.
 # The job ID is stored in the variable PREPROC.
-PREPROC=$(sbatch WS_preprocessing_HPC.sh | cut -f 4 -d' ')
+PREPROC=$(sbatch WS_preprocessing_HPC_I_over_D^2.sh | cut -f 4 -d' ')
 echo "SLURM JOB ID Preprocessing: $PREPROC"
 
-sleeptime=400
+sleeptime=100 # 400
 echo "Sleeping $sleeptime seconds until variables for Slurm are assigned."
 sleep $sleeptime
 

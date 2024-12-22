@@ -19,8 +19,8 @@ N_new_freq_bounds = length([2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
 ################################################################################
 
 # Experiment name
-name = "WS_k=4_exp02_"
-long_name = "Uebergang frequency bounds further values for f_b." # for providing more details
+name = "WS_k=4_exp03_D_I^2_test_"
+long_name = "Damping_variation_I_over_D^2_." # for providing more details
 save_graph_and_filepath = false
 solver_name = "Rodas4P()"
 steadystate_choice = :rootfind # :relaxation
@@ -49,7 +49,7 @@ N_ensemble_size = 32 # 100
 # Cascading params ##############
 init_pert = [:line] # initial perturbation set constant to an initial line failure
 α_vals = 0.7 # tuning parameter α, :rating = α*K
-monitored_power_flow = :active
+monitored_power_flow = :apparent
 
 #= frequency bounds [narrow bounds, wide bounds] bounds.
 The value in numerator of round(0.1/(2*π) is the angular frequency =#
