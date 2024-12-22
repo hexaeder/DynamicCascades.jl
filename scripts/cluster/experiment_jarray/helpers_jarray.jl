@@ -6,7 +6,7 @@ println("hostname=$bla")
 
 # @assert VERSION == v"1.8.4"
 const ON_YOGA = occursin("L7440", gethostname())
-const ON_PIK_HPC = occursin("cs-", gethostname())
+const ON_PIK_HPC = occursin("cs", gethostname())
 const ON_POOL = occursin("pool", gethostname())
 
 @info "Initialize environment"
