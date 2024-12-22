@@ -1,12 +1,5 @@
 include("helpers_jarray.jl")
 
-if ON_YOGA
-    using Revise
-else # if on PIK-HPC or Pool
-    Pkg.instantiate()
-    # Pkg.precompile()
-end
-
 # PARAMETERS ###################################################################
 ########### Only for adding new simulations to existing experiment #############
 complement_to_existing_exp = false

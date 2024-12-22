@@ -1,8 +1,6 @@
 """
 Helper functions used by WS- and RTS-job array framework.
 """
-bla = gethostname()
-println("hostname=$bla")
 
 # @assert VERSION == v"1.8.4"
 const ON_YOGA = occursin("L7440", gethostname())
@@ -25,6 +23,13 @@ end
 
 using Pkg
 Pkg.activate(PKG_DIR)
+
+if ON_YOGA
+    using Revise
+else # if on PIK-HPC or Pool
+    Pkg.instantiate()
+    # Pkg.precompile()
+end
 
 using LinearAlgebra
 print("Number of threads before setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
