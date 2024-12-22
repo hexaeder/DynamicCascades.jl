@@ -1,6 +1,8 @@
 """
 Helper functions used by WS- and RTS-job array framework.
 """
+bla = gethostname()
+println("hostname=$bla")
 
 # @assert VERSION == v"1.8.4"
 const ON_YOGA = occursin("L7440", gethostname())
