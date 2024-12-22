@@ -6,8 +6,6 @@
  - `WS_master_experiment.sh` (execute as `./WS_master_experiment.sh`, without `sbatch`)
     creates job array for each inertia value. Slurm parameters need to be adapted
     for each inertia value.
-    NOTE invoked args might need minor adaptions as I used `WS_master_experiment_complement_sims.sh` last
-    `RTS_master_experiment.sh` used last => Should work.
  - `WS_master_experiment_complement_sims.sh`
     (execute as `./WS_master_experiment_complement_sims.sh`, without `sbatch`)
     creates job array for each inertia value and also for every frequency bound.

@@ -19,7 +19,7 @@ N_new_freq_bounds = length([2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
 ################################################################################
 
 # Experiment name
-name = "WS_k=4_exp03_I_over_D^2_test_"
+name = "WS_k=4_exp03_I_over_Dsq_test_"
 long_name = "Damping_variation_I_over_D^2_." # for providing more details
 save_graph_and_filepath = false
 solver_name = "Rodas4P()"
