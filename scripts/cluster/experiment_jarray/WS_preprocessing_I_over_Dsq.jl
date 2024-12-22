@@ -251,6 +251,6 @@ for task_id in df_hpe.ArrayTaskID
         savegraph(filepath, network)
     end
 end
-
+exp_data_dir
 # Save to CSV
 CSV.write(joinpath(exp_data_dir, "config.csv"), df_hpe)
