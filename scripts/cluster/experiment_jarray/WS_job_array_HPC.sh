@@ -6,7 +6,7 @@
 #SBATCH --account=icone
 #SBATCH --output=%x-%A_%a-%N.out
 #SBATCH --error=%x-%A_%a-%N.err
-#SBATCH --workdir=/home/brandner/MA_data/results_NB/WS_k=4_exp01_PIK_HPC_K_=3,N_G=2_20240128_212755.658/output
+#SBATCH --chdir=/home/brandner/MA_data/results_NB/WS_k=4_exp01_PIK_HPC_K_=3,N_G=2_20240128_212755.658/output
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --array=1-324

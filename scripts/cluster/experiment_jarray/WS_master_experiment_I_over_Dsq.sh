@@ -42,7 +42,7 @@ for job_array_index in $(seq 1 1 $N_inertia); do
     MODEL_JOBARRAY=$(sbatch --depend=afterany:$PREPROC --qos=$qos --time=$time --job-name=$job_name --chdir=$workdir --cpus-per-task=$cpus --array=1-$job_array_length WS_job_array_HPC_for_master.sh $exp_name_date $job_array_index | cut -f 4 -d' ')
     echo "SLURM JOB ID JOBARRAY $job_array_index: $MODEL_JOBARRAY"
     ############################## Postprocessing ##############################
-    POSTPROC=$(sbatch --depend=afterany:$MODEL_JOBARRAY --job-name="sacct_infos_$job_name" --workdir=$sacct_dir sacct_postprocessing.sh $MODEL_JOBARRAY $sacct_dir $job_array_index | cut -f 4 -d' ')
+    POSTPROC=$(sbatch --depend=afterany:$MODEL_JOBARRAY --job-name="sacct_infos_$job_name" --chdir=$sacct_dir sacct_postprocessing.sh $MODEL_JOBARRAY $sacct_dir $job_array_index | cut -f 4 -d' ')
     echo "SLURM JOB ID Postprocessing $job_array_index: $POSTPROC"
 done
 

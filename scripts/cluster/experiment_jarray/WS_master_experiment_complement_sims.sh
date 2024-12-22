@@ -50,10 +50,10 @@ for job_array_index in $(seq 1 1 $N_inertia); do
     for freq_bound_index in "${new_indices_freq_bounds[@]}"; do
         echo "Frequency bound index $freq_bound_index"
         job_name="$name,ja_idx=$job_array_index,fb_idx=$freq_bound_index"
-        MODEL_JOBARRAY=$(sbatch --depend=afterany:$PREPROC --qos=$qos --time=$time --job-name=$job_name --workdir=$workdir --cpus-per-task=$cpus --array=1-$job_array_length WS_job_array_HPC_for_master.sh $exp_name_date $job_array_index $freq_bound_index | cut -f 4 -d' ')
+        MODEL_JOBARRAY=$(sbatch --depend=afterany:$PREPROC --qos=$qos --time=$time --job-name=$job_name --chdir=$workdir --cpus-per-task=$cpus --array=1-$job_array_length WS_job_array_HPC_for_master.sh $exp_name_date $job_array_index $freq_bound_index | cut -f 4 -d' ')
         echo "SLURM JOB ID job array index $job_array_index, frequency bound index $freq_bound_index: $MODEL_JOBARRAY"
         ############################## Postprocessing ##############################
-        POSTPROC=$(sbatch --depend=afterany:$MODEL_JOBARRAY --job-name="sacct_infos_$job_name" --workdir=$sacct_dir sacct_postprocessing.sh $MODEL_JOBARRAY $sacct_dir $job_array_index $freq_bound_index | cut -f 4 -d' ')
+        POSTPROC=$(sbatch --depend=afterany:$MODEL_JOBARRAY --job-name="sacct_infos_$job_name" --chdir=$sacct_dir sacct_postprocessing.sh $MODEL_JOBARRAY $sacct_dir $job_array_index $freq_bound_index | cut -f 4 -d' ')
         echo "SLURM JOB ID Postprocessing job array index $job_array_index, frequency bound index $freq_bound_index $POSTPROC"
     done
 done

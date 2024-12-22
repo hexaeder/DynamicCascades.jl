@@ -6,7 +6,7 @@
 #SBATCH --account=icone
 #SBATCH --output=%x-%j-%N.out
 #SBATCH --error=%x-%j-%N.err
-#SBATCH --workdir=/p/tmp/<your username>/<some directory>
+#SBATCH --chdir=/p/tmp/<your username>/<some directory>
 
 #SBATCH --mail-type=begin        # send email when job begins
 #SBATCH --mail-type=end          # send email when job ends
