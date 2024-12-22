@@ -9,13 +9,17 @@ using Unitful
 
 export DATA_DIR, MA_DATA, RESULTS_DIR, PLOT_DIR, MA_DIR, RES_GEN_NET # , F_BELEG_DIR
 const DATA_DIR = abspath(@__DIR__, "..", "data") # data used for simulations
-const MA_DATA = "/home/brandner/nb_data/HU_Master/2122WS/MA/MA_data/"
-const RESULTS_DIR = "/home/brandner/nb_data/HU_Master/2122WS/MA/MA_data/results_NB/" # generated data
-const PLOT_DIR = "/home/brandner/nb_data/HU_Master/2122WS/MA/MA_data/figures/"
+# const MA_DATA = "/home/brandner/nb_data/HU_Master/2122WS/MA/MA_data/"
+# const RESULTS_DIR = "/home/brandner/nb_data/HU_Master/2122WS/MA/MA_data/results_NB/" # generated data
+# const PLOT_DIR = "/home/brandner/nb_data/HU_Master/2122WS/MA/MA_data/figures/"
+const MA_DATA = abspath(@__DIR__, "..", "..", "MA_data")
+const RESULTS_DIR = abspath(@__DIR__, "..", "..", "MA_data", "results_NB") # generated data
+const PLOT_DIR = abspath(@__DIR__, "..", "..", "MA_data", "figures")
 const MA_DIR = abspath(@__DIR__, "..", "..", "..", "..", "repos", "649871baa3fa7bffa33bf152","MA_figs")
 # const F_BELEG_DIR = abspath(@__DIR__, "..", "..", "..", "..", "repos", "/Private_MA/F_BELEG/F_BELEG_figs")
 # further directories
-const RES_GEN_NET = "/home/brandner/nb_data/HU_Master/2122WS/MA/MA_data/res_gen_net" # results general networks
+# const RES_GEN_NET = "/home/brandner/nb_data/HU_Master/2122WS/MA/MA_data/res_gen_net" # results general networks
+const RES_GEN_NET = abspath(@__DIR__, "..", "..", "MA_data", "res_gen_net") # results general networks
 
 export import_system, describe_nodes, describe_edges, bustype, is_static_state
 
