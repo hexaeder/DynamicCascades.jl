@@ -24,13 +24,6 @@ end
 using Pkg
 Pkg.activate(PKG_DIR)
 
-if ON_YOGA
-    using Revise
-else # if on PIK-HPC or Pool
-    Pkg.instantiate()
-    # Pkg.precompile()
-end
-
 using LinearAlgebra
 print("Number of threads before setting"); print(LinearAlgebra.BLAS.get_num_threads()); print("\n")
 BLAS.set_num_threads(1)
