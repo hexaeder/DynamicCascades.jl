@@ -1,7 +1,14 @@
-* [2024-03-10 So]
+
+
+
 ** Structure job array framework
 (The framework is the same for WS and RTS, suffixes: HPC for running on PIK-Cluser, pool: HU-Pool)
-
+ - Use Julia 1.8.2 on HPC
+   - `cd /home/brandner/tmpjulia/`
+   - wget https://julialang-s3.julialang.org/bin/linux/x64/1.8/julia-1.8.2-linux-x86_64.tar.gz
+   - tar -xvzf julia-1.8.2-linux-x86_64.tar.gz
+   - in submit.sh do `/home/brandner/tmpjulia/julia-1.8.2/bin/julia script.jl   
+ - Do `] instantiate` manually on cluster. Doing this through the script, it didn't work.
  - `WS_preprocessing.jl` creates config file and initially stable networks (for WS)
  - `WS_master_experiment.sh` (execute as `./WS_master_experiment.sh`, without `sbatch`)
     creates job array for each inertia value. Slurm parameters need to be adapted
