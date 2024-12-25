@@ -202,6 +202,7 @@ for task_id in df_hpe.ArrayTaskID
                 N,k_,β,graph_seed_,μ,σ,distr_seed_,K,_,_,γ,τ,_,_,_,_,_ = get_network_args_stripped(df_hpe, task_id)
                 M = ustrip(u"s^2", get_prop(network, 1, :_M))
                 # Next line needs to be kept with the long sting, string_metagraph_args() can't be used as `M` changes.
+                # NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE task_id stimmt hier nicht, weil man oben über i looped.
                 @warn "No static solution found: ArrayTaskID=$task_id, Parameters: N=$N,k=$k_,β=$β,graph_seed=$graph_seed_,μ=$μ,σ=$σ,distr_seed=$distr_seed_,K=$K,M=$M,γ=$γ,τ=$τ."
 
                 # generate new grid by increasing seeds by one
@@ -215,9 +216,8 @@ for task_id in df_hpe.ArrayTaskID
     end
     df_hpe[task_id,:graph_seed] = graph_seed; df_hpe[task_id,:distr_seed] = distr_seed
 
-    N,k,β,graph_seed_,μ,σ,distr_seed_,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,_,ensemble_element = get_network_args_stripped(df_hpe, task_id)
-
     # Create directories for results (preventing that different jobs try to create a directory at the same time)
+    N,k,β,graph_seed_,μ,σ,distr_seed_,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,_,ensemble_element = get_network_args_stripped(df_hpe, task_id)
     graph_combinations_path = joinpath(exp_data_dir, "k=$k,β=$β")
     ispath(graph_combinations_path) || mkdir(graph_combinations_path)
 

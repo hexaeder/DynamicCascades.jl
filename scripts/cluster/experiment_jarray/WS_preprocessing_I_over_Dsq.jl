@@ -34,11 +34,12 @@ k_vals = [4]
 # β_vals = [0.5]
 
 # MetaGraph params ###############
-# inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
 inertia_values = [0.2, 0.5, 1.0]
 K_vals = 3 # coupling K
-γ_vals = NaN # damping swing equation nodes γ # NOTE see below "inertia_variation - relate damping and inertia"
+# NOTE see below "inertia_variation - relate damping and inertia"
+γ_vals = NaN # damping swing equation nodes γ
 τ_vals = NaN # time constant τ
+
 σ_vals = 1 # standard deviation σ
 μ_vals = 0 # mean μ
 
@@ -52,15 +53,8 @@ monitored_power_flow = :apparent
 #= frequency bounds [narrow bounds, wide bounds] bounds.
 The value in numerator of round(0.1/(2*π) is the angular frequency =#
 # freq_bounds = [round(i/(2*π), digits=4) for i in [0.01, 0.1, 0.5, 1.0, 5.0]]
-# freq_bounds = [round(0.1/(2*π), digits=2), round(0.5/(2*π), digits=2), round(10.0/(2*π), digits=2)]
-# freq_bounds = [round(0.1/(2*π), digits=2)]
-# freq_bounds = [0.005, 0.0075, 0.01, 0.015]#, 0.02, 0.025, 0.03]
-# freq_bounds = [0.005, 0.03]
-# freq_bounds = [0.005, 0.02, 0.03, 0.04, 0.8]
 # This is frequency not angular frequency
 freq_bounds = [0.010, 0.030, 0.150]
-# freq_bounds = [0.010]
-
 
 # failure_modes = [trip_lines, trip_nodes]
 # failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
@@ -110,8 +104,8 @@ of finished jobs of the job array the size of the ensemble increases equally,
 e.g. when half of all jobs are finished, for each ensemble half of the grids
 shall be simulated. Parameters included are parameters that are potentially changed
 in an (future) experiment.=#
-hyperparam = collect(Iterators.product(inertia_values, freq_bounds, failure_modes, β_vals, k_vals,
-    N_nodes, K_vals, γ_vals, τ_vals, α_vals, init_pert, σ_vals, μ_vals))[:]
+hyperparam = collect(Iterators.product(inertia_values, γ_vals, τ_vals, K_vals, α_vals,
+    freq_bounds, failure_modes, init_pert, β_vals, k_vals, N_nodes, σ_vals, μ_vals))[:]
 
 # Repeat hyperparam N_ensemble_size times
 hyperparam_ensemble = repeat(hyperparam, N_ensemble_size)
@@ -121,7 +115,7 @@ hyperparam_ensemble = repeat(hyperparam, N_ensemble_size)
 #= NOTE `:inertia_values` needs to be in the second column, otherwise the big while
 loop below is corrupted =#
 df_hpe = DataFrame(map(idx -> getindex.(hyperparam_ensemble, idx), eachindex(first(hyperparam_ensemble))),
-    [:inertia_values, :freq_bounds, :failure_modes, :β, :k, :N_nodes, :K, :γ, :τ, :α, :init_pert, :σ, :μ])
+    [:inertia_values, :γ, :τ, :K, :α, :freq_bounds, :failure_modes, :init_pert, :β, :k, :N_nodes,  :σ, :μ])
 
 # add "ArrayTaskID" as first column of df
 df_hpe = hcat(DataFrame(ArrayTaskID = 1:length(hyperparam_ensemble)), df_hpe)
@@ -147,6 +141,7 @@ end
 N_jobs_total = nrow(df_hpe)
 N_inertia = length(inertia_values)
 # job_array_length = Int64(N_jobs_total/N_inertia)
+# NOTE: Needs to be adapted if `complement_to_existing_exp = true´
 job_array_length = complement_to_existing_exp ? Int64((N_jobs_total - N_jobs_total_existing)/(N_inertia * N_new_freq_bounds)) : Int64(N_jobs_total/N_inertia)
 
 
@@ -161,7 +156,8 @@ CSV.write("sbatch_dict_$name.csv", exp_name_date_dict, writeheader=false)
 
 
 # GENERATION OF NETWORKS #######################################################
-number_of_task_ids_between_graphs = length(inertia_values) * length(freq_bounds) * length(failure_modes)
+number_of_task_ids_between_graphs = length(inertia_values)*length(γ_vals)*length(τ_vals)*length(K_vals)*length(α_vals)*length(freq_bounds)*length(failure_modes)*length(init_pert)
+number_of_parameter_configurations_relevant_for_steady_state = length(inertia_values)*length(γ_vals)*length(τ_vals)*length(K_vals)
 graph_seed = 0; distr_seed = 0
 # Loop over each ArrayTaskID:
 for task_id in df_hpe.ArrayTaskID
@@ -171,7 +167,8 @@ for task_id in df_hpe.ArrayTaskID
     relevant for this.=#
     if ((task_id-1) % number_of_task_ids_between_graphs) == 0
         global graph_seed += 1; global distr_seed += 1
-        df_hpe[task_id,:graph_seed] = graph_seed; df_hpe[task_id,:distr_seed] = distr_seed
+        # df_hpe[task_id,:graph_seed] = graph_seed; df_hpe[task_id,:distr_seed] = distr_seed
+        df_hpe[task_id:end, :graph_seed] .= graph_seed; df_hpe[task_id:end, :distr_seed] .= distr_seed
         string_args = string_metagraph_args(df_hpe, task_id)
         println("Generate new MetaGraph:ArrayTaskID=$task_id with parameters $string_args")
         network = import_system_wrapper(df_hpe, task_id)
@@ -183,23 +180,22 @@ for task_id in df_hpe.ArrayTaskID
         steady_state_for_all_inertia_values = false
         while steady_state_for_all_inertia_values == false
             try
-                # Try all inertia values
-                for i in inertia_values
-                    set_prop!(network, 1:nv(network), :_M, i * 1u"s^2")
-                    println("Test steady state with inertia I=$i...")
-                    # TODO Avoid if-branch in loop.
+                # Try all parameter configurations for given network relevant for steady state
+                for i in task_id:(task_id + number_of_parameter_configurations_relevant_for_steady_state - 1)
+                    network = import_system_wrapper(df_hpe, i)
+                    _,_,_,graph_seed_,_,_,distr_seed_,K,_,M,γ,τ,_,_,_,_,_ = get_network_args_stripped(df_hpe, i)
+                    println("task_id = $i: Test steady state of network with inertia I=$M,γ=$γ,τ=$τ,K=$K (graph_seed=$graph_seed_, distr_seed=$distr_seed_)...")
                     if steadystate_choice == :rootfind
                         steadystate(network) # "Old" way: leads to some errors, thus the `catch`-option below
                     elseif steadystate_choice == :relaxation
                         steadystate_relaxation(network) # "New" way, steady state more precise, less/no errors, probabyl slower
                     end
                 end
-
-                # If (in case of no error in previous for loop) a steady state exists for all inertia values
+                # If (in case of no error in previous for loop) a steady state exists for all parameter configurations
                 trial_counter = 1 # reset trial_counter
                 steady_state_for_all_inertia_values = true
 
-            # If a there is at least one inertia value for which no steady state exists:
+            # If a there is at least one parameter configuration for which no steady state exists:
             catch
                 trial_counter += 1
                 if trial_counter > max_trials
@@ -207,26 +203,19 @@ for task_id in df_hpe.ArrayTaskID
                     #= ENHANCEMENT: Instead of an error and an interuption of the
                     program leave out this grid and print which grid was left out.=#
                 end
-
-                N,k_,β,graph_seed_,μ,σ,distr_seed_,K,_,_,γ,τ,_,_,_,_,_ = get_network_args_stripped(df_hpe, task_id)
-                M = ustrip(u"s^2", get_prop(network, 1, :_M))
-                # Next line needs to be kept with the long sting, string_metagraph_args() can't be used as `M` changes.
-                @warn "No static solution found: ArrayTaskID=$task_id, Parameters: N=$N,k=$k_,β=$β,graph_seed=$graph_seed_,μ=$μ,σ=$σ,distr_seed=$distr_seed_,K=$K,M=$M,γ=$γ,τ=$τ."
+                @warn "No static solution found!"
 
                 # generate new grid by increasing seeds by one
                 global graph_seed += 1; global distr_seed += 1
-                df_hpe[task_id,:graph_seed] = graph_seed; df_hpe[task_id,:distr_seed] = distr_seed
-                string_args = string_metagraph_args(df_hpe, task_id)
-                println("Generate new network with changed seeds for ArrayTaskID=$task_id with parameters $string_args")
-                network = import_system_wrapper(df_hpe, task_id)
+                # df_hpe[task_id,:graph_seed] = graph_seed; df_hpe[task_id,:distr_seed] = distr_seed
+                df_hpe[task_id:end, :graph_seed] .= graph_seed; df_hpe[task_id:end, :distr_seed] .= distr_seed
+                println("Generate new network with seeds +1.")
             end
         end
     end
-    df_hpe[task_id,:graph_seed] = graph_seed; df_hpe[task_id,:distr_seed] = distr_seed
-
-    N,k,β,graph_seed_,μ,σ,distr_seed_,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,_,ensemble_element = get_network_args_stripped(df_hpe, task_id)
 
     # Create directories for results (preventing that different jobs try to create a directory at the same time)
+    N,k,β,graph_seed_,μ,σ,distr_seed_,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,_,ensemble_element = get_network_args_stripped(df_hpe, task_id)
     graph_combinations_path = joinpath(exp_data_dir, "k=$k,β=$β")
     ispath(graph_combinations_path) || mkdir(graph_combinations_path)
 
@@ -242,7 +231,7 @@ for task_id in df_hpe.ArrayTaskID
         ispath(graph_folder_path) || mkdir(graph_folder_path)
 
         graph_params = "graph_seed=$graph_seed_,distr_seed=$distr_seed_,k=$k,β=$β,ensemble_element=$ensemble_element"
-        filepath = joinpath(graph_folder_path, string(graph_params,".lg"))
+        filepath = joinpath(graph_folder_path, string(graph_params,".mg"))
 
         # Assign filepath to df
         df_hpe[task_id,:filepath] = relpath(filepath)
@@ -251,6 +240,6 @@ for task_id in df_hpe.ArrayTaskID
         savegraph(filepath, network)
     end
 end
-exp_data_dir
+
 # Save to CSV
 CSV.write(joinpath(exp_data_dir, "config.csv"), df_hpe)

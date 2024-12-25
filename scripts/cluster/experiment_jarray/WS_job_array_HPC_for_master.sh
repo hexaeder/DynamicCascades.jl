@@ -22,7 +22,7 @@ cd /home/brandner/DynamicCascades.jl/scripts/cluster/experiment_jarray
 
 # `$freq_bound_index` is only for `WS_master_experiment_complement_sims.sh`
 # julia WS_job.jl $SLURM_ARRAY_TASK_ID $exp_name_date $job_array_index # $freq_bound_index
-/home/brandner/tmpjulia/julia-1.8.4/bin/julia WS_job.jl $SLURM_ARRAY_TASK_ID $exp_name_date $job_array_index # $freq_bound_index
+/home/brandner/tmpjulia/julia-1.8.2/bin/julia WS_job.jl $SLURM_ARRAY_TASK_ID $exp_name_date $job_array_index # $freq_bound_index
 
 # # Specify the path to the config file
 # config=231219_WS_test_config.csv
