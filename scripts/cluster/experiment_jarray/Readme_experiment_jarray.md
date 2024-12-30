@@ -1,7 +1,7 @@
 
 
 
-** Structure job array framework
+** Structure job array framework.
 (The framework is the same for WS and RTS, suffixes: HPC for running on PIK-Cluser, pool: HU-Pool)
  - Use Julia 1.8.2 on HPC
    - `cd /home/brandner/tmpjulia/`
