@@ -147,20 +147,20 @@ end
 
 terminated(sc::SolutionContainer) = sc.sol.t[end] < sc.sol.prob.tspan[end]
 
-function project_theta!(nd, x0)
-    θidx = idx_containing(nd, "θ")
-    for (i, θ) in enumerate(θidx)
-        n = (θ + π) ÷ 2π
-        x0[i] = θ - n * 2π
-    end
-end
+# function project_theta!(nd, x0)
+#     θidx = idx_containing(nd, "θ")
+#     for (i, θ) in enumerate(θidx)
+#         n = (θ + π) ÷ 2π
+#         x0[i] = θ - n * 2π
+#     end
+# end
 
 """
 # Arguments
 - `zeroidx::Integer=nothing`: If this flag is set, this shifts the phase angle
 at all nodes by the phase angle of the node with index `zeroidx`.
 """
-function steadystate(network; project=false, verbose=false, tol=1e-7, zeroidx=nothing)
+function steadystate(network; project=false, verbose=false, tol=1e-7, zeroidx=nothing) # NOTE `project=false` is deprecated => remove
     verbose && println("Find steady state...")
     (nd, p) = nd_model(network)
     x0 = zeros(length(nd.syms));
@@ -173,11 +173,17 @@ function steadystate(network; project=false, verbose=false, tol=1e-7, zeroidx=no
         @assert iszero(x_static[θidx[zeroidx]])
     end
 
-    project && project_theta!(nd, x0)
+    # s. org/project_theta
+    # project && project_theta!(nd, x0)
+    #
+    # ex = extrema(x_static[θidx])
+    # if ex[1] < -π/2 || ex[2] > π/2
+    #     @warn "Steadystate: θ ∈ $ex, consider using project=true flag!"
+    # end
 
     ex = extrema(x_static[θidx])
-    if ex[1] < -π/2 || ex[2] > π/2
-        @warn "Steadystate: θ ∈ $ex, consider using project=true flag!"
+    if ex[1] < -π || ex[2] > π
+        error("Steadystate: θ ∈ $ex, consider projecting into [-π,π]!")
     end
     residuum = issteadystate(network, x_static; ndp=(nd, p))
 
@@ -204,12 +210,6 @@ function steadystate_relaxation(network; project=false, verbose=false, tol=1e-7,
         @assert iszero(x_static[θidx[zeroidx]])
     end
 
-    project && project_theta!(nd, x0)
-
-    ex = extrema(x_static[θidx])
-    if ex[1] < -π/2 || ex[2] > π/2
-        @warn "Steadystate: θ ∈ $ex, consider using project=true flag!"
-    end
     residuum = issteadystate(network, x_static; ndp=(nd, p))
 
     @assert residuum < tol "No steady state found $residuum"
@@ -220,7 +220,7 @@ end
 function issteadystate(network, x_static; ndp=nd_model(network))
     (nd, p) = ndp
     dx = similar(x_static)
-    nd(dx, x_static, p, 0.0)
+    nd(dx, x_static, p, 0.0) # Rate of change (derivative) of each state variable storing it in `dx`.
     return maximum(abs.(dx))
 end
 
