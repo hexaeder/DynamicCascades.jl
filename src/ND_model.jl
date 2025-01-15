@@ -183,7 +183,7 @@ function steadystate(network; project=false, verbose=false, tol=1e-7, zeroidx=no
 
     ex = extrema(x_static[θidx])
     if ex[1] < -π || ex[2] > π
-        error("Steadystate: θ ∈ $ex, consider projecting into [-π,π]!")
+        @warn "Steadystate: θ ∈ $ex, consider projecting into [-π,π]!")
     end
     residuum = issteadystate(network, x_static; ndp=(nd, p))
 
