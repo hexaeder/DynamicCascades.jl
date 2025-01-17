@@ -675,10 +675,21 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
                 end
             end
 
+            # Checks whether the loads on the lines exceed their ratings.
+            function check_initial_loads(c, u, t, integrator)
+                current_load = zeros(ne(network))
+                rating = get_prop(network, edges(network), :rating)
+                calculate_apparent_power!(current_load, u, integrator.p, t, integrator.f.f, network)
+                if any(current_load .> rating)
+                    error("At least one initial load exceeds the rating.")
+                end
+            end
+
             vccb_lines = VectorContinuousCallback(condition, affect!, ne(network); # VectorContinuousCallback (vccb)
                 save_positions = (true, true),
                 affect_neg! = nothing, #only trigger on upcrossing -> 0
-                abstol = 10eps(), reltol = 0)
+                abstol = 10eps(), reltol = 0,
+                initialize = check_initial_loads)
 
         else
             vccb_lines = nothing
