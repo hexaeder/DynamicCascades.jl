@@ -197,9 +197,9 @@ for task_id in df_hpe.ArrayTaskID
                 _,_,_,graph_seed_,_,_,distr_seed_,K,_,M,γ,τ,_,_,_,_,ensemble_element = get_network_args_stripped(df_hpe, task_id)
                 println("task_id = $task_id: Test steady state of network with inertia I=$M,γ=$γ,τ=$τ,K=$K (graph_seed=$graph_seed_, distr_seed=$distr_seed_)...")
                 if steadystate_choice == :rootfind
-                    x_static = steadystate(network; zeroidx=1)
+                    global x_static = steadystate(network; zeroidx=1)
                 elseif steadystate_choice == :relaxation
-                    x_static = steadystate_relaxation(network; zeroidx=1)
+                    global x_static = steadystate_relaxation(network; zeroidx=1)
                 end
 
                 simulate(network;
