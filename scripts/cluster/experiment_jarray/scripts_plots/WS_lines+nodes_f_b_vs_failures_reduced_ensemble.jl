@@ -1,8 +1,13 @@
 """
+NOT WORKING! Reduced ensemble: Few ensemble elements are networks with initial line overloads
+that are potentially not catched by the CB. This is the plot without these faulty
+ensemble elements.
+
+
 Watts-Strogatz-Network-Ensemble: Using job array framework. Transition that appears
 when varying the frequency bounds. Line and node failures summed.
 """
-#  NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE Check normalized sum of lines and nodes again.
+
 include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
 
 if ON_YOGA
@@ -27,7 +32,7 @@ fontsize = labelsize = 26
 marker = (:circle, ":circle")
 markersize = 15
 
-exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
+exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814_test"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 left_out_frequencies = [
     0.16, 0.17, 0.18, 0.19, 0.2, 0.21, 0.22, 0.23, 0.24, 0.25, 0.26, 0.27, 0.28, 0.29, 0.3, 0.8]
@@ -39,9 +44,14 @@ left_out_β_values = []
 if create_posprocessing_data == true
     # load config file, and parameters
     df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
+
+    # Filter out all ensemble elements with initial line overloads
+    exclude_values = [4, 9, 10, 12, 14, 15, 16, 18, 23, 25, 29]
+    filter!(row -> row.ensemble_element ∉ exclude_values, df_config)
+
     exp_params_dict = Serialization.deserialize(joinpath(exp_data_dir, "exp.params"))
 
-    N_ensemble_size = exp_params_dict[:N_ensemble_size]
+    N_ensemble_size = exp_params_dict[:N_ensemble_size] - length(exclude_values)
     num_parameter_combinations = Int(length(df_config[!,:ArrayTaskID])/N_ensemble_size)
 
     df_avg_error = deepcopy(df_config)
@@ -271,7 +281,7 @@ for i in inertia_values
     filtered_freq_bounds_str = string(filtered_freq_bounds)
     K_str = string(exp_params_dict[:K])
 
-    CairoMakie.save(joinpath(MA_DIR, "WS", "fb_vs_failures", "WS_f_b_vs_failures_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,I=$i.png"),fig_lines_and_nodes)
-    CairoMakie.save(joinpath(MA_DIR, "WS", "fb_vs_failures", "WS_f_b_vs_failures_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,I=$i.pdf"),fig_lines_and_nodes)
+    CairoMakie.save(joinpath(MA_DIR, "WS", "reduced_ensemble", "reduced_ensenmble_WS_f_b_vs_failures_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,I=$i.png"),fig_lines_and_nodes)
+    CairoMakie.save(joinpath(MA_DIR, "WS", "reduced_ensemble", "reduced_ensenmble_WS_f_b_vs_failures_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,I=$i.pdf"),fig_lines_and_nodes)
     # fig_lines_and_nodes
 end

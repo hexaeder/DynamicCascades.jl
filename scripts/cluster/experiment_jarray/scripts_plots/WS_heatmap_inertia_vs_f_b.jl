@@ -2,7 +2,7 @@
 Watts-Strogatz-Network-Ensemble: Using job array framework.
 Heatmap: x: frequency bound f_b, y: Inertia I, z: log(sum of line + node failres + 1)
 """
-
+#  NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE Check normalized sum of lines and nodes again.
 include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
 
 if ON_YOGA

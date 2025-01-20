@@ -19,8 +19,8 @@ N_new_freq_bounds = length([2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
 ################################################################################
 
 # Experiment name
-name = "WS_k=4_exp03_I_over_Dsq_test_"
-long_name = "Damping_variation_I_over_D^2_." # for providing more details
+name = "WS_k=4_exp03_I_over_Dsq_lines+nodes_"
+long_name = "Damping_variation_I_over_Dsq_." # for providing more details
 save_graph_and_filepath = false
 solver_name = "Rodas4P()"
 steadystate_choice = :rootfind # :relaxation
@@ -34,27 +34,28 @@ k_vals = [4]
 # β_vals = [0.5]
 
 # MetaGraph params ###############
-inertia_values = [0.2, 0.5, 1.0]
+inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
+
 K_vals = 3 # coupling K
 # NOTE see below "inertia_variation - relate damping and inertia"
-γ_vals = NaN # damping swing equation nodes γ
-τ_vals = NaN # time constant τ
+γ_vals = 1 # damping swing equation nodes γ
+τ_vals = 1 # time constant τ
 
 σ_vals = 1 # standard deviation σ
 μ_vals = 0 # mean μ
 
-N_ensemble_size = 2
+N_ensemble_size = 32
 
 # Cascading params ##############
 init_pert = [:line] # initial perturbation set constant to an initial line failure
 α_vals = 0.7 # tuning parameter α, :rating = α*K
-monitored_power_flow = :apparent
+monitored_power_flow = :active
 
 #= frequency bounds [narrow bounds, wide bounds] bounds.
 The value in numerator of round(0.1/(2*π) is the angular frequency =#
 # freq_bounds = [round(i/(2*π), digits=4) for i in [0.01, 0.1, 0.5, 1.0, 5.0]]
 # This is frequency not angular frequency
-freq_bounds = [0.010, 0.030, 0.150]
+freq_bounds = [0.005, 0.010, 0.015, 0.020, 0.025, 0.030, 0.035, 0.040, 0.045, 0.050, 0.055, 0.060, 0.065, 0.070, 0.075, 0.080, 0.085, 0.090, 0.095, 0.100, 0.110, 0.120, 0.130, 0.140, 0.150, 0.160, 0.170, 0.180, 0.190, 0.200, 0.210, 0.220, 0.230, 0.240, 0.250, 0.260, 0.270, 0.280, 0.290, 0.300, 0.800]
 
 # failure_modes = [trip_lines, trip_nodes]
 # failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
@@ -128,14 +129,14 @@ df_hpe[!, :ensemble_element] = vcat([fill(i, length(hyperparam)) for i in 1:N_en
 
 # inertia_variation - relate damping and inertia
 # γ = τ = √I
-for task_id in df_hpe.ArrayTaskID
-    df_hpe.γ[task_id] = round(sqrt(df_hpe.inertia_values[task_id]), digits=4)
-    df_hpe.τ[task_id] = round(sqrt(df_hpe.inertia_values[task_id]), digits=4)
-end
+# for task_id in df_hpe.ArrayTaskID
+#     df_hpe.γ[task_id] = round(sqrt(df_hpe.inertia_values[task_id]), digits=4)
+#     # df_hpe.τ[task_id] = round(sqrt(df_hpe.inertia_values[task_id]), digits=4)
+# end
 # # γ = τ = I
 # for task_id in df_hpe.ArrayTaskID
 #     df_hpe.γ[task_id] = round(df_hpe.inertia_values[task_id], digits=4)
-#     df_hpe.τ[task_id] = round(df_hpe.inertia_values[task_id], digits=4)
+#     # df_hpe.τ[task_id] = round(df_hpe.inertia_values[task_id], digits=4)
 # end
 
 N_jobs_total = nrow(df_hpe)

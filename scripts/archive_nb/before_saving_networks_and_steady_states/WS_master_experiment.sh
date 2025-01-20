@@ -1,11 +1,11 @@
 #!/bin/bash
 
 ############################## Parameters to be chosen #########################
-name=WS_k=4_exp03_I_over_Dsq_test_
+name=WS_k=4_exp02_
 # inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
-qos_array=(short short short)
-times_array=(0-05:00:00 0-07:00:00 0-09:00:00)
-cpus_array=(1 1 1)
+qos_array=(short short short short short short short medium medium)
+times_array=(0-05:00:00 0-07:00:00 0-09:00:00 0-11:00:00 0-15:00:00 0-20:00:00 0-22:00:00 1-12:00:00 2-00:00:00)
+cpus_array=(1 1 1 1 1 1 1 2 2)
 
 ############################## Preprocessing ###################################
 echo "------------------------------------------------------------"
@@ -17,7 +17,7 @@ echo "------------------------------------------------------------"
 PREPROC=$(sbatch WS_preprocessing_HPC.sh | cut -f 4 -d' ')
 echo "SLURM JOB ID Preprocessing: $PREPROC"
 
-sleeptime=100 # 400
+sleeptime=400
 echo "Sleeping $sleeptime seconds until variables for Slurm are assigned."
 sleep $sleeptime
 
@@ -30,8 +30,6 @@ N_inertia=$(echo "$sbatch_dict" | grep 'N_inertia' | cut -d ',' -f 2- | tr -d '[
 
 workdir=/home/brandner/MA_data/results_NB/$exp_name_date/output
 sacct_dir=/home/brandner/MA_data/results_NB/$exp_name_date
-
-cp -r /home/brandner/DynamicCascades.jl $workdir
 
 # NOTE bash starts at index 0.
 for job_array_index in $(seq 1 1 $N_inertia); do

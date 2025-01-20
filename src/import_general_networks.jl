@@ -31,6 +31,7 @@ function import_system(::Val{:wattsstrogatz}; N=20, k=4, β=0.5, graph_seed=123,
     else
         g = MetaGraph(watts_strogatz(N, k, β))
     end
+    set_prop!(g, :graph_seed, graph_seed)
 
     set_params_general_neworks!(g, distr_seed, N, M, γ, τ, K, α, μ, σ)
     return g
@@ -54,9 +55,14 @@ function set_params_general_neworks!(g, distr_seed, N, M, γ, τ, K, α, μ, σ)
 
     # NOTE Would have been easier to set coupling directly here: `set_prop!(network, e, :_K, K[i])`
     set_prop!(g, edges(g), :R, 0.0)
+    set_prop!(g, edges(g), :K, K)
+    set_prop!(g, edges(g), :α, α)
     set_prop!(g, edges(g), :X, 1/K)
     set_prop!(g, edges(g), :rating, α*K)
 
+    set_prop!(g, :distr_seed, distr_seed)
+    set_prop!(g, :μ, μ)
+    set_prop!(g, :σ, σ)
     d = Distributions.Normal(μ, σ)
     if distr_seed !== nothing
         Random.seed!(distr_seed)

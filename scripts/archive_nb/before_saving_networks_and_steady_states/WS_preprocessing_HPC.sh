@@ -11,6 +11,4 @@
 # module purge
 # module load julia/1.8.2
 
-# julia WS_preprocessing_I_over_Dsq.jl
-
 /home/brandner/tmpjulia/julia-1.8.2/bin/julia WS_preprocessing.jl

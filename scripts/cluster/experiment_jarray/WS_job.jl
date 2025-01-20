@@ -41,13 +41,19 @@ steadystate_choice = exp_params_dict[:steadystate_choice]
 
 # Alternative of loading graphs that have been generated during postprocessing
 # filepath_graph = df_config[task_id,:filepath]
-# loadgraph(filepath_graph,MGFormat())
-#= NOTE change inertia value of graph in case of loading graphs from .lg-files.
+# network = loadgraph(filepath_graph, MGFormat())
+#= NOTE Saving graphs takes really long during preprocessing and one needs to save
+a graph for each parameter configuration.
+NOTE hange inertia value of graph in case of loading graphs from .mg-files.
 => use correct inertia value via set_prop!(network, 1:nv(network), :_M, inertia_values[i] * 1u"s^2") =#
 
 # SIMULATION ###################################################################
-# read in parameters from df_config
+# read in network (includes parameters) from df_config
 network = import_system_wrapper(df_config, task_id)
+
+# read in steady state
+steady_state_dict  = CSV.File(df_config[task_id,:filepath_steady_state])
+x_static = steady_state_dict[:SteadyState]
 
 # TODO remove this block
 # # Find numer of (potentially failing) generator nodes.
@@ -64,11 +70,6 @@ network = import_system_wrapper(df_config, task_id)
 
 number_failures_lines = Float64[]
 number_failures_nodes = Float64[]
-if steadystate_choice == :rootfind
-    x_static = steadystate(network; verbose=true) # "Old" way: leads to some errors, thus the `catch`-option below
-elseif steadystate_choice == :relaxation
-    x_static = steadystate_relaxation(network; verbose=true) # "New" way, steady state more precise, less/no errors, probabyl slower
-end
 for i in 1:ne(network)
     sol = simulate(network;
                    x_static=x_static,

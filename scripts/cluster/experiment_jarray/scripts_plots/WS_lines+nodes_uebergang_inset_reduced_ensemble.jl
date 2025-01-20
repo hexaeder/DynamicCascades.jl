@@ -1,8 +1,13 @@
 """
+Reduced ensemble: Few ensemble elements are networks with initial line overloads
+that are potentially not catched by the CB. This is the plot without these faulty
+ensemble elements.
+
 Watts-Strogatz-Network-Ensemble: Using job array framework. Transition that appears
 when varying the frequency bounds. Line and node failures summed.
 """
 #  NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE Check normalized sum of lines and nodes again.
+
 
 include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
 
@@ -19,18 +24,18 @@ using CairoMakie
 
 
 # plotting parameters
-create_posprocessing_data = false # set to `false` for fast plotting
-sum_lines_nodes = false
-normalize = true
+create_posprocessing_data = true # set to `false` for fast plotting
+sum_lines_nodes = true
+normalize = false
 line_colors = [Makie.wong_colors()[3], Makie.wong_colors()[5], Makie.wong_colors()[6]]
 colormap_frequencies = true
 opacity = 0.15
 fontsize = labelsize = 26
 # markers
 markersize = 15
-markers_labels = [(:star5, "star5")]
+markers_labels = [(:circle, ":circle")]
 
-exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
+exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814_red_ensemble"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 left_out_frequencies = [0.005, 0.015, 0.02, 0.025, 0.035, 0.04, 0.045,
     0.05, 0.055, 0.060, 0.065, 0.07, 0.075, 0.08, 0.085, 0.09, 0.095, 0.1,
@@ -39,15 +44,21 @@ left_out_frequencies = [0.005, 0.015, 0.02, 0.025, 0.035, 0.04, 0.045,
 left_out_inertia_values = []
 left_out_β_values = []
 
+
 ################################################################################
 ###################### Calculate mean and standard error #######################
 ################################################################################
 if create_posprocessing_data == true
     # load config file, and parameters
     df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
+
+    # Filter out all ensemble elements with initial line overloads
+    exclude_values = [4, 9, 10, 12, 14, 15, 16, 18, 23, 25, 29]
+    filter!(row -> row.ensemble_element ∉ exclude_values, df_config)
+
     exp_params_dict = Serialization.deserialize(joinpath(exp_data_dir, "exp.params"))
 
-    N_ensemble_size = exp_params_dict[:N_ensemble_size]
+    N_ensemble_size = exp_params_dict[:N_ensemble_size] - length(exclude_values)
     num_parameter_combinations = Int(length(df_config[!,:ArrayTaskID])/N_ensemble_size)
 
     df_avg_error = deepcopy(df_config)
@@ -98,6 +109,10 @@ if create_posprocessing_data == true
 
     for task_id in df_avg_error.ArrayTaskID
         # loop over all elements of an ensemble
+        #= In case of reduced ensemble (some ensemble elements are left out): Not strictly
+        looping over `task_id` but rather over the rows of the modified `df_config`. This is
+        because for an left out ensemble element `num_parameter_combinations` task_ids are
+        left out. =#
         avg_line_failures_ensemble = Float64[]; avg_node_failures_ensemble = Float64[]
         norm_avg_line_failures_ensemble = Float64[]; norm_avg_node_failures_ensemble = Float64[]
         for i in 0:num_parameter_combinations:(length(df_config[!,:ArrayTaskID]) - 1)
@@ -107,36 +122,39 @@ if create_posprocessing_data == true
 
                 exp_data = joinpath(RESULTS_DIR, exp_name_date)
                 graph_combinations_path = joinpath(exp_data, "k=$k,β=$β")
-
                 failure_mode_string = joinpath(graph_combinations_path, "trip_lines=$trip_lines,trip_nodes=$trip_nodes")
                 failure_mode_frequ_bound = joinpath(failure_mode_string, "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound")
 
-                # NOTE use this only WHEN MERGING TWO EXPERIMENTS ###############
-                # This is a bit hacky...
-                file_path = ""
-                test_counter = 0
-                # read out all parameters , exept of seeds, read out ensemble_element find file in folder that matches both
-                N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, (task_id + i))
-                string1 = "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound,N=$N,k=$k,β=$β"
-                string2 = "μ=$μ,σ=$σ"
-                string3 = "K=$K,α=$α,M=$M,γ=$γ,τ=$τ,init_pert=$init_pert,ensemble_element=$ensemble_element."
-                strings_to_match = [string1, string2, string3]
-                files_in_dir = readdir(failure_mode_frequ_bound)
-                for file_name in files_in_dir
-                    if all(x -> x == true, [occursin(s, file_name) for s in strings_to_match])
-                        file_path = joinpath(failure_mode_frequ_bound, file_name)
-                        test_counter += 1
-                        if test_counter > 1
-                            error("Two files with the same parameters!")
-                        end
-                    end
-                end
-                df_result = DataFrame(CSV.File(file_path))
+                #= NOTE use this only WHEN MERGING TWO EXPERIMENTS ###############
+                This is for checking if two files with the same parameter exist.
+                NOTE [2025-01-16 Do] check this code again before using. Might be erroneous
+                because anyways two files that have an identical name cannot live in
+                one directory.=#
+                # # This is a bit hacky...
+                # file_path = ""
+                # test_counter = 0
+                # # read out all parameters , exept of seeds, read out ensemble_element find file in folder that matches both
+                # N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, (task_id + i))
+                # string1 = "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound,N=$N,k=$k,β=$β"
+                # string2 = "μ=$μ,σ=$σ"
+                # string3 = "K=$K,α=$α,M=$M,γ=$γ,τ=$τ,init_pert=$init_pert,ensemble_element=$ensemble_element."
+                # strings_to_match = [string1, string2, string3]
+                # files_in_dir = readdir(failure_mode_frequ_bound)
+                # for file_name in files_in_dir
+                #     if all(x -> x == true, [occursin(s, file_name) for s in strings_to_match])
+                #         file_path = joinpath(failure_mode_frequ_bound, file_name)
+                #         test_counter += 1
+                #         if test_counter > 1
+                #             error("Two files with the same parameters!")
+                #         end
+                #     end
+                # end
+                # df_result = DataFrame(CSV.File(file_path))
                 ################################################################
 
                 # USE THIS ONLY FOR SINGLE EXPERIMENT ###############################
-                # filename = string("/", string_network_args(df_config, task_id + i), ".csv")
-                # df_result = DataFrame(CSV.File(string(failure_mode_frequ_bound, filename)))
+                filename = string("/", string_network_args(df_config, task_id + i), ".csv")
+                df_result = DataFrame(CSV.File(string(failure_mode_frequ_bound, filename)))
                 ################################################################
 
                 number_failures_lines = df_result[!, :number_failures_lines]
@@ -200,7 +218,7 @@ fig_lines_and_nodes = Figure(fontsize = fontsize)
 ax_lines_and_nodes = Axis(fig_lines_and_nodes[1, 1],
     # title = sum_lines_nodes ? "Summed line and node failures" : "Line and node failures",
     xlabel = L"Inertia I [$s^2$]",
-    ylabel = normalize ? "Normalized average of failures" : L"Averaged failures $N_{fail}$",
+    ylabel = normalize ? "normalized average of failures" : L"Averaged failures $N_{fail}$",
 )
 # hidedecorations!(ax_lines_and_nodes, grid=false)
 
@@ -221,7 +239,8 @@ inset_ax = Axis(fig_lines_and_nodes[1, 1],
 
 # hidedecorations!(inset_ax)
 xlims!(inset_ax, 0, 30)
-ylims!(inset_ax, 0, 0.036)
+ylims!(inset_ax, 0, 7.5)
+
 
 # Create figures depending on the modes (loop).
 failure_modes = exp_params_dict[:failure_modes]
@@ -286,34 +305,29 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
         color_index = colormap_frequencies ? findfirst(x -> x == freq_bound, filtered_freq_bounds) : marker_index
 
         if (trip_lines == :dynamic &&  trip_nodes == :dynamic)
-            if sum_lines_nodes == true
+            if sum_lines_nodes == true # NOTE For the normalized version this might be wrong s. Schmierzettel S. 23.
                 scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes, marker = marker, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
                 band!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes + err_nodes_plus_lines, y_lines + y_nodes - err_nodes_plus_lines, transparency=true, color = (line_colors[color_index], opacity))
                 # inset plot
                 scatterlines!(inset_ax, filtered_inertia_values, y_lines + y_nodes, marker = marker, markersize = markersize, color = line_colors[color_index])
                 band!(inset_ax, filtered_inertia_values, y_lines + y_nodes + err_nodes_plus_lines, y_lines + y_nodes - err_nodes_plus_lines, transparency=true, color = (line_colors[color_index], opacity))
             else
-                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines, linestyle=:dash, marker = :dtriangle, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β Line failures (dashed)", color = line_colors[color_index])
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines, linestyle=:dash, marker = marker, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
                 band!(ax_lines_and_nodes, filtered_inertia_values, y_lines + err_lines, y_lines - err_lines, transparency=true, color = (line_colors[color_index], opacity))
-                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_nodes, marker = marker, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β Node failures (solid)", color = line_colors[color_index])
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_nodes, marker = marker, markersize = markersize, color = line_colors[color_index])
                 band!(ax_lines_and_nodes, filtered_inertia_values, y_nodes + err_nodes, y_nodes - err_nodes, transparency=true, color = (line_colors[color_index], opacity))
-                # inset plot
-                scatterlines!(inset_ax, filtered_inertia_values, y_lines, linestyle=:dash, marker = :dtriangle, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β Line failures (dashed)", color = line_colors[color_index])
-                band!(inset_ax, filtered_inertia_values, y_lines + err_lines, y_lines - err_lines, transparency=true, color = (line_colors[color_index], opacity))
-                scatterlines!(inset_ax, filtered_inertia_values, y_nodes, marker = marker, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β Node failures (solid)", color = line_colors[color_index])
-                band!(inset_ax, filtered_inertia_values, y_nodes + err_nodes, y_nodes - err_nodes, transparency=true, color = (line_colors[color_index], opacity))
             end
         end
     end
 end
 N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, 1)
-# axislegend(ax_lines_and_nodes, position = (0.08,0.99), labelsize=labelsize-5)
-axislegend(ax_lines_and_nodes, position = (0.98,0.12), labelsize=labelsize-9)
+# axislegend(ax_lines_and_nodes, position = :lt, labelsize=labelsize)
+axislegend(ax_lines_and_nodes, position = (0.08,0.99), labelsize=labelsize-5)
 
 k_str = string(exp_params_dict[:k])
 filtered_freq_bounds_str = string(filtered_freq_bounds)
 K_str = string(exp_params_dict[:K])
 
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
+CairoMakie.save(joinpath(MA_DIR, "WS", "2reduced_ensemble_WS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
+CairoMakie.save(joinpath(MA_DIR, "WS", "2reduced_ensemble_WS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
 fig_lines_and_nodes

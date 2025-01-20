@@ -183,7 +183,7 @@ function steadystate(network; project=false, verbose=false, tol=1e-7, zeroidx=no
 
     ex = extrema(x_static[θidx])
     if ex[1] < -π || ex[2] > π
-        @warn "Steadystate: θ ∈ $ex, consider projecting into [-π,π]!"
+        error("Steadystate: θ ∈ $ex, consider projecting into [-π,π]!")
     end
     residuum = issteadystate(network, x_static; ndp=(nd, p))
 
@@ -210,6 +210,10 @@ function steadystate_relaxation(network; project=false, verbose=false, tol=1e-7,
         @assert iszero(x_static[θidx[zeroidx]])
     end
 
+    ex = extrema(x_static[θidx])
+    if ex[1] < -π || ex[2] > π
+        error("Steadystate: θ ∈ $ex, consider projecting into [-π,π]!")
+    end
     residuum = issteadystate(network, x_static; ndp=(nd, p))
 
     @assert residuum < tol "No steady state found $residuum"
@@ -234,7 +238,7 @@ function simulate(network;
                   tspan=(0., 100.),
                   trip_lines=:dynamic,
                   trip_nodes=:dynamic,
-                  trip_load_nodes=:dynamic,
+                  trip_load_nodes=:none,
                   monitored_power_flow =:apparent, #NOTE NOT WORKING!
                   f_min = -2.5,
                   f_max = 1.5,
