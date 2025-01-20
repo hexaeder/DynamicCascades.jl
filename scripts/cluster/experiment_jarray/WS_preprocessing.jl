@@ -206,9 +206,6 @@ for task_id in df_hpe.ArrayTaskID
                    x_static=x_static,
                    initial_fail = [1],
                    tspan = (0, 0.2),
-                   trip_lines = trip_lines,
-                   trip_nodes = trip_nodes,
-                   trip_load_nodes = :none,
                    monitored_power_flow = monitored_power_flow,
                    solverargs = (;dtmax=0.01),
                    verbose = true);
