@@ -172,6 +172,7 @@ CSV.write("sbatch_dict_$name.csv", exp_name_date_dict, writeheader=false)
 number_of_task_ids_between_graphs = length(inertia_values)*length(γ_vals)*length(τ_vals)*length(K_vals)*length(α_vals)*length(freq_bounds)*length(failure_modes)*length(init_pert)
 number_of_parameter_configurations_relevant_for_steady_state = length(inertia_values)*length(γ_vals)*length(τ_vals)*length(K_vals)
 graph_seed = 0; distr_seed = 0
+x_static = Float64[]
 # Loop over each ArrayTaskID:
 for task_id in df_hpe.ArrayTaskID
     #= For every new configuration of β and k and for each new element of an
@@ -179,7 +180,6 @@ for task_id in df_hpe.ArrayTaskID
     relevant for this.=#
     if ((task_id-1) % number_of_task_ids_between_graphs) == 0
         global graph_seed += 1; global distr_seed += 1
-        # df_hpe[task_id,:graph_seed] = graph_seed; df_hpe[task_id,:distr_seed] = distr_seed
         df_hpe[task_id:end, :graph_seed] .= graph_seed; df_hpe[task_id:end, :distr_seed] .= distr_seed
         string_args = string_metagraph_args(df_hpe, task_id)
         println("Generate new MetaGraph:ArrayTaskID=$task_id with parameters $string_args")
@@ -197,7 +197,7 @@ for task_id in df_hpe.ArrayTaskID
                 _,_,_,graph_seed_,_,_,distr_seed_,K,_,M,γ,τ,_,_,_,_,ensemble_element = get_network_args_stripped(df_hpe, task_id)
                 println("task_id = $task_id: Test steady state of network with inertia I=$M,γ=$γ,τ=$τ,K=$K (graph_seed=$graph_seed_, distr_seed=$distr_seed_)...")
                 if steadystate_choice == :rootfind
-                    x_static = steadystate(network; tol=1e-6, zeroidx=1)
+                    x_static = steadystate(network; zeroidx=1)
                 elseif steadystate_choice == :relaxation
                     x_static = steadystate_relaxation(network; zeroidx=1)
                 end
@@ -243,10 +243,8 @@ for task_id in df_hpe.ArrayTaskID
     failure_mode_frequ_bound = joinpath(failure_mode_string, "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound")
     ispath(failure_mode_frequ_bound) || mkdir(failure_mode_frequ_bound)
 
-    # Save steady state, create directories for graphs, save graphs.
+    # Save steady state, create directories for steady states.
     if save_graph_and_filepath == true
-        # save steady state
-        set_prop!(network, :SteadyState, x_static)
 
         steady_state_folder_path = joinpath(graph_combinations_path, "steady_states_graphs")
         ispath(steady_state_folder_path) || mkdir(steady_state_folder_path)
