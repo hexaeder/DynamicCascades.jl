@@ -2,7 +2,6 @@
 
 #SBATCH --qos=priority
 #SBATCH --time=0-01:00:00
-#SBATCH --account=icone
 #SBATCH --output=%x-%A_%a-%N.out
 #SBATCH --error=%x-%A_%a-%N.err
 #SBATCH --ntasks=1

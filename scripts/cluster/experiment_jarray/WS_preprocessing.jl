@@ -35,7 +35,7 @@ K_vals = 3 # coupling K
 
 # NOTE see below "inertia_variation - relate inertia and damping"
 inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
-relate_inertia_and_damping = true
+relate_inertia_and_damping = false
 γ_eq_sq_I = false
 γ_eq_I = false
 if relate_inertia_and_damping

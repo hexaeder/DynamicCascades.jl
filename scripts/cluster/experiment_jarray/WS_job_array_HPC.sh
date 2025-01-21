@@ -3,7 +3,6 @@
 #SBATCH --qos=short
 #SBATCH --time=0-05:00:00
 #SBATCH --job-name=WS_k=4_K=3_wide
-#SBATCH --account=icone
 #SBATCH --output=%x-%A_%a-%N.out
 #SBATCH --error=%x-%A_%a-%N.err
 #SBATCH --chdir=/home/brandner/MA_data/results_NB/WS_k=4_exp01_PIK_HPC_K_=3,N_G=2_20240128_212755.658/output
