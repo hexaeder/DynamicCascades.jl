@@ -17,7 +17,7 @@ echo "------------------------------------------------------------"
 PREPROC=$(sbatch WS_preprocessing_HPC.sh | cut -f 4 -d' ')
 echo "SLURM JOB ID Preprocessing: $PREPROC"
 
-sleeptime=100 # 400
+sleeptime=60
 echo "Sleeping $sleeptime seconds until variables for Slurm are assigned."
 sleep $sleeptime
 

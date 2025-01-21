@@ -208,7 +208,8 @@ for task_id in df_hpe.ArrayTaskID
                    tspan = (0, 0.2),
                    monitored_power_flow = monitored_power_flow,
                    solverargs = (;dtmax=0.01),
-                   verbose = false);
+                   verbose = false,
+                   warn = false);
 
                 # If check is approved
                 trial_counter = 1 # reset trial_counter
