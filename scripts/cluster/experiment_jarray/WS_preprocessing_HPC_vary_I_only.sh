@@ -12,4 +12,4 @@
 
 # julia WS_preprocessing_I_over_Dsq.jl
 
-/home/brandner/tmpjulia/julia-1.8.4/bin/julia WS_preprocessing_vary_I_only.jl
+/home/brandner/tmpjulia/julia-1.8.4/bin/julia WS_preprocessing.jl

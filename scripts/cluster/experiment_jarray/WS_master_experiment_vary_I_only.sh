@@ -14,7 +14,7 @@ echo "------------------------------------------------------------"
 
 # `cut -f 4 -d' '` extracts the job ID from the output of the `sbatch` command.
 # The job ID is stored in the variable PREPROC.
-PREPROC=$(sbatch WS_preprocessing_HPC.sh | cut -f 4 -d' ')
+PREPROC=$(sbatch WS_preprocessing_HPC_vary_I_only.sh | cut -f 4 -d' ')
 echo "SLURM JOB ID Preprocessing: $PREPROC"
 
 sleeptime=60
