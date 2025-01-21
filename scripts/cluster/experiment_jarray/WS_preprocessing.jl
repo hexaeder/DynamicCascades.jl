@@ -34,9 +34,9 @@ k_vals = [4]
 K_vals = 3 # coupling K
 
 # NOTE see below "inertia_variation - relate inertia and damping"
-inertia_values = [0.2, 0.5]
+inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
 relate_inertia_and_damping = true
-γ_eq_sq_I = true
+γ_eq_sq_I = false
 γ_eq_I = false
 if relate_inertia_and_damping
     γ_vals = NaN # damping swing equation nodes γ
@@ -49,7 +49,7 @@ end
 σ_vals = 1 # standard deviation σ
 μ_vals = 0 # mean μ
 
-N_ensemble_size = 2
+N_ensemble_size = 32
 
 # Cascading params ##############
 init_pert = [:line] # initial perturbation set constant to an initial line failure
@@ -59,8 +59,8 @@ monitored_power_flow = :apparent
 #= frequency bounds [narrow bounds, wide bounds] bounds.
 The value in numerator of round(0.1/(2*π) is the angular frequency =#
 # freq_bounds = [round(i/(2*π), digits=4) for i in [0.01, 0.1, 0.5, 1.0, 5.0]]
-# This is frequency not angular frequency, 0.110, 0.120, 0.130, 0.140, 0.150, 0.160, 0.170, 0.180, 0.190, 0.200, 0.210, 0.220, 0.230, 0.240, 0.250, 0.260, 0.270, 0.280, 0.290, 0.300, 0.800
-freq_bounds = [0.050, 0.100]
+# This is frequency not angular frequency
+freq_bounds = [0.005, 0.010, 0.015, 0.020, 0.025, 0.030, 0.035, 0.040, 0.045, 0.050, 0.055, 0.060, 0.065, 0.070, 0.075, 0.080, 0.085, 0.090, 0.095, 0.100, 0.110, 0.120, 0.130, 0.140, 0.150, 0.160, 0.170, 0.180, 0.190, 0.200, 0.210, 0.220, 0.230, 0.240, 0.250, 0.260, 0.270, 0.280, 0.290, 0.300, 0.800]
 
 # failure_modes = [trip_lines, trip_nodes]
 # failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
@@ -208,7 +208,7 @@ for task_id in df_hpe.ArrayTaskID
                    tspan = (0, 0.2),
                    monitored_power_flow = monitored_power_flow,
                    solverargs = (;dtmax=0.01),
-                   verbose = true);
+                   verbose = false);
 
                 # If check is approved
                 trial_counter = 1 # reset trial_counter
