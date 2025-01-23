@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ############################## Parameters to be chosen #########################
-name=WS_k=4_exp03_vary_I_only_
+name=WS_k=4_exp05_1_I_over_Dsq_lines_
 # inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
 qos_array=(short short short short short short short medium medium)
 times_array=(0-05:00:00 0-07:00:00 0-09:00:00 0-11:00:00 0-15:00:00 0-20:00:00 0-22:00:00 1-12:00:00 2-00:00:00)
@@ -14,7 +14,7 @@ echo "------------------------------------------------------------"
 
 # `cut -f 4 -d' '` extracts the job ID from the output of the `sbatch` command.
 # The job ID is stored in the variable PREPROC.
-PREPROC=$(sbatch WS_preprocessing_HPC_vary_I_only.sh | cut -f 4 -d' ')
+PREPROC=$(sbatch WS_preprocessing_HPC_I_over_Dsq_lines.sh | cut -f 4 -d' ')
 echo "SLURM JOB ID Preprocessing: $PREPROC"
 
 sleeptime=60
@@ -50,17 +50,3 @@ done
 
 echo "Files will be saved in this folder: $exp_name_date"
 exit 0
-
-# Explanations
-
-# TODO adapt explanations
-# Explanations for `indices_short=$(echo "$sbatch_dict" | grep 'indices_short' | cut -d ',' -f 2- | tr -d '[]' | sed 's/"//g')`
-# `echo "$sbatch_dict"` Echo the content of the variable sbatch_dict to standard output.
-# `grep 'indices_short'` Use grep to filter lines containing the string 'indices_short'.
-# `cut -d ',' -f 2-` Use cut to split the line into fields using a comma as the delimiter, keeping fields starting from the second field.
-# This removes the identifier (like ':indices_short') and retains the values.
-# `tr -d '[]'` Use tr to delete characters specified by the set '[]'.
-#  This removes square brackets, which might be present around the values in the CSV data.
-# `sed 's/"//g'` Use sed for text stream editing. The expression 's/"//g' specifies a substitution command to replace all double quotes with an empty string.
-# This is used to remove any double quotes around the values.
-# `indices_short=$(...)`: This is command substitution. It assigns the result of the entire command sequence within the parentheses to the variable indices_short.

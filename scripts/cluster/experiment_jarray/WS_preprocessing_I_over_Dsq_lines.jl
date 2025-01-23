@@ -19,8 +19,8 @@ N_new_freq_bounds = length([2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
 ################################################################################
 
 # Experiment name
-name = "WS_k=4_exp03_1_vary_I_only_lines"
-long_name = "Only variation of intertia I. As in MA but using the same states for all number_of_task_ids_between_graphs. Line failure only model." # for providing more details
+name = "WS_k=4_exp05_1_I_over_Dsq_lines_"
+long_name = "I over D squared is constant. Line failure only model." # for providing more details
 save_graph_and_filepath = true
 solver_name = "Rodas4P()"
 steadystate_choice = :rootfind # :relaxation
@@ -35,8 +35,8 @@ K_vals = 3 # coupling K
 
 # NOTE see below "inertia_variation - relate inertia and damping"
 inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
-relate_inertia_and_damping = false
-γ_eq_sq_I = false
+relate_inertia_and_damping = true
+γ_eq_sq_I = true
 γ_eq_I = false
 if relate_inertia_and_damping
     γ_vals = NaN # damping swing equation nodes γ
@@ -60,7 +60,7 @@ monitored_power_flow = :apparent
 The value in numerator of round(0.1/(2*π) is the angular frequency =#
 # freq_bounds = [round(i/(2*π), digits=4) for i in [0.01, 0.1, 0.5, 1.0, 5.0]]
 # This is frequency not angular frequency
-freq_bounds = [0.030] 
+freq_bounds = [0.030] # Dummy parameter, doesn't affect line failures
 
 
 # failure_modes = [trip_lines, trip_nodes]
@@ -214,7 +214,7 @@ for task_id in df_hpe.ArrayTaskID
          - if steady state within tolerance exists (this autmatically checks if θ ∈ [-π,π].
          - if flows in steady state exceed rating by starting test simulation (depends on α.
         =#
-        max_trials = 1000
+        max_trials = 10000
         trial_counter = 1
         steady_state_check_approved = false
         while steady_state_check_approved == false

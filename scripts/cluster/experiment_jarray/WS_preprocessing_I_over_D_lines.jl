@@ -19,25 +19,24 @@ N_new_freq_bounds = length([2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
 ################################################################################
 
 # Experiment name
-name = "WS_k=4_exp03_vary_I_only_"
-long_name = "Only variation of intertia I. As in MA but using the same states for all number_of_task_ids_between_graphs." # for providing more details
-save_graph_and_filepath = true
+name = "WS_k=4_exp06_1_I_over_Dsq_lines_"
+long_name = "I over D is constant. Line failure only model." # for providing more detailssave_graph_and_filepath = true
 solver_name = "Rodas4P()"
 steadystate_choice = :rootfind # :relaxation
 
 # Graph params #############
 N_nodes = 100
 k_vals = [4]
-β_vals = [0.5]
+β_vals = [0.1, 0.25, 0.5]
 
 # MetaGraph params ###############
 K_vals = 3 # coupling K
 
 # NOTE see below "inertia_variation - relate inertia and damping"
 inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
-relate_inertia_and_damping = false
+relate_inertia_and_damping = true
 γ_eq_sq_I = false
-γ_eq_I = false
+γ_eq_I = true
 if relate_inertia_and_damping
     γ_vals = NaN # damping swing equation nodes γ
 else
@@ -60,12 +59,13 @@ monitored_power_flow = :apparent
 The value in numerator of round(0.1/(2*π) is the angular frequency =#
 # freq_bounds = [round(i/(2*π), digits=4) for i in [0.01, 0.1, 0.5, 1.0, 5.0]]
 # This is frequency not angular frequency
-freq_bounds = [0.005, 0.010, 0.015, 0.020, 0.025, 0.030, 0.035, 0.040, 0.045, 0.050, 0.055, 0.060, 0.065, 0.070, 0.075, 0.080, 0.085, 0.090, 0.095, 0.100, 0.110, 0.120, 0.130, 0.140, 0.150, 0.160, 0.170, 0.180, 0.190, 0.200, 0.210, 0.220, 0.230, 0.240, 0.250, 0.260, 0.270, 0.280, 0.290, 0.300, 0.800]
+freq_bounds = [0.030] # Dummy parameter, doesn't affect line failures
+
 
 # failure_modes = [trip_lines, trip_nodes]
 # failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
 # failure_modes = [[:dynamic, :dynamic], [:dynamic, :none]]
-failure_modes = [[:dynamic, :dynamic]]
+failure_modes = [[:dynamic, :none]]
 
 exp_name_params = "K_=$K_vals,N_G=$N_ensemble_size"
 exp_name = string(name, server_string, exp_name_params)
@@ -118,8 +118,6 @@ hyperparam_ensemble = repeat(hyperparam, N_ensemble_size)
 # println(hyperparameter[1])
 
 # create dataframe (hpe stands for hyperparam_ensemble)
-#= NOTE `:inertia_values` needs to be in the second column, otherwise the big while
-loop below is corrupted =#
 df_hpe = DataFrame(map(idx -> getindex.(hyperparam_ensemble, idx), eachindex(first(hyperparam_ensemble))),
     [:inertia_values, :γ, :τ, :K, :α, :freq_bounds, :failure_modes, :init_pert, :β, :k, :N_nodes,  :σ, :μ])
 
@@ -169,33 +167,66 @@ CSV.write("sbatch_dict_$name.csv", exp_name_date_dict, writeheader=false)
 
 
 # GENERATION OF NETWORKS #######################################################
-number_of_task_ids_between_graphs = length(inertia_values)*length(γ_vals)*length(τ_vals)*length(K_vals)*length(α_vals)*length(freq_bounds)*length(failure_modes)*length(init_pert)
-number_of_parameter_configurations_relevant_for_steady_state = length(inertia_values)*length(γ_vals)*length(τ_vals)*length(K_vals)
-graph_seed = 0; distr_seed = 0
+number_of_task_ids_between_graphs = length(inertia_values)*length(γ_vals)*length(τ_vals)*length(α_vals)*length(freq_bounds)*length(failure_modes)*length(init_pert)
 x_static = Float64[]
+graph_seed = 0; distr_seed = 0
 # Loop over each ArrayTaskID:
 for task_id in df_hpe.ArrayTaskID
     #= For every new configuration of β and k and for each new element of an
     ensemble, generate a new network. The order of parameters in `hyperparam` is
     relevant for this.=#
     if ((task_id-1) % number_of_task_ids_between_graphs) == 0
+        #= Find last idx with these parameters (N,k,β,graph_seed_,μ,σ,distr_seed_,K)
+        with `idx < task_id`. This is in order to make sure that we use
+        the same `graph_seed` and `distr_seed` for different experiments where other
+        parameters (e.g. D,I) are used but the graphs and steady states need to be
+        the same.=#
+        #=The whole thing works only if this is true. Otherwise the condition
+        `(task_id - idx) > 1` is never fulfilled.=#
+        if length(N_nodes)*length(k_vals)*length(β_vals)*length(μ_vals)*length(σ_vals)*length(K_vals) > 1
+            N,k,β,_,μ,σ,_,K,_,_,_,_,_,_,_,_,_ = get_network_args(df_hpe, task_id)
+            idx = findlast(idx ->
+                (idx < task_id &&
+                N==df_hpe[idx,:N_nodes] &&
+                k==df_hpe[idx,:k] &&
+                β==df_hpe[idx,:β] &&
+                μ==df_hpe[idx,:μ] &&
+                σ==df_hpe[idx,:σ] &&
+                K==df_hpe[idx,:K]),
+                df_hpe.ArrayTaskID)
+            #= If `typeof(idx) == Nothing` then the seeds are not changed. In this
+            case this set of parameters is not in the previous `task_id`s  and the seeds
+            start at 1. E.g. this is always the case for `task_id=1`.=#
+            if typeof(idx) != Nothing && (task_id - idx) > 1
+                global graph_seed = df_hpe[idx, :graph_seed]; global distr_seed = df_hpe[idx, :distr_seed]
+            else
+                global graph_seed = 0; global distr_seed = 0
+            end
+        end
+
         global graph_seed += 1; global distr_seed += 1
         df_hpe[task_id:end, :graph_seed] .= graph_seed; df_hpe[task_id:end, :distr_seed] .= distr_seed
         string_args = string_metagraph_args(df_hpe, task_id)
         println("Generate new MetaGraph:ArrayTaskID=$task_id with parameters $string_args")
 
         #= Check...
-         - if steady state within tolerance exists (this autmatically checks if θ ∈ [-π,π]).
-         - if flows in steady state exceed rating by starting test simulation.
+         - if steady state within tolerance exists (this autmatically checks if θ ∈ [-π,π].
+         - if flows in steady state exceed rating by starting test simulation (depends on α.
         =#
         max_trials = 10000
         trial_counter = 1
         steady_state_check_approved = false
         while steady_state_check_approved == false
             try
-                network = import_system_wrapper(df_hpe, task_id)
-                _,_,_,graph_seed_,_,_,distr_seed_,K,_,M,γ,τ,_,_,_,_,ensemble_element = get_network_args_stripped(df_hpe, task_id)
-                println("task_id = $task_id: Test steady state of network with inertia I=$M,γ=$γ,τ=$τ,K=$K (graph_seed=$graph_seed_, distr_seed=$distr_seed_)...")
+                N,k,β,graph_seed_,μ,σ,distr_seed_,K,_,_,_,_,_,_,_,_,_ = get_network_args(df_hpe, task_id)
+                # SteadyState mathematically does not depend on α, M, γ, τ
+                #= NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+                Here `α` is fixed, i.e. SteadyStates are generated with all flows < α.
+                For simulations with smaller values of default α=0.7, we get different
+                steady states and the ensemble is biased.=#
+                α = minimum(α_vals)
+                network = import_system(:wattsstrogatz; N=N, k=k, β=β, graph_seed=graph_seed, μ=μ, σ=σ, distr_seed=distr_seed, K=K, α=α, M=1u"s^2",  γ=1u"s", τ=1u"s")
+                println("task_id = $task_id: Test steady state of network with K=$K,N=$N,k=$k,β=$β,μ=$μ,σ=$σ,graph_seed=$graph_seed_,distr_seed=$distr_seed_...")
                 if steadystate_choice == :rootfind
                     global x_static = steadystate(network; zeroidx=1)
                 elseif steadystate_choice == :relaxation
