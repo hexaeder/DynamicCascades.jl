@@ -21,6 +21,7 @@ N_new_freq_bounds = length([2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
 # Experiment name
 name = "WS_k=4_exp06_2_I_over_Dsq_nodes_"
 long_name = "I over D is constant. Node failure only model." # for providing more detailssave_graph_and_filepath = true
+save_graph_and_filepath = true
 solver_name = "Rodas4P()"
 steadystate_choice = :rootfind # :relaxation
 
