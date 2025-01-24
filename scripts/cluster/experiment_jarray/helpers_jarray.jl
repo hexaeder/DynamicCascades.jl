@@ -12,7 +12,7 @@ const ON_POOL = occursin("pool", gethostname())
 
 if ON_YOGA
     PKG_DIR = abspath(@__DIR__, "..", "..", "..")
-    server_string = "YOGA_"
+    server_string = "L7440_"
 elseif ON_PIK_HPC
     PKG_DIR = "/home/brandner/DynamicCascades.jl"
     server_string = "PIK_HPC_"
