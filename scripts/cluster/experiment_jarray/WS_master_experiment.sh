@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ############################## Parameters to be chosen #########################
-name=WS_k=4_exp05_2_I_over_Dsq_nodes_
+name=WS_k=4_exp04_vary_I_only_lines_and_nodes_
 # inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
 qos_array=(short short short short short short short medium medium)
 times_array=(0-05:00:00 0-07:00:00 0-09:00:00 0-11:00:00 0-15:00:00 0-20:00:00 0-22:00:00 1-12:00:00 2-00:00:00)
