@@ -2,7 +2,7 @@
 
 #SBATCH --qos=priority
 #SBATCH --time=1-00:00:00
-#SBATCH --job-name=preprocessing_WS_k=4_exp07_1_vary_D_only_lines_
+#SBATCH --job-name=preprocessing_WS_k=4_exp07_2_vary_D_only_nodes_
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.err
 
@@ -12,4 +12,4 @@
 
 # julia WS_preprocessing_I_over_Dsq.jl
 
-/home/brandner/tmpjulia/julia-1.8.4/bin/julia WS_preprocessing_vary_D_only_lines.jl
+/home/brandner/tmpjulia/julia-1.8.4/bin/julia WS_preprocessing_vary_D_only_nodes.jl

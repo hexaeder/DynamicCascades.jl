@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ############################## Parameters to be chosen #########################
-name=WS_k=4_exp07_1_vary_D_only_lines_
+name=WS_k=4_exp07_2_vary_D_only_nodes_
 # inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
 qos_array=(short short short medium)
 times_array=(0-07:00:00 0-09:00:00 0-11:00:00 1-12:00:00)
@@ -17,7 +17,7 @@ echo "------------------------------------------------------------"
 PREPROC=$(sbatch WS_preprocessing_HPC.sh | cut -f 4 -d' ')
 echo "SLURM JOB ID Preprocessing: $PREPROC"
 
-sleeptime=400
+sleeptime=300
 echo "Sleeping $sleeptime seconds until variables for Slurm are assigned."
 sleep $sleeptime
 
