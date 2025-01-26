@@ -41,7 +41,7 @@ relate_inertia_and_damping = false
 if relate_inertia_and_damping
     γ_vals = NaN # damping swing equation nodes γ
 else
-    γ_vals = [1.0, 10.0, 30.0] # damping swing equation nodes γ
+    γ_vals = [1.0, 10.0] # damping swing equation nodes γ
 end
 τ_vals = 1 # time constant τ
 
@@ -53,7 +53,8 @@ N_ensemble_size = 32
 
 # Cascading params ##############
 init_pert = [:line] # initial perturbation set constant to an initial line failure
-α_vals = [0.7, 0.75, 0.8, 8.5, 0.9, 9.5, 1.0] # tuning parameter α, :rating = α*K
+# α_vals = [0.7, 0.75, 0.8, 8.5, 0.9, 9.5, 1.0]
+α_vals = [0.7, 0.75, 0.8, 0.9, 1.0] # tuning parameter α, :rating = α*K
 monitored_power_flow = :apparent
 
 #= frequency bounds [narrow bounds, wide bounds] bounds.
