@@ -1,11 +1,11 @@
 #!/bin/bash
 
 ############################## Parameters to be chosen #########################
-name=WS_k=4_exp07_2_vary_D_only_nodes_
+name=WS_k=4_exp08_vary_alpha_lines_and_nodes_
 # inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
-qos_array=(short short short medium)
-times_array=(0-07:00:00 0-09:00:00 0-11:00:00 1-12:00:00)
-cpus_array=(1 1 1 2)
+qos_array=(short short short medium medium)
+times_array=(0-09:00:00 0-11:00:00 0-22:00:00 1-12:00:00 2-00:00:00)
+cpus_array=(1 1 1 2 2)
 
 ############################## Preprocessing ###################################
 echo "------------------------------------------------------------"
