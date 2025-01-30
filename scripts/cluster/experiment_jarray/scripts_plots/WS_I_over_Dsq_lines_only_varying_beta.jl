@@ -285,6 +285,6 @@ k_str = string(exp_params_dict[:k])
 filtered_freq_bounds_str = string(filtered_freq_bounds)
 K_str = string(exp_params_dict[:K])
 
-CairoMakie.save("WS_I_over_Dsq_lines_only.png",fig_lines_only)
-CairoMakie.save("WS_I_over_Dsq_lines_only.pdf",fig_lines_only)
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_I_over_Dsq_lines_only.png"),fig_lines_only)
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_I_over_Dsq_lines_only.pdf"),fig_lines_only)
 fig_lines_only

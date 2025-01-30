@@ -30,7 +30,7 @@ elseif ON_POOL
 end
 
 const DATA_DIR = abspath(@__DIR__, "..", "data") # data used for simulations
-const MA_DIR = "/home/brandner/nb_data/repos/649871baa3fa7bffa33bf152/MA_figs/"
+const MA_DIR = "/home/brandner/nb_data/repos/649871baa3fa7bffa33bf152/paper_figs/"
 # const F_BELEG_DIR = abspath(@__DIR__, "..", "..", "..", "..", "repos", "/Private_MA/F_BELEG/F_BELEG_figs")
 
 export import_system, describe_nodes, describe_edges, bustype, is_static_state
