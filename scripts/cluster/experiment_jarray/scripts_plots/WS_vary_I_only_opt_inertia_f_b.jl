@@ -17,7 +17,7 @@ using Colors
 using CairoMakie
 
 # plotting parameters
-create_posprocessing_data = false # set to `false` for fast plotting
+create_posprocessing_data = true # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
 custom_colors = true

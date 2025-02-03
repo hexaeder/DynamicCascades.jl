@@ -17,7 +17,7 @@ using Colors
 using CairoMakie
 
 # plotting parameters
-create_posprocessing_data = false # set to `false` for fast plotting
+create_posprocessing_data = true # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
 heatmap_logscale = true
@@ -306,6 +306,7 @@ if length(filtered_freq_bounds) > 1
         end
         scatter!(ax_hm, filtered_freq_bounds[i], opt_inertia[i], color = Makie.wong_colors()[1], markersize = markersize)
     end
+    lines!(ax_hm, [NaN], [NaN]; label=L"Damping $D=1$ [$s$]", color=:white)
     axislegend(ax_hm, position = :rt, labelsize=(labelsize-8))
     Colorbar(fig_hm[:, end+1], hm, label = normalize ? L"normalized $N_{fail}$" : (heatmap_logscale ? L"$\log(N_{fail}+1)$" : L"$N_{fail}$"))
 
@@ -313,6 +314,6 @@ if length(filtered_freq_bounds) > 1
     ax_hm.xlabelpadding = 15
     ax_hm.yticks = [1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
 end
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_I_only_heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=[_],M_left_out=$left_out_inertia_values.pdf"),fig_hm)
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_I_only_heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b_left_out=[_],M_left_out=$left_out_inertia_values.png"),fig_hm)
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_I_only_heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values.pdf"),fig_hm)
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_I_only_heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values.png"),fig_hm)
 fig_hm

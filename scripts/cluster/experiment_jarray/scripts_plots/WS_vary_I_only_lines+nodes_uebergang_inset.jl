@@ -20,7 +20,7 @@ using CairoMakie
 
 
 # plotting parameters
-create_posprocessing_data = false # set to `false` for fast plotting
+create_posprocessing_data = true # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
 line_colors = [Makie.wong_colors()[3], Makie.wong_colors()[5], Makie.wong_colors()[6]]

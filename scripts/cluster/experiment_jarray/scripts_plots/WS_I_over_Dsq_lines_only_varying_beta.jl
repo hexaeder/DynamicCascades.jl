@@ -264,27 +264,27 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
         # frequency argument first for a nice order in the legend
         N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
 
-        marker_index = findfirst(x -> x == β, β_vals)# CairoMakie.save(joinpath(MA_DIR, "WS", "lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,M_left_out=$left_out_inertia_values.png"),fig_lines_only)
-# CairoMakie.save(joinpath(MA_DIR, "WS", "lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,M_left_out=$left_out_inertia_values.pdf"),fig_lines_only)
+        marker_index = findfirst(x -> x == β, β_vals)
         marker = markers_labels[marker_index][1]
         marker_label = markers_labels[marker_index][2]
         color_index = colormap_frequencies ? findfirst(x -> x == freq_bound, filtered_freq_bounds) : marker_index
 
         if (trip_lines == :dynamic &&  trip_nodes == :none)
             if freq_bound == filtered_freq_bounds[1]
-                scatterlines!(ax_lines_only, filtered_inertia_values, y_lines, marker = marker, markersize = markersize, label = "k=$k,β=$β,D=sqrt(I)", color = line_colors[color_index])
+                scatterlines!(ax_lines_only, filtered_inertia_values, y_lines, marker = marker, markersize = markersize, label = "k=$k,β=$β", color = line_colors[color_index])
                 band!(ax_lines_only, filtered_inertia_values, y_lines + err_lines, y_lines - err_lines, transparency=true, color = (line_colors[color_index], opacity))
             end
         end
     end
 end
 N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, 1)
+lines!(ax_lines_only, [NaN], [NaN]; label=L"Damping $D=\sqrt{I}$ [$s$]", color=:white)
 axislegend(ax_lines_only, position = :rc, labelsize=labelsize)
 
 k_str = string(exp_params_dict[:k])
 filtered_freq_bounds_str = string(filtered_freq_bounds)
 K_str = string(exp_params_dict[:K])
 
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_I_over_Dsq_lines_only.png"),fig_lines_only)
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_I_over_Dsq_lines_only.pdf"),fig_lines_only)
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_I_over_Dsq_lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,M_left_out=$left_out_inertia_values.png"),fig_lines_only)
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_I_over_Dsq_lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,M_left_out=$left_out_inertia_values.pdf"),fig_lines_only)
 fig_lines_only

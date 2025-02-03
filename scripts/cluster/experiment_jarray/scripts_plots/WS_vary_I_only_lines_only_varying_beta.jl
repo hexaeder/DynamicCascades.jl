@@ -18,7 +18,7 @@ using CairoMakie
 
 # plotting parameters
 show_title = true
-create_posprocessing_data = false # set to `false` for fast plotting
+create_posprocessing_data = true # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
 line_colors = [Makie.wong_colors()[1], Makie.wong_colors()[2], Makie.wong_colors()[4], Makie.wong_colors()[3]]  # https://docs.makie.org/stable/explanations/colors/
@@ -286,6 +286,6 @@ k_str = string(exp_params_dict[:k])
 filtered_freq_bounds_str = string(filtered_freq_bounds)
 K_str = string(exp_params_dict[:K])
 
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_I_only_lines_only.png"),fig_lines_only)
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_I_only_lines_only.pdf"),fig_lines_only)
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_I_only_lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,M_left_out=$left_out_inertia_values.png"),fig_lines_only)
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_I_only_lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,M_left_out=$left_out_inertia_values.pdf"),fig_lines_only)
 fig_lines_only

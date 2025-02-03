@@ -19,8 +19,8 @@ using CairoMakie
 
 # plotting parameters
 create_posprocessing_data = true # set to `false` for fast plotting
-sum_lines_nodes = true
-normalize = false
+sum_lines_nodes = false
+normalize = true
 opacity = 0.30
 fontsize = labelsize = 26
 # markers
@@ -248,7 +248,7 @@ for i in inertia_values
     filtered_freq_bounds
     (y_lines + y_nodes)
     if sum_lines_nodes == true
-        scatterlines!(ax_lines_and_nodes, filtered_freq_bounds, (y_lines + y_nodes), markersize = markersize, color=:black, label = "I=$i,k=$k,β=$β")
+        scatterlines!(ax_lines_and_nodes, filtered_freq_bounds, (y_lines + y_nodes), markersize = markersize, color=:black, label = "I=$i,k=$k,β=$β,D=1 [s]")
         band!(ax_lines_and_nodes, filtered_freq_bounds, y_lines + y_nodes + err_nodes_plus_lines, y_lines + y_nodes - err_nodes_plus_lines, color=(:black, opacity), transparency=true)
     else
         lines!(ax_lines_and_nodes, [NaN], [NaN]; label="I=$i,k=$k,β=$β", color=:white, linewidth=3)
@@ -264,6 +264,7 @@ for i in inertia_values
 
     ax_lines_and_nodes.xticks = filtered_freq_bounds
     ax_lines_and_nodes.xlabelpadding = 15
+        lines!(ax_lines_and_nodes, [NaN], [NaN]; label=L"Damping $D=1$ [$s$]", color=:white)
     axislegend(ax_lines_and_nodes, position = :rt, labelsize=labelsize)
 
     N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, 1)
@@ -271,7 +272,7 @@ for i in inertia_values
     filtered_freq_bounds_str = string(filtered_freq_bounds)
     K_str = string(exp_params_dict[:K])
 
-    CairoMakie.save(joinpath(MA_DIR, "WS", "fb_vs_failures", "WS_f_b_vs_failures_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,I=$i.png"),fig_lines_and_nodes)
-    CairoMakie.save(joinpath(MA_DIR, "WS", "fb_vs_failures", "WS_f_b_vs_failures_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,I=$i.pdf"),fig_lines_and_nodes)
+    CairoMakie.save(joinpath(MA_DIR, "WS", "fb_vs_failures", "WS_vary_I_only_f_b_vs_failures_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,I=$i.png"),fig_lines_and_nodes)
+    CairoMakie.save(joinpath(MA_DIR, "WS", "fb_vs_failures", "WS_vary_I_only_f_b_vs_failures_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,I=$i.pdf"),fig_lines_and_nodes)
     # fig_lines_and_nodes
 end

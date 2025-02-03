@@ -19,7 +19,6 @@ using CairoMakie
 
 # plotting parameters
 create_posprocessing_data = true # set to `false` for fast plotting
-sum_lines_nodes = true
 normalize = false
 custom_colors = true
 predefined_colors = [Makie.wong_colors()[1], Makie.wong_colors()[2], Makie.wong_colors()[3], Makie.wong_colors()[4]]  # https://docs.makie.org/stable/explanations/colors/
@@ -35,14 +34,14 @@ markers_labels = [
     (:circle, ":circle"),
 ]
 
-exp_name_date = "WS_k=4_exp03_2_vary_I_only_nodes_PIK_HPC_K_=3,N_G=32_20250124_123411.73"
+exp_name_date = "WS_k=4_exp06_2_I_over_Dsq_nodes_PIK_HPC_K_=3,N_G=32_20250124_131438.611"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 left_out_frequencies = [0.010, 0.015, 0.020, 0.025, 0.035, 0.040,
     0.045, 0.050, 0.055, 0.060, 0.065, 0.070, 0.075, 0.080, 0.085, 0.090, 0.095, 0.100,
     0.110, 0.120, 0.130, 0.140, 0.150, 0.160, 0.170, 0.180, 0.190, 0.200,
     0.210, 0.220, 0.230, 0.240, 0.250, 0.260, 0.270, 0.280, 0.290, 0.300, 0.800]
 left_out_inertia_values = []
-left_out_β_values = [0.25, 0.5]
+left_out_β_values = [0.25, 0.5, 0.9]
 
 ################################################################################
 ###################### Calculate mean and standard error #######################
@@ -310,13 +309,13 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
     end
 end
 N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, 1)
-lines!(ax_nodes_only, [NaN], [NaN]; label="Damping D=1 [s]", color=:white)
+lines!(ax_nodes_only, [NaN], [NaN]; label=L"Damping $D=I$ [$s$]", color=:white)
 axislegend(ax_nodes_only, position = :rt, labelsize=labelsize)
 
 k_str = string(exp_params_dict[:k])
 filtered_freq_bounds_str = string(filtered_freq_bounds)
 K_str = string(exp_params_dict[:K])
 
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_I_only_nodes_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_nodes_only)
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_I_only_nodes_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_nodes_only)
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_I_over_D_nodes_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_nodes_only)
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_I_over_D_nodes_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_nodes_only)
 fig_nodes_only
