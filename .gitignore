@@ -6,5 +6,10 @@
 /docs/src/generated/
 /docs/LocalPreferences.toml
 
+/scripts/tryout.jl
+/scripts/MWE_vccb.jl
+/scripts/MWE_WS_plot.jl
 .username
 *scratch*
+
+/scripts/delete_soon

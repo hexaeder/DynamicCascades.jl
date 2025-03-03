@@ -7,11 +7,31 @@ using MetaGraphs
 using Missings
 using Unitful
 
-export DATA_DIR, RAWRESULTS_DIR, RESULTS_DIR, PLOT_DIR
-const DATA_DIR = abspath(@__DIR__, "..", "data")
-const RAWRESULTS_DIR = abspath("/Users/hw/MAScratch")
-const RESULTS_DIR = abspath(@__DIR__, "..", "results")
-const PLOT_DIR = abspath(@__DIR__, "..", "..", "MA_data", "figures")
+export DATA_DIR, MA_DATA, RESULTS_DIR, PLOT_DIR, MA_DIR, RES_GEN_NET # , F_BELEG_DIR
+export ON_YOGA, ON_PIK_HPC, ON_POOL
+
+# @assert VERSION == v"1.8.4"
+const ON_YOGA = occursin("L7440", gethostname())
+const ON_PIK_HPC = occursin("cs", gethostname())
+const ON_POOL = occursin("pool", gethostname())
+
+if ON_YOGA
+    const MA_DATA = "/home/brandner/nb_data/HU_Master/2122WS/MA/MA_data/"
+    const RESULTS_DIR = "/home/brandner/nb_data/HU_Master/2122WS/MA/MA_data/results_NB/" # generated data
+    const PLOT_DIR = "/home/brandner/nb_data/HU_Master/2122WS/MA/MA_data/figures/"
+    const RES_GEN_NET = "/home/brandner/nb_data/HU_Master/2122WS/MA/MA_data/res_gen_net" # results general networks
+elseif ON_PIK_HPC
+    const MA_DATA = abspath(@__DIR__, "..", "..", "MA_data")
+    const RESULTS_DIR = abspath(@__DIR__, "..", "..", "MA_data", "results_NB") # generated data
+    const PLOT_DIR = abspath(@__DIR__, "..", "..", "MA_data", "figures")
+    const RES_GEN_NET = abspath(@__DIR__, "..", "..", "MA_data", "res_gen_net") # results general networks
+elseif ON_POOL
+    # TODO
+end
+
+const DATA_DIR = abspath(@__DIR__, "..", "data") # data used for simulations
+const MA_DIR = "/home/brandner/nb_data/repos/NLCp/paper_figs/"
+# const F_BELEG_DIR = abspath(@__DIR__, "..", "..", "..", "..", "repos", "/Private_MA/F_BELEG/F_BELEG_figs")
 
 export import_system, describe_nodes, describe_edges, bustype, is_static_state
 
@@ -86,6 +106,9 @@ include("import_kaiser2020.jl")
 include("import_schaefer2018.jl")
 include("import_square.jl")
 include("import_isolator_toymodel.jl")
+include("import_toymodel.jl")
+include("import_general_networks.jl")
+include("import_slack_gen.jl")
 
 """
     describe_nodes(g::MetaGraph; firstcols=Vector{String}())

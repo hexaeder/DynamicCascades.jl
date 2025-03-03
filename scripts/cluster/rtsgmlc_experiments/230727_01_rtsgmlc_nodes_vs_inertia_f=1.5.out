@@ -1,0 +1,3 @@
+slurmstepd: error: Job 27080540 exceeded memory limit (3625044 > 3584000), being killed
+slurmstepd: error: *** JOB 27080540 ON cs-i14c02b11 CANCELLED AT 2023-07-28T12:44:27 ***
+slurmstepd: error: Exceeded job memory limit

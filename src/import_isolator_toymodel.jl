@@ -5,7 +5,8 @@ Imports the a toy model that consists of two identical toymodels from the
 Schaefer 2018 paper that are connected by a network isolator introduced by
 Kaiser et al. Network isolators inhibit failure spreading in complex networks.
 """
-function import_system(::Val{:isolator_toymodel}; γ=0.1u"s", M=1u"s^2")
+# `tconst` only needed for syntax, tconst is not used in this model
+function import_system(::Val{:isolator_toymodel}; γ=0.1u"s", M=1u"s^2", tconst=0.01u"s")
     g = MetaGraph(10)
     # orginal toymodel
     add_edge!(g, 1,2)
@@ -46,12 +47,13 @@ function import_system(::Val{:isolator_toymodel}; γ=0.1u"s", M=1u"s^2")
     set_prop!(g, gen_idxs, :type, :gen)
     set_prop!(g, gen_idxs, :_M, M)
     set_prop!(g, load_idxs, :P, -1.0)
-    set_prop!(g, load_idxs, :type, :load)
+    set_prop!(g, load_idxs, :type, :gen) # NOTE due to restrutured `nd_model`
     set_prop!(g, load_idxs, :_M, M)
     set_prop!(g, 1:10, :model, :swing)
     set_prop!(g, 1:10, :Q, 0.0)
     # set_prop!(g, 1:5, :inertia, 1.0)
     set_prop!(g, 1:10, :damping, γ)
+    set_prop!(g, 1:10, :timeconst, tconst)
 
     K = 1.63
     set_prop!(g, edges(g), :R, 0.0)

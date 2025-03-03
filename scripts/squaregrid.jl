@@ -61,6 +61,9 @@ fig[2,1] = nwax = graphplot_axis(fig, t1, Δω; title="Frequencies at t₁ = $(t
 fig[2,2] = graphplot_axis(fig, t2, Δω; title="Frequencies at t₂ = $(t2[])")
 fig[2,3] = graphplot_axis(fig, t3, Δω; title="Frequencies at t₃ = $(t3[])")
 fig[2,4] = graphplot_axis(fig, t4, Δω; title="Frequencies at t₄ = $(t4[])")
+#= NOTE get_node_plot() probably not working as in inspect_solution.jl the following
+line is not loger used
+`node_attr=(colorrange=nc_range, colormap=node_colorscheme),`=#
 fig[1,:] = Colorbar(fig, get_node_plot(nwax.scene.plots[2]), height=25,width=1300, vertical=false, label="Node frequency in rad/s",)
 
 fig[3,:] = ax2 = Axis(fig,
@@ -130,4 +133,3 @@ trange = range(0.0, tmax, length=Int(T * fps))
 record(fig, "square_grid.mp4", trange; framerate=30) do time
     t[] = time
 end
-
