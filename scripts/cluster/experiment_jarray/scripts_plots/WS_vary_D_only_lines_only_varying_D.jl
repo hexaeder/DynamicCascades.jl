@@ -30,9 +30,10 @@ markersize = 15
 markers_labels = [
     (:utriangle, ":utriangle"),
     (:rect, ":rect"),
-    # (:star5, "star5"),
+    (:star5, "star5"),
     (:circle, ":circle"),
 ]
+
 
 exp_name_date = "WS_k=4_exp07_1_vary_D_only_lines_PIK_HPC_K_=3,N_G=32_20250126_161647.351"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
@@ -40,7 +41,7 @@ exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 left_out_frequencies = []
 left_out_inertia_values = []
 left_out_β_values = []
-left_out_γ_values = [0.2, 7.5, 10, 20]
+left_out_γ_values = [0.2, 5.0, 7.5, 10, 20]
 
 ################################################################################
 ###################### Calculate mean and standard error #######################
@@ -193,10 +194,13 @@ end
 ################################################################################
 inertia_values = exp_params_dict[:inertia_values]
 freq_bounds = exp_params_dict[:freq_bounds]
+γ_vals = exp_params_dict[:γ]
+filtered_γ_values = filter!(x->x ∉ left_out_γ_values, deepcopy(exp_params_dict[:γ]))
 
 filtered_freq_bounds = filter!(x->x ∉ left_out_frequencies, deepcopy(freq_bounds))
 filtered_inertia_values = filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values))
 filtered_β_values = filter!(x->x ∉ left_out_β_values, deepcopy(exp_params_dict[:β]))
+
 
 
 fig_lines_only = Figure(fontsize = fontsize)
@@ -268,10 +272,10 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
         # frequency argument first for a nice order in the legend
         N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
 
-        marker_index = findfirst(x -> x == β, β_vals)
+        marker_index = findfirst(x -> x == γ, filtered_γ_values)
         marker = markers_labels[marker_index][1]
         marker_label = markers_labels[marker_index][2]
-        color_index = colormap_frequencies ? findfirst(x -> x == freq_bound, filtered_freq_bounds) : marker_index
+        color_index = colormap_frequencies ? findfirst(x -> x == γ, filtered_γ_values) : marker_index
 
         if (trip_lines == :dynamic &&  trip_nodes == :none)
             if freq_bound == filtered_freq_bounds[1]
@@ -288,6 +292,6 @@ k_str = string(exp_params_dict[:k])
 filtered_freq_bounds_str = string(filtered_freq_bounds)
 K_str = string(exp_params_dict[:K])
 
-# CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_D_only_lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,M_left_out=$left_out_inertia_values.png"),fig_lines_only)
-# CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_D_only_lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,M_left_out=$left_out_inertia_values.pdf"),fig_lines_only)
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_D_only_lines_only_K=$K_str,k=$k_str,γ=$filtered_γ_values,M_left_out=$left_out_inertia_values.png"),fig_lines_only)
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_D_only_lines_only_K=$K_str,k=$k_str,γ=$filtered_γ_values,M_left_out=$left_out_inertia_values.pdf"),fig_lines_only)
 fig_lines_only

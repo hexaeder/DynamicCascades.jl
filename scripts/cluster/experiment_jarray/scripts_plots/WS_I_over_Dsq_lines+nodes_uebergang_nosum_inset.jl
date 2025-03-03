@@ -19,9 +19,9 @@ using CairoMakie
 
 
 # plotting parameters
-create_posprocessing_data = true # set to `false` for fast plotting
+create_posprocessing_data = false # set to `false` for fast plotting
 sum_lines_nodes = false
-normalize = false
+normalize = true
 line_colors = [Makie.wong_colors()[3], Makie.wong_colors()[5], Makie.wong_colors()[6]]
 colormap_frequencies = true
 opacity = 0.15
@@ -33,8 +33,8 @@ markers_labels = [(:star5, "star5")]
 exp_name_date = "WS_k=4_exp05_3_I_over_Dsq_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250124_123933.775"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 # left_out_frequencies = [0.005, 0.01, 0.015, 0.025, 0.03, 0.035, 0.14, 0.15, 0.16, 0.3, 0.5, 0.8]
-left_out_frequencies = [0.005, 0.01, 0.015, 0.025, 0.03, 0.035, 0.14, 0.15, 0.16]
-left_out_inertia_values = [10,20,30]
+left_out_frequencies = [0.005, 0.01, 0.015, 0.14, 0.15, 0.16, 0.3, 0.5, 0.8]
+left_out_inertia_values = []
 left_out_β_values = []
 
 ################################################################################
@@ -210,7 +210,7 @@ inset_ax = Axis(fig_lines_and_nodes[1, 1],
     width=Relative(0.5),
     height=Relative(0.5),
     halign=0.95,
-    valign=0.95,
+    valign=0.3,
     backgroundcolor=(:grey, 0.05),
     xgridvisible = false,
     ygridvisible = false,
@@ -218,8 +218,8 @@ inset_ax = Axis(fig_lines_and_nodes[1, 1],
 
 
 # hidedecorations!(inset_ax)
-xlims!(inset_ax, 0, 2)
-ylims!(inset_ax, 0.25, 0.28)
+xlims!(inset_ax, 0, 30)
+ylims!(inset_ax, 0, 0.003)
 
 # Create figures depending on the modes (loop).
 failure_modes = exp_params_dict[:failure_modes]
@@ -306,7 +306,8 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
 end
 N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, 1)
 # axislegend(ax_lines_and_nodes, position = (0.08,0.99), labelsize=labelsize-5)
-axislegend(ax_lines_and_nodes, position = (0.98,0.12), labelsize=labelsize-9)
+lines!(ax_lines_and_nodes, [NaN], [NaN]; label=L"Damping $D=\sqrt{I}$ [$s$]", color=:white)
+axislegend(ax_lines_and_nodes, position = (1.2,1.0), labelsize=labelsize-12, nbanks = 2)
 
 k_str = string(exp_params_dict[:k])
 filtered_freq_bounds_str = string(filtered_freq_bounds)

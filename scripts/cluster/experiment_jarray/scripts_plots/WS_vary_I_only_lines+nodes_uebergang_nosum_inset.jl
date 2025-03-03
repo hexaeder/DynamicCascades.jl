@@ -19,7 +19,7 @@ using CairoMakie
 
 
 # plotting parameters
-create_posprocessing_data = true # set to `false` for fast plotting
+create_posprocessing_data = false # set to `false` for fast plotting
 sum_lines_nodes = false
 normalize = true
 line_colors = [Makie.wong_colors()[3], Makie.wong_colors()[5], Makie.wong_colors()[6]]
@@ -30,7 +30,7 @@ fontsize = labelsize = 26
 markersize = 15
 markers_labels = [(:star5, "star5")]
 
-exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
+exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250126_012357.344"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 left_out_frequencies = [0.005, 0.015, 0.02, 0.025, 0.035, 0.04, 0.045,
     0.05, 0.055, 0.060, 0.065, 0.07, 0.075, 0.08, 0.085, 0.09, 0.095, 0.1,
@@ -221,7 +221,7 @@ inset_ax = Axis(fig_lines_and_nodes[1, 1],
 
 # hidedecorations!(inset_ax)
 xlims!(inset_ax, 0, 30)
-ylims!(inset_ax, 0, 0.036)
+ylims!(inset_ax, 0, 0.016)
 
 # Create figures depending on the modes (loop).
 failure_modes = exp_params_dict[:failure_modes]
@@ -308,12 +308,13 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
 end
 N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, 1)
 # axislegend(ax_lines_and_nodes, position = (0.08,0.99), labelsize=labelsize-5)
-axislegend(ax_lines_and_nodes, position = (0.98,0.12), labelsize=labelsize-9)
+lines!(ax_lines_and_nodes, [NaN], [NaN]; label="Damping D=1 [s]", color=:white)
+axislegend(ax_lines_and_nodes, position = (0.98,0.22), labelsize=labelsize-12, nbanks = 2)
 
 k_str = string(exp_params_dict[:k])
 filtered_freq_bounds_str = string(filtered_freq_bounds)
 K_str = string(exp_params_dict[:K])
 
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_I_only_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_I_only_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
 fig_lines_and_nodes

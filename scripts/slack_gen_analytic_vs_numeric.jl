@@ -204,6 +204,53 @@ for D in D_values
 end
 axislegend()
 fig
+
+############# analytic Δω
+#############
+
+# Define the analytical expression for the maximum frequency deviation
+function frequency_nadir_analytic(I, D, K, P0, P1)
+    # Guard against nonpositive inertia
+    if I <= 0
+        return NaN
+    end
+    # Compute the power step
+    deltaP = P1 - P0
+    # Natural frequency
+    ωₙ = sqrt(K / I)
+    # Damping ratio
+    ζ = D / (2 * sqrt(K * I))
+    # If the system is overdamped (ζ >= 1) return NaN (or handle appropriately)
+    if ζ >= 1
+        return NaN
+    end
+    # Analytical expression:
+    # Δω_max = (ΔP/K)*ωₙ * exp[ - (ζ*arccos(ζ)) / sqrt(1-ζ^2) ]
+    return (deltaP / K) * ωₙ * exp( - (ζ * acos(ζ)) / sqrt(1 - ζ^2) )
+end
+
+# Create a figure and axis
+fig = Figure(fontsize = 40)
+ax = Axis(fig[1, 1]; xlabel = L"Inertia I [$s^2$]", ylabel = L"$\Delta \omega$ [rad/s]", xticks = 1:1:12)
+
+# Define the range of inertia values (avoid I = 0 to prevent division by zero)
+x = range(0, 12, length = 1200)
+
+# Define a set of damping values to test
+D_values = [0.1, 0.5, 1.0, 2.0]
+
+# Compute and plot the frequency nadir for each damping value
+for D in D_values
+    y = frequency_nadir_analytic.(x, D, K, P0, P1)
+    lines!(ax, x, y; label = "D = $D", linewidth = 4)
+end
+
+axislegend(ax)
+fig
+
+#############
+#############
+
 save(joinpath(MA_DIR, "frequency_nadir_different_dampings.pdf"), fig)
 save(joinpath(MA_DIR, "frequency_nadir_different_dampings.png"), fig)
 

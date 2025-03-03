@@ -43,6 +43,24 @@ fig
 save(joinpath("/home/brandner/nb_data/repos/Private_MA/paper/relation_I_D", "phase_nadir_tau_variation.pdf"), fig)
 save(joinpath("/home/brandner/nb_data/repos/Private_MA/paper/relation_I_D", "phase_nadir_tau_variation.png"), fig)
 
+# phase nadir
+fig = Figure(fontsize = 50)
+ax = Axis(fig[1, 1]; xlabel= L"τ1", ylabel= L"$\Delta \theta$ [rad]", xticks=1:1:12)
+τ1 = range(0.0, 3, length=1200)
+τ2_values = [0.1, 0.5, 1.0, 2.0, 3.0]
+for τ2 in τ2_values
+    y = phase_nadir.((τ1*τ2), τ1, K, P0, P1)
+    lines!(ax, τ1, y; label="τ2=$τ2", linewidth=4)
+end
+y = phase_nadir.(τ1.^2, τ1, K, P0, P1)
+lines!(ax, τ1, y; label="τ2=τ1", color=:red, linewidth=4)
+y = phase_nadir.(τ1.^2*c, τ1, K, P0, P1)
+lines!(ax, τ1, y; label="τ2=c*τ1, c=$c", color=:red, linestyle=:dot, linewidth=4)
+
+axislegend(ax, position=:rt, nbanks = 2)
+fig
+save(joinpath("/home/brandner/nb_data/repos/NLCp/paper_figs/relation_I_D/", "phase_nadir_combined_tau.pdf"), fig)
+save(joinpath("/home/brandner/nb_data/repos/NLCp/paper_figs/relation_I_D/", "phase_nadir_combined_tau.png"), fig)
 
 fig = Figure(fontsize = 40)
 ax = Axis(fig[1, 1]; xlabel="damping D", ylabel=L"$\Delta \theta$ [rad]", xticks=1:1:12)
@@ -121,13 +139,15 @@ for τ2 in τ2_values
     lines!(ax, τ1, y; label="τ2=$τ2", linewidth=4)
 end
 y = frequency_nadir.(τ1.^2, τ1, K, P0, P1)
-lines!(ax, τ1, y; label=L"$I = \tau_1^2", color =:red, linewidth=4)
+lines!(ax, τ1, y; label="τ2=τ1", color =:red, linewidth=4)
+y = frequency_nadir.(τ1.^2*c, τ1, K, P0, P1)
+lines!(ax, τ1, y; label="τ2=c*τ1, c=$c", color=:red, linestyle=:dot, linewidth=4)
 axislegend()
 xlims!(ax, -0.1, 3.)
 ylims!(ax, 0., 3.)
 fig
-save(joinpath("/home/brandner/nb_data/repos/Private_MA/paper/relation_I_D", "frequency_nadir_combined_tau.pdf"), fig)
-save(joinpath("/home/brandner/nb_data/repos/Private_MA/paper/relation_I_D", "frequency_nadir_combined_tau.png"), fig)
+save(joinpath("/home/brandner/nb_data/repos/NLCp/paper_figs/relation_I_D/", "frequency_nadir_combined_tau.pdf"), fig)
+save(joinpath("/home/brandner/nb_data/repos/NLCp/paper_figs/relation_I_D/", "frequency_nadir_combined_tau.png"), fig)
 
 fig = Figure(fontsize = 40)
 ax = Axis(fig[1, 1]; xlabel="damping D", ylabel=L"$\Delta \omega$ [rad/s]", xticks=1:1:12)
@@ -146,7 +166,7 @@ fig
 save(joinpath("/home/brandner/nb_data/repos/Private_MA/paper/relation_I_D", "frequency_nadir_combined_D.pdf"), fig)
 save(joinpath("/home/brandner/nb_data/repos/Private_MA/paper/relation_I_D", "frequency_nadir_combined_D.png"), fig)
 
-
+c = 0.7
 fig = Figure(fontsize = 25)
 ax = Axis(fig[1, 1]; xlabel= L"Inertia I [$s^2$]", ylabel= L"$\Delta \theta$ [rad]", xticks=1:1:12)
 x = range(0.0, 12, length=1200)
@@ -157,14 +177,18 @@ for D in D_values
 end
 y = phase_nadir.(x, sqrt.(x), K, P0, P1)
 lines!(ax, x, y; label="D = sqrt(I)", color=:red, linewidth=4)
+y = phase_nadir.(x, sqrt.(x/c), K, P0, P1)
+lines!(ax, x, y; label="D = sqrt(I/c), c=$c", color=:red, linestyle=:dot, linewidth=4)
 y = phase_nadir.(x, x, K, P0, P1)
 lines!(ax, x, y; label="D = I", color=:black, linewidth=4)
-axislegend(ax, position=:rb, nbanks = 3)
+y = phase_nadir.(x, x./c, K, P0, P1)
+lines!(ax, x, y; label="D = I/c, c=$c", color=:black, linestyle=:dot, linewidth=4)
+axislegend(ax, position=:rc, nbanks = 3)
 fig
-save(joinpath("/home/brandner/nb_data/repos/Private_MA/paper/relation_I_D", "phase_nadir_combined_both_I.pdf"), fig)
-save(joinpath("/home/brandner/nb_data/repos/Private_MA/paper/relation_I_D", "phase_nadir_combined_both_I.png"), fig)
+save(joinpath("/home/brandner/nb_data/repos/NLCp/paper_figs/relation_I_D/", "phase_nadir_combined_both_I.pdf"), fig)
+save(joinpath("/home/brandner/nb_data/repos/NLCp/paper_figs/relation_I_D/", "phase_nadir_combined_both_I.png"), fig)
 
-fig = Figure(fontsize = 40)
+fig = Figure(fontsize = 35)
 ax = Axis(fig[1, 1]; xlabel= L"Inertia I [$s^2$]", ylabel= L"$\Delta \omega$ [rad/s]", xticks=1:1:12)
 x = range(0.0, 12, length=1200)
 D_values = [0.1, 0.5, 1.0, 2.0]
@@ -174,13 +198,17 @@ for D in D_values
 end
 y = frequency_nadir.(x, sqrt.(x), K, P0, P1)
 lines!(ax, x, y; label="D = sqrt(I)", color=:red, linewidth=4)
+y = frequency_nadir.(x, sqrt.(x/c), K, P0, P1)
+lines!(ax, x, y; label="D = sqrt(I/c), c=$c", color=:red, linestyle=:dot, linewidth=4)
 y = frequency_nadir.(x, x, K, P0, P1)
 lines!(ax, x, y; label="D = I", color=:black, linewidth=4)
+y = frequency_nadir.(x, x./c, K, P0, P1)
+lines!(ax, x, y; label="D = I/c, c=$c", color=:black, linestyle=:dot, linewidth=4)
 axislegend()
-ylims!(ax, 0., 3.)
+ylims!(ax, 0., 2.)
 fig
-save(joinpath("/home/brandner/nb_data/repos/Private_MA/paper/relation_I_D", "frequency_nadir_combined_both_I.pdf"), fig)
-save(joinpath("/home/brandner/nb_data/repos/Private_MA/paper/relation_I_D", "frequency_nadir_combined_both_I.png"), fig)
+save(joinpath("/home/brandner/nb_data/repos/NLCp/paper_figs/relation_I_D/", "frequency_nadir_combined_both_I.pdf"), fig)
+save(joinpath("/home/brandner/nb_data/repos/NLCp/paper_figs/relation_I_D/", "frequency_nadir_combined_both_I.png"), fig)
 
 ############################### nadir functions ################################
 function phase_nadir(M, D, K, P0, P1)

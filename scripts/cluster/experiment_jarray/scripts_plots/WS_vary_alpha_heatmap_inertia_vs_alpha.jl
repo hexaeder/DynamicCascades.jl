@@ -26,13 +26,14 @@ fontsize = labelsize = 24
 # markers
 markersize = 15
 
-exp_name_date = "WS_k=4_exp06_3_I_over_D_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250125_134157.625"
+exp_name_date = "WS_k=4_exp08_vary_alpha_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250126_200358.439"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
-# left_out_frequencies = [0.005, 0.01, 0.015, 0.025, 0.03, 0.035, 0.14, 0.15, 0.16, 0.3, 0.5, 0.8]
 left_out_frequencies = []
-left_out_frequencies = [0.3, 0.5, 0.8]
+left_out_frequencies = [0.01, 0.03]
 left_out_inertia_values = []
 left_out_β_values = []
+left_out_γ_values = [1]
+left_out_α_values = []
 
 ################################################################################
 ###################### Calculate mean and standard error #######################
@@ -186,10 +187,13 @@ end
 ################################################################################
 inertia_values = exp_params_dict[:inertia_values]
 freq_bounds = exp_params_dict[:freq_bounds]
+γ_vals = exp_params_dict[:γ]
+filtered_γ_values = filter!(x->x ∉ left_out_γ_values, deepcopy(exp_params_dict[:γ]))
 
 filtered_freq_bounds = filter!(x->x ∉ left_out_frequencies, deepcopy(freq_bounds))
 filtered_inertia_values = filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values))
 filtered_β_values = filter!(x->x ∉ left_out_β_values, deepcopy(exp_params_dict[:β]))
+filtered_α_values = filter!(x->x ∉ left_out_α_values, deepcopy(exp_params_dict[:α]))
 
 # Create figures depending on the modes (loop).
 failure_modes = exp_params_dict[:failure_modes]
@@ -227,6 +231,14 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
     end
     # β values
     if β ∈ left_out_β_values
+        continue
+    end
+    # γ values
+    if γ ∈ left_out_γ_values
+        continue
+    end
+    # α values
+    if α ∈ left_out_α_values
         continue
     end
 
@@ -269,20 +281,20 @@ filtered_freq_bounds_str = string(filtered_freq_bounds)
 K_str = string(exp_params_dict[:K])
 
 
-if length(filtered_freq_bounds) > 1
+if length(filtered_α_values) > 1
     # create heatmap
     fig_hm = Figure(fontsize = (fontsize-3))
     ax_hm = Axis(fig_hm[1, 1], xticklabelrotation=π/2,
         title = "",
-        xlabel = "Frequency bound f_b [Hz]", # frequency bound f_b
+        xlabel = L"Line rating $\alpha$", # frequency bound f_b
         xlabelsize = (fontsize + 5),
         ylabel = L"Inertia I [$s^2$]", # inertia value associated with minimum of failures
         ylabelsize = (fontsize + 5),
     )
 
-    xs = filtered_freq_bounds
+    xs = filtered_α_values
     ys = filtered_inertia_values
-    data = transpose(reshape(all_failures_heatmap, length(filtered_inertia_values), length(filtered_freq_bounds)))
+    data = transpose(reshape(all_failures_heatmap, length(filtered_inertia_values), length(filtered_α_values)))
 
     # hm = heatmap!(ax_hm, xs, ys, data, colormap = Reverse(:blues))
     # hm = heatmap!(ax_hm, xs, ys, data, colormap = Reverse(color_map))
@@ -301,20 +313,21 @@ if length(filtered_freq_bounds) > 1
     # https://docs.makie.org/stable/reference/blocks/colorbar/
 
     # create minimal failures (optimal inertia) vs. frequency bound f_b
-    for i in 1:length(filtered_freq_bounds)
+    for i in 1:length(filtered_α_values)
         if i == 1
-            scatter!(ax_hm, filtered_freq_bounds[i], opt_inertia[i], color = Makie.wong_colors()[1], label = L"$I_{min}$: Inertia value associated with minimum of failures", markersize = markersize)
+            scatter!(ax_hm, filtered_α_values[i], opt_inertia[i], color = Makie.wong_colors()[1], label = L"$I_{min}$: Inertia value associated with minimum of failures", markersize = markersize)
         end
-        scatter!(ax_hm, filtered_freq_bounds[i], opt_inertia[i], color = Makie.wong_colors()[1], markersize = markersize)
+        scatter!(ax_hm, filtered_α_values[i], opt_inertia[i], color = Makie.wong_colors()[1], markersize = markersize)
     end
-    lines!(ax_hm, [NaN], [NaN]; label=L"Damping $D=I$ [$s$]", color=:white)
-    axislegend(ax_hm, position = :rc, labelsize=(labelsize-8))
+    D = filtered_γ_values[1]
+    lines!(ax_hm, [NaN], [NaN]; label="Damping D=$D [s]", color=:white)
+    axislegend(ax_hm, position = :rt, labelsize=(labelsize-8))
     Colorbar(fig_hm[:, end+1], hm, label = normalize ? L"normalized $N_{fail}$" : (heatmap_logscale ? L"$\log(N_{fail}+1)$" : L"$N_{fail}$"))
 
-    ax_hm.xticks = filtered_freq_bounds
+    ax_hm.xticks = filtered_α_values
     ax_hm.xlabelpadding = 15
-    ax_hm.yticks = [1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
+    ax_hm.yticks = filtered_inertia_values
 end
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_D_only_heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str.pdf"),fig_hm)
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_D_only_heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str.png"),fig_hm)
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_α_heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,D=$D.pdf"),fig_hm)
+CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_α_heatmap_log=$heatmap_logscale,sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,D=$D.png"),fig_hm)
 fig_hm

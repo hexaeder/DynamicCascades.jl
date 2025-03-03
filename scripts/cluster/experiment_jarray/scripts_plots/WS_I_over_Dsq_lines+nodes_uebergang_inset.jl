@@ -20,7 +20,7 @@ using CairoMakie
 
 
 # plotting parameters
-create_posprocessing_data = true # set to `false` for fast plotting
+create_posprocessing_data = false # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
 line_colors = [Makie.wong_colors()[3], Makie.wong_colors()[5], Makie.wong_colors()[6]]
@@ -34,7 +34,7 @@ markers_labels = [(:circle, ":circle")]
 exp_name_date = "WS_k=4_exp05_3_I_over_Dsq_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250124_123933.775"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 # left_out_frequencies = [0.005, 0.01, 0.015, 0.025, 0.03, 0.035, 0.14, 0.15, 0.16, 0.3, 0.5, 0.8]
-left_out_frequencies = [0.005, 0.01, 0.015, 0.14, 0.15, 0.16, 0.3, 0.5, 0.8]
+left_out_frequencies = [0.025, 0.03, 0.035, 0.14, 0.15, 0.16, 0.3, 0.5, 0.8]
 left_out_inertia_values = []
 left_out_β_values = []
 
