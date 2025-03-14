@@ -6,7 +6,6 @@ nodes and lines that fail for I=[0.2, 3.0, 30.0].
 
 include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
 
-using Revise
 using DynamicCascades
 using Graphs
 using MetaGraphs

@@ -138,6 +138,8 @@ function Line(; src=nothing, dst=nothing, kwargs...)
     em
 end
 
+
+
 #### Test functionality of node failure in 2 bus system
 ####
 v1 = SlackModel(vidx=1)
@@ -197,11 +199,13 @@ s0 = find_fixpoint(nw)
 prob = ODEProblem(nw, uflat(s0), (0, 2), pflat(s0), callback=get_callbacks(nw));
 sol = solve(prob, Tsit5())
 
+let
+    fig = Figure()
+    ax = Axis(fig[1, 1]; xlabel="time", ylabel="powerflow through line")
+    lines!(ax, sol, idxs=eidxs(1, :P))
+    fig
+end
 
-fig = Figure()
-ax = Axis(fig[1, 1]; xlabel="time2", ylabel="powerflow through line")
-lines!(ax, sol, idxs=eidxs(1, :P))
-fig
 
 # call for interactive inspection
 # inspect(sol)
