@@ -1,85 +1,156 @@
 """
-Watts-Strogatz-Network: Related to the curve in WS_lines+nodes_uebergang.jl with
-frequency bound f_b=0.03. Plotting all frequency and power flow trajectories of all
-nodes and lines that fail for I=[0.2, 3.0, 30.0].
 """
 
 include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
+include(abspath(@__DIR__, "WS_trajectories_new_ND_single_model_port.jl"))
 
 using DynamicCascades
-using Graphs
+# using Graphs
 using MetaGraphs
-using Unitful
-using Statistics
-using GraphMakie
-using Colors
-using DynamicCascades: PLOT_DIR
+# using Unitful
+# using Statistics
+# using GraphMakie
+# using Colors
+# using DynamicCascades: PLOT_DIR
 
-using CairoMakie
-# using GLMakie
-# GLMakie.activate!()
-
-# time_stepsize = 10
-#
-# sol.load_S.t[1:time_stepsize:end_time]
-# sol.load_S.t[1:time_stepsize:end]
+# using CairoMakie
 
 
+
+###
+### read in parameters from .csv
+###
 initial_fail = 78
-task_id_array = [415, 418, 423]
-task_id = 418
-exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
+task_id = 1720
+task_id_array = [1720, 1723, 1728]
 
+# exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
+exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250126_012357.344"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
-exp_params_dict = Serialization.deserialize(joinpath(exp_data_dir, "exp.params"))
-
 N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
-monitored_power_flow = exp_params_dict[:monitored_power_flow]
-steadystate_choice = exp_params_dict[:steadystate_choice]
+network = import_system_wrapper(df_config, task_id)
+
+
+###
+### build NetworkDynamics.jl Network
+###
+
+# loop over vertices and assign vertex models & parameter
+vm_array = VertexModel[]
+for i in 1:nv(network)
+    # P = P_inj - P_load see `balance_power!`
+    # P_inj = P + P_load
+    P = get_prop(network, i, :P)
+    Pload = get_prop(network, i, :P_load)
+    Pmech = P + Pload
+
+    type = get_prop(network, i, :type)
+    if type == :gen
+        vm = SwingDynLoadModel(M=M,D=γ,τ=τ,ωmax=freq_bound,Pmech=Pmech,Pload=Pload)
+    elseif type == :load
+        vm = DynLoadModel(τ=τ,Pload=Pload)  
+    end
+    push!(vm_array, vm)
+end
+
+# generate `Network` object
+nw = Network(network.graph, vm_array, Line(K=K,rating=α*K); dealias=true)
+
+# Check if network is power balanced
+nw_state = NWState(nw)
+p = nw_state.p
+@assert isapprox(sum(p.v[1:100, :Pload]), sum(p.v[1:100, :Pmech]))
+
+# set initial perturbation CB
+init_perturb = PresetTimeComponentCallback(0.1,
+    ComponentAffect([], [:active]) do u, p, ctx
+        println("Shutdown line $(ctx.eidx) at t=$(ctx.integrator.t)")
+        p[:active] = 0
+    end
+)
+set_callback!(nw[EIndex(initial_fail)], init_perturb)
+
+
+s0=find_fixpoint(nw)
+prob = ODEProblem(nw, uflat(s0), (0, 1), pflat(s0), callback=get_callbacks(nw)); # TODO warum `pflat(s0)` warum extrahiert man Parameter  nicht aus `nw`?
+sol = solve(prob, Rodas4P())
+
+
+
+####
+network.graph
+collect(edges(network.graph))
+
+# x0=NWState(nw)
+# p=x0.p
+# x_static0 = solve(NonlinearProblem(nw, x0, p), NLSolveJL())
+
+s0 = find_fixpoint(nw, x0, p) # TODO check if I get the same fixpoint.
+prob = ODEProblem(nw, uflat(s0), (0, 10), pflat(s0), callback=get_callbacks(nw)); # TODO warum `pflat(s0)` warum extrahiert man Parameter  nicht aus `nw`?
+sol = solve(prob, Tsit5())
+####
+
+# call for interactive inspection
+# inspect(sol)
+
+let
+    fig = Figure(size=(800, 800))
+    ax = Axis(fig[1, 1]; xlabel="time", ylabel="voltage angle θ")
+    lines!(ax, sol, idxs=vidxs(1:2, :θ))
+    axislegend(ax)
+    ax = Axis(fig[2, 1]; xlabel="time", ylabel="rotor frequency ω")
+    lines!(ax, sol, idxs=vidxs(2, :ω))
+    axislegend(ax)
+    ax = Axis(fig[3, 1]; xlabel="time", ylabel="injected power P")
+    lines!(ax, sol, idxs=vidxs(1:2, :Pinj))
+    axislegend(ax)
+    fig
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#############################################################################################
+#############################################################################################
+#############################################################################################
 
 #= Generate and save sol-Objects, the data for the plots. Only use this for recreating
 the solution objects =#
-# network = import_system_wrapper(df_config, task_id)
+####
+#### save and load sol objects
+####
+# Serialization.serialize(joinpath(exp_data_dir, "trajectories", "task_id=$task_id.sol"), sol) TODO add initially failed line
 
-# if steadystate_choice == :rootfind
-#     x_static = steadystate(network; verbose=true) # "Old" way: leads to some errors, thus the `catch`-option below
-# elseif steadystate_choice == :relaxation
-#     x_static = steadystate_relaxation(network; verbose=true) # "New" way, steady state more precise, less/no errors, probabyl slower
-# end
-#
-# sol = simulate(network;
-#                x_static=x_static,
-#                initial_fail = [initial_fail],
-#                init_pert = init_pert,
-#                tspan = (0, 100000),
-#                trip_lines = trip_lines,
-#                trip_nodes = trip_nodes,
-#                trip_load_nodes = :none,
-#                monitored_power_flow = monitored_power_flow,
-#                f_min = -freq_bound,
-#                f_max = freq_bound,
-#                solverargs = (;dtmax=0.01),
-#                verbose = true);
-#
-# Serialization.serialize(joinpath(exp_data_dir, "trajectories", "task_id=$task_id.sol"), sol) TODO add line
-
-# Solution objects
-sol415 = Serialization.deserialize(joinpath(exp_data_dir, "trajectories", "task_id=415.sol"))
-sol418 = Serialization.deserialize(joinpath(exp_data_dir, "trajectories", "task_id=418.sol"))
-sol423 = Serialization.deserialize(joinpath(exp_data_dir, "trajectories", "task_id=423.sol"))
+# # Solution objects
+# sol415 = Serialization.deserialize(joinpath(exp_data_dir, "trajectories", "task_id=415.sol"))
+# sol418 = Serialization.deserialize(joinpath(exp_data_dir, "trajectories", "task_id=418.sol"))
+# sol423 = Serialization.deserialize(joinpath(exp_data_dir, "trajectories", "task_id=423.sol"))
 
 
-# 78: initial trigger line
-lines_task_id_415 = [78] # sol415.failures.saveval
-lines_task_id_418 = [78] # sol418.failures.saveval
-lines_task_id_423 = [78, 199, 194, 131, 147, 146, 14, 106, 135, 149, 148] # sol423.failures.saveval
-nodes_task_id_415 = [29, 98, 92, 58] # sol415.failures_nodes.saveval
-nodes_task_id_418 = [29, 98] # sol418.failures_nodes.saveval
-nodes_task_id_423 = [98, 59, 62, 61, 60] # sol423.failures_nodes.saveval
-
-all_failing_lines_idxs = [14, 78, 106, 131, 135, 146, 147, 148, 149, 194, 199]
-all_failing_nodes_idxs = [29, 58, 59, 60, 61, 62, 92, 98]
 
 node_colors = distinguishable_colors(9)
 deleteat!(node_colors, 2) # delete yellow
@@ -335,74 +406,9 @@ end
 # ax.xticks = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.1]
 # axislegend(ax, position = :rt, nbanks = 3)
 
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_traj,lines_only,task_ids=$task_id_array,init_fail=$initial_fail.pdf"),fig)
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_traj,lines_only,task_ids=$task_id_array,init_fail=$initial_fail.png"),fig)
+# CairoMakie.save(joinpath(MA_DIR, "WS", "WS_traj,lines_only,task_ids=$task_id_array,init_fail=$initial_fail.pdf"),fig)
+# CairoMakie.save(joinpath(MA_DIR, "WS", "WS_traj,lines_only,task_ids=$task_id_array,init_fail=$initial_fail.png"),fig)
 
-
-# # plot all power flows # NOTE This takes really long
-# fig[2,2] = ax = Axis(fig; xlabel="time t in s", ylabel="apparent power flow in p.u.", title="power flow of all lines")
-# for i in 1:length(sol.load_S.saveval[1])
-#     if t_end == :plot_all_timesteps
-#         t = sol.load_S.t
-#     else
-#         t = sol.load_S.t[1:1:t_end]
-#     end
-#
-#     # if M > 5.0
-#     #     t = sol.load_S.t[1:time_stepsize:end]
-#     # end
-#     # t = sol.frequencies_load_nodes.t[1:20]
-#     y = [sol.load_S.saveval[j][i] for j in 1:length(t)]
-#     # y = [sol.frequencies_load_nodes.saveval[t][i] for t in 1:20]
-#     lines!(ax, t, y; label="frequency on load node ($i)", linewidth=2)
-#     # scatter!(ax, t, y; label="power flow on line ($i)", markersize=5)
-# end
-# vlines!(ax, tobs; color=:black, linewidth=1)
-
-# # plot frequencies of all gen nodes
-# fig[1,2] = ax = Axis(fig; xlabel="time t in s", ylabel="angular frequency ω", title=@lift("t = "*repr(round($tobs,digits=2))*" s        frequency transients of all generator nodes"))
-# (nd, p, overload_cb) = nd_model(network)
-# state_idx = idx_containing(nd, "ω") # array: indices of ω-states
-# for i in state_idx
-#     if t_end == :plot_all_timesteps
-#         t = sol.sol.t
-#     else
-#         t = sol.sol.t[1:1:t_end]
-#     end
-#     # t = sol.sol.t[1:1:t_end]
-#     # if M > 5.0
-#     #     t = sol.sol.t[1:time_stepsize:end]
-#     # end
-#     y = [sol.sol.u[j][i] for j in 1:length(t)]
-#     # y = [sol.sol.u[t][i] for t in 1:300]
-#     lines!(ax, t, y; label="frequency on node ($i)", linewidth=2)
-#     # scatter!(ax, t, y; label="frequency on node ($i)", linewidth=3)
-# end
-# vlines!(ax, tobs; color=:black, linewidth=1)
-
-
-# # plot frequencies of all load nodes
-# fig[1,3] = ax = Axis(fig; xlabel="time t in s", ylabel="angular frequency ω", title="frequency transients of all load nodes")
-# for i in 1:length(sol.frequencies_load_nodes.saveval[1])
-#     t = sol.frequencies_load_nodes.t
-#     # t = sol.frequencies_load_nodes.t[1:20]
-#     y = [sol.frequencies_load_nodes.saveval[t][i] for t in 1:length(sol.frequencies_load_nodes.t)]
-#     # y = [sol.frequencies_load_nodes.saveval[t][i] for t in 1:20]
-#     lines!(ax, t, y; label="frequency on load node ($i)", linewidth=2)
-#     # scatter!(ax, t, y; label="frequency on load node ($i)", markersize=5)
-# end
-# vlines!(ax, tobs; color=:black, linewidth=1)
-
-# # plot frequencies of failed load nodes
-# load_node_idxs = findall(x -> x==:load, get_prop(network, 1:nv(network), :type))
-# fig[2,3] = ax = Axis(fig; xlabel="time t in s", ylabel="angular frequency ω", title="frequency transients of failing load nodes")
-# for (i, l) in pairs([findfirst(x -> x == i, load_node_idxs) for i in sol.failures_load_nodes.saveval])
-#     t, s = seriesforidx(sol.frequencies_load_nodes, l)
-#     # scatter!(ax, t, s; label="frequency on load node ($i)", linewidth=3)
-#     lines!(ax, t, s; label="frequency on load node ($i)", linewidth=3)
-#     scatter!(ax, (t[end], s[end]); marker=:star5, markersize=25)
-# end
-# vlines!(ax, tobs; color=:black, linewidth=1)
 
 # # create video
 # T = 20 #10

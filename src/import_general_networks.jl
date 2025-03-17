@@ -53,8 +53,9 @@ function set_params_general_neworks!(g, distr_seed, N, M, γ, τ, K, α, μ, σ)
     set_prop!(g, 1:nv(g), :damping, γ)
     set_prop!(g, 1:nv(g), :timeconst, τ)
 
-    #= NOTE Would have been easier to set coupling directly here: `set_prop!(network, e, :_K, K[i])`
-    TODO However this would be problematic: For `calculate_apparent_power!` we need `:_Y`, which is only assigned
+    # NOTE
+    #= Would have been easier to set coupling directly here: `set_prop!(network, e, :_K, K[i])`
+    However this would be problematic: For `calculate_apparent_power!` we need `:_Y`, which is only assigned
     a value in `set_coupling!` if `:_K` is not assigned.=#
     set_prop!(g, edges(g), :R, 0.0)
     set_prop!(g, edges(g), :K, K)  
