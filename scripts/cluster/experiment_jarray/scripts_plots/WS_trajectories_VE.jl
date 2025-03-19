@@ -27,41 +27,65 @@ using CairoMakie
 
 
 initial_fail = 78
-task_id_array = [415, 418, 423]
-task_id = 418
-exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
+task_id = 1720
+# task_id_array = [1720, 1723, 1728]
 
+# exp_name_date = "WS_k=4_exp02_PIK_HPC_K_=3,N_G=32_20240208_000237.814"
+exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250126_012357.344"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
-exp_params_dict = Serialization.deserialize(joinpath(exp_data_dir, "exp.params"))
-
 N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
-monitored_power_flow = exp_params_dict[:monitored_power_flow]
-steadystate_choice = exp_params_dict[:steadystate_choice]
+network = import_system_wrapper(df_config, task_id)
+
+# using SciMLNLSolve
+# zeroidx=1
+# (nd, p) = nd_model(network)
+# x0 = zeros(length(nd.syms));
+# x_static = solve(NonlinearProblem(nd, x0, p), NLSolveJL())
+# θidx = idx_containing(nd, "θ")
+
+# offset = x_static[θidx[zeroidx]]
+# x_static[θidx] .= x_static[θidx] .- offset
+# @assert iszero(x_static[θidx[zeroidx]])
+# x_static
 
 #= Generate and save sol-Objects, the data for the plots. Only use this for recreating
 the solution objects =#
-# network = import_system_wrapper(df_config, task_id)
-#
+network = import_system_wrapper(df_config, task_id)
+
 # if steadystate_choice == :rootfind
 #     x_static = steadystate(network; verbose=true) # "Old" way: leads to some errors, thus the `catch`-option below
 # elseif steadystate_choice == :relaxation
 #     x_static = steadystate_relaxation(network; verbose=true) # "New" way, steady state more precise, less/no errors, probabyl slower
 # end
-#
-# sol = simulate(network;
-#                x_static=x_static,
-#                initial_fail = [initial_fail],
-#                init_pert = init_pert,
-#                tspan = (0, 100000),
-#                trip_lines = trip_lines,
-#                trip_nodes = trip_nodes,
-#                trip_load_nodes = :none,
-#                monitored_power_flow = monitored_power_flow,
-#                f_min = -freq_bound,
-#                f_max = freq_bound,
-#                solverargs = (;dtmax=0.01),
-#                verbose = true);
+
+steady_state_dict  = CSV.File("/home/brandner/nb_data/HU_Master/2122WS/MA/MA_data/results_NB/WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250126_012357.344/k=4,β=0.5/steady_states_graphs/graph_seed=11,distr_seed=11,k=4,β=0.5,ensemble_element=7.csv")
+x_static = steady_state_dict[:SteadyState]
+
+using SciMLNLSolve
+zeroidx=1
+(nd, p) = nd_model(network)
+x0 = zeros(length(nd.syms));
+x_static = solve(NonlinearProblem(nd, x0, p), NLSolveJL())
+θidx = idx_containing(nd, "θ")
+
+offset = x_static[θidx[zeroidx]]
+x_static[θidx] .= x_static[θidx] .- offset
+@assert iszero(x_static[θidx[zeroidx]])
+
+sol = simulate(network;
+               x_static=x_static,
+               initial_fail = [initial_fail],
+               init_pert = init_pert,
+               tspan = (0, 100000),
+               trip_lines = trip_lines,
+               trip_nodes = trip_nodes,
+               trip_load_nodes = :none,
+               monitored_power_flow = :apparent,
+               f_min = -freq_bound,
+               f_max = freq_bound,
+               solverargs = (;dtmax=0.01),
+               verbose = true);
 #
 # Serialization.serialize(joinpath(exp_data_dir, "trajectories", "task_id=$task_id.sol"), sol)
 
