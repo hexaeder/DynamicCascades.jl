@@ -161,23 +161,6 @@ function preprocess(complement_to_existing_exp, existing_exp_name, exp_name, lon
 
     CSV.write(joinpath(exp_data_dir, "exp_params.csv"), exp_params_dict, writeheader=true, header=["parameter", "value"])
     Serialization.serialize(joinpath(exp_data_dir, "exp.params"), exp_params_dict)
-# end
-
-# function create_hyperparameter_save_sbatch_dict(exp_params_dict)
-#     # get parameters
-#     N_ensemble_size = exp_params_dict[:N_ensemble_size]
-#     k_vals = exp_params_dict[:k]
-#     β_vals = exp_params_dict[:β]
-#     N_nodes = exp_params_dict[:N_nodes]
-#     inertia_values = exp_params_dict[:inertia_values]
-#     K_vals = exp_params_dict[:K]
-#     γ_vals = exp_params_dict[:γ]
-#     τ_vals = exp_params_dict[:τ]
-#     σ_vals = exp_params_dict[:σ]
-#     μ_vals = exp_params_dict[:μ]
-#     failure_modes = exp_params_dict[:failure_modes]
-#     init_pert = exp_params_dict[:init_pert]
-#     α_vals = exp_params_dict[:α]
 
     ################################################################################
     #= Create hyperparameter: the order is chosen such, that with an increasing number
@@ -240,24 +223,6 @@ function preprocess(complement_to_existing_exp, existing_exp_name, exp_name, lon
         )
 
     CSV.write("sbatch_dict_$name.csv", exp_name_date_dict, writeheader=false)
-#     return df_hpe
-# end
-
-
-# function generate_networks!(df_hpe, exp_params_dict; max_trials = 1000)
-#     # get parameters
-#     k_vals = exp_params_dict[:k]
-#     β_vals = exp_params_dict[:β]
-#     N_nodes = exp_params_dict[:N_nodes]
-#     inertia_values = exp_params_dict[:inertia_values]
-#     K_vals = exp_params_dict[:K]
-#     γ_vals = exp_params_dict[:γ]
-#     τ_vals = exp_params_dict[:τ]
-#     σ_vals = exp_params_dict[:σ]
-#     μ_vals = exp_params_dict[:μ]
-#     failure_modes = exp_params_dict[:failure_modes]
-#     init_pert = exp_params_dict[:init_pert]
-#     α_vals = exp_params_dict[:α]
     
     # GENERATION OF NETWORKS #######################################################
     number_of_task_ids_between_graphs = length(inertia_values)*length(γ_vals)*length(τ_vals)*length(α_vals)*length(freq_bounds)*length(failure_modes)*length(init_pert)
@@ -291,13 +256,13 @@ function preprocess(complement_to_existing_exp, existing_exp_name, exp_name, lon
                 case this set of parameters is not in the previous `task_id`s  and the seeds
                 start at 1. E.g. this is always the case for `task_id=1`.=#
                 if typeof(idx) != Nothing && (task_id - idx) > 1
-                    global graph_seed = df_hpe[idx, :graph_seed]; global distr_seed = df_hpe[idx, :distr_seed]
+                    graph_seed = df_hpe[idx, :graph_seed]; distr_seed = df_hpe[idx, :distr_seed]
                 else
-                    global graph_seed = 0; global distr_seed = 0
+                    graph_seed = 0; distr_seed = 0
                 end
             end
 
-            global graph_seed += 1; global distr_seed += 1
+            graph_seed += 1; distr_seed += 1
             df_hpe[task_id:end, :graph_seed] .= graph_seed; df_hpe[task_id:end, :distr_seed] .= distr_seed
             string_args = string_metagraph_args(df_hpe, task_id)
             println("Generate new MetaGraph:ArrayTaskID=$task_id with parameters $string_args")
@@ -320,9 +285,9 @@ function preprocess(complement_to_existing_exp, existing_exp_name, exp_name, lon
                     network = import_system(:wattsstrogatz; N=N, k=k, β=β, graph_seed=graph_seed, μ=μ, σ=σ, distr_seed=distr_seed, K=K, α=α, M=1u"s^2",  γ=1u"s", τ=1u"s")
                     println("task_id = $task_id: Test steady state of network with K=$K,N=$N,k=$k,β=$β,μ=$μ,σ=$σ,graph_seed=$graph_seed_,distr_seed=$distr_seed_...")
                     if steadystate_choice == :rootfind
-                        global x_static = steadystate(network; zeroidx=1)
+                        x_static = steadystate(network; zeroidx=1)
                     elseif steadystate_choice == :relaxation
-                        global x_static = steadystate_relaxation(network; zeroidx=1)
+                        x_static = steadystate_relaxation(network; zeroidx=1)
                     end
 
                     simulate(network;
@@ -390,7 +355,7 @@ function preprocess(complement_to_existing_exp, existing_exp_name, exp_name, lon
                     @warn "No static solution found!"
 
                     # generate new grid by increasing seeds by one
-                    global graph_seed += 1; global distr_seed += 1
+                    graph_seed += 1; distr_seed += 1
                     # df_hpe[task_id,:graph_seed] = graph_seed; df_hpe[task_id,:distr_seed] = distr_seed
                     df_hpe[task_id:end, :graph_seed] .= graph_seed; df_hpe[task_id:end, :distr_seed] .= distr_seed
                     println("Generate new network with seeds +1.")
@@ -398,6 +363,6 @@ function preprocess(complement_to_existing_exp, existing_exp_name, exp_name, lon
             end
         end
     end
-    # return df_hpe
+
     CSV.write(joinpath(exp_data_dir, "config.csv"), df_hpe)
 end
