@@ -36,6 +36,9 @@ exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
 N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
 network = import_system_wrapper(df_config, task_id)
+savegraph("/home/brandner/.julia/dev/DynamicCascades/scripts/cluster/experiment_jarray/scripts_plots/testnetwork_old_ND.mg", network)
+
+steadystate(network; zeroidx=1)
 
 # using SciMLNLSolve
 # zeroidx=1
