@@ -107,6 +107,8 @@ function SwingDynLoadModel(; vidx=nothing, kwargs...)
     vm = VertexModel(model, [:Pel], [:θ])
     !isnothing(vidx) && set_graphelement!(vm, vidx)
 
+    # NOTE CB is defined on component base, i.e. CB is defined for each node and `get_callbacks`
+    # collects them and creates a `VectorContinousCallback`
     # define callback, but only if :ωmax != Inf
     get_default(vm, :ωmax) == Inf && return vm
 
@@ -116,7 +118,7 @@ function SwingDynLoadModel(; vidx=nothing, kwargs...)
     affect = ComponentAffect([:ω], [:functional]) do u, p, ctx
         println("Vertex $(ctx.vidx) tripped at t=$(ctx.integrator.t)")
         u[:ω] = 0.0
-        p[:functional] = 0 # TODO hier muss man vermutlich den index hinzufügen für vector CB
+        p[:functional] = 0
     end
     cb = ContinousComponentCallback(cond, affect)
     set_callback!(vm, cb)
@@ -166,7 +168,7 @@ perturb = PresetTimeComponentCallback(1.0,
 set_callback!(v1, perturb)
 
 nw = Network([v1,v2], l)
-s0 = find_fixpoint(nw) # TODO check if I get the same fixpoint.
+s0 = find_fixpoint(nw) # Up to numerical errors I get the same fixpoint as in old code using old ND.jl
 prob = ODEProblem(nw, uflat(s0), (0, 5), pflat(s0), callback=get_callbacks(nw)); # TODO warum `pflat(s0)` warum extrahiert man Parameter  nicht aus `nw`?
 sol = solve(prob, Tsit5())
 

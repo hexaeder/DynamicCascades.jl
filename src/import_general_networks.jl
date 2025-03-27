@@ -2,6 +2,10 @@ using Random
 using Distributions
 using NetworkLayout
 
+# NOTE
+#=Inconsistency of RNG across the different Julia versions for WS-graphs (and probably ER-graphs (not tested)).
+Power injection are consistent bewtwen Julia v1.8.4 and v1.11.0 but should be saved asweel in the future: TODO=#
+
 """
     import_system(:erdosrenyi)
 

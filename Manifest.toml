@@ -2,7 +2,7 @@
 
 julia_version = "1.11.0"
 manifest_format = "2.0"
-project_hash = "42ca14f318fd3533694619047bf35f236fd1ee78"
+project_hash = "5daf31a38c0e474681fcc6a2bc85fa462f38f928"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "e2478490447631aedba0823d4d7a80b2cc8cdb32"
@@ -1785,10 +1785,16 @@ version = "0.9.13"
     Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [[deps.NetworkDynamicsInspector]]
-deps = ["Bonito", "ColorSchemes", "Colors", "GraphMakie", "Graphs", "NetworkDynamics", "Observables", "OrderedCollections", "SciMLBase", "WGLMakie"]
-git-tree-sha1 = "ff2fd4a3c59e7ea34a7b172ba33de39994652129"
+deps = ["Bonito", "ColorSchemes", "Colors", "Downloads", "GraphMakie", "Graphs", "NetworkDynamics", "Observables", "OrderedCollections", "SciMLBase", "WGLMakie"]
+git-tree-sha1 = "486b12dca3870abe4caf5b3b98cfb4616da5a6f8"
 uuid = "0a4713f2-d58f-43f2-b63b-1b5d5ee4e65a"
-version = "0.1.2"
+version = "0.1.4"
+
+    [deps.NetworkDynamicsInspector.extensions]
+    ElectronExt = ["Electron"]
+
+    [deps.NetworkDynamicsInspector.weakdeps]
+    Electron = "a1bb12fb-d4d1-54b4-b10a-ee7951ef7ad3"
 
 [[deps.NetworkLayout]]
 deps = ["GeometryBasics", "LinearAlgebra", "Random", "Requires", "StaticArrays"]
