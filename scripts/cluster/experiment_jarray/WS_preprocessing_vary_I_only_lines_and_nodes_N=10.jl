@@ -49,7 +49,7 @@ end
 σ_vals = 1 # standard deviation σ
 μ_vals = 0 # mean μ
 
-N_ensemble_size = 32
+N_ensemble_size = 16
 
 # Cascading params ##############
 init_pert = [:line] # initial perturbation set constant to an initial line failure
