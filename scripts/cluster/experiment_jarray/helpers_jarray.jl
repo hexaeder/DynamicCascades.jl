@@ -230,6 +230,16 @@ function preprocess(complement_to_existing_exp, existing_exp_name, exp_name, lon
     graph_seed = 0; distr_seed = 0
     # Loop over each ArrayTaskID:
     for task_id in df_hpe.ArrayTaskID
+        # Create directories for results (preventing that different jobs try to create a directory at the same time)
+        N,k,β,graph_seed_,μ,σ,distr_seed_,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,_,ensemble_element = get_network_args_stripped(df_hpe, task_id)
+        graph_combinations_path = joinpath(exp_data_dir, "k=$k,β=$β")
+        ispath(graph_combinations_path) || mkdir(graph_combinations_path)
+
+        failure_mode_string = joinpath(graph_combinations_path, "trip_lines=$trip_lines,trip_nodes=$trip_nodes")
+        ispath(failure_mode_string) || mkdir(failure_mode_string)
+        failure_mode_frequ_bound = joinpath(failure_mode_string, "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound")
+        ispath(failure_mode_frequ_bound) || mkdir(failure_mode_frequ_bound)
+
         #= For every new configuration of β and k and for each new element of an
         ensemble, generate a new network. The order of parameters in `hyperparam` is
         relevant for this.=#
@@ -303,17 +313,7 @@ function preprocess(complement_to_existing_exp, existing_exp_name, exp_name, lon
                     trial_counter = 1 # reset trial_counter
                     steady_state_check_approved = true
 
-                    # Create directories for results (preventing that different jobs try to create a directory at the same time)
-                    N,k,β,graph_seed_,μ,σ,distr_seed_,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,_,ensemble_element = get_network_args_stripped(df_hpe, task_id)
-                    graph_combinations_path = joinpath(exp_data_dir, "k=$k,β=$β")
-                    ispath(graph_combinations_path) || mkdir(graph_combinations_path)
-
-                    failure_mode_string = joinpath(graph_combinations_path, "trip_lines=$trip_lines,trip_nodes=$trip_nodes")
-                    ispath(failure_mode_string) || mkdir(failure_mode_string)
-                    failure_mode_frequ_bound = joinpath(failure_mode_string, "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound")
-                    ispath(failure_mode_frequ_bound) || mkdir(failure_mode_frequ_bound)
-
-                    # Save steady state, create directories for steady states.
+                    # Save steady state and graph, create directories for steady states.
                     if save_graph_and_filepath == true
 
                         # save steady
