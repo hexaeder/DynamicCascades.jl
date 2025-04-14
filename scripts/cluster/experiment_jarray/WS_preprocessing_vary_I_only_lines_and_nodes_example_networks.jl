@@ -19,14 +19,14 @@ N_new_freq_bounds = length([2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
 ################################################################################
 
 # Experiment name
-name = "WS_k=4_exp09_vary_I_only_lines_and_nodes_N=10_"
+name = "WS_k=4_exp10_vary_I_only_lines_and_nodes_N=20_"
 long_name = "Only variation of inertia I. Line and node failure model. Small example network." # for providing more details
 save_graph_and_filepath = true
 solver_name = "Rodas4P()"
 steadystate_choice = :rootfind # :relaxation
 
 # Graph params #############
-N_nodes = 10
+N_nodes = 20
 k_vals = [4]
 β_vals = [0.5]
 
@@ -49,7 +49,7 @@ end
 σ_vals = 1 # standard deviation σ
 μ_vals = 0 # mean μ
 
-N_ensemble_size = 32
+N_ensemble_size = 16
 
 # Cascading params ##############
 init_pert = [:line] # initial perturbation set constant to an initial line failure
