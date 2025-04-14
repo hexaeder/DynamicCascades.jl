@@ -37,6 +37,7 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 [compat]
 GraphMakie = "0.3"
 Graphs = "1"
+Makie = "0.20"
 MetaGraphs = "0.7"
 NetworkDynamics = "0.7"
 OrdinaryDiffEq = "6"
