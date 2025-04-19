@@ -39,6 +39,10 @@ cp -r /home/brandner/DynamicCascades.jl $workdir
 
 # NOTE bash starts at index 0.
 for job_array_index in $(seq 1 1 $N_inertia); do
+    if [[ $job_array_index -eq 9 ]]; then
+        echo "Pausing for 100 seconds before job_array_index $N_inertia to manage submission load."
+        sleep 100
+    fi
     echo "Job array index $job_array_index"
     qos=${qos_array[($job_array_index-1)]}
     time=${times_array[($job_array_index-1)]}
