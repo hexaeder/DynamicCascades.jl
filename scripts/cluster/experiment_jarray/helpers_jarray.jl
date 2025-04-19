@@ -130,7 +130,7 @@ end
 function preprocess(complement_to_existing_exp, existing_exp_name, exp_name, long_name,
     save_graph_and_filepath, solver_name, steadystate_choice, N_ensemble_size, k_vals, β_vals, N_nodes, 
     inertia_values, K_vals, γ_vals, τ_vals, σ_vals, μ_vals,
-    failure_modes, init_pert, freq_bounds, α_vals, monitored_power_flow;
+    failure_modes, node_failure_model, init_pert, freq_bounds, α_vals, monitored_power_flow;
     max_trials = 1000)
 
     # Create result directory
@@ -156,6 +156,7 @@ function preprocess(complement_to_existing_exp, existing_exp_name, exp_name, lon
         :inertia_values => inertia_values, :K => K_vals,  :γ => γ_vals, :τ => τ_vals,
         :σ => σ_vals, :μ => μ_vals,
         :failure_modes => failure_modes,
+        :node_failure_model => node_failure_model,
         :init_pert => init_pert, :freq_bounds => freq_bounds, :α => α_vals, :monitored_power_flow => monitored_power_flow,
         )
 

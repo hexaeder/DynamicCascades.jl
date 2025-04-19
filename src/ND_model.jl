@@ -135,6 +135,7 @@ struct SolutionContainer{G,T}
     trip_lines::Symbol
     trip_nodes::Symbol
     trip_load_nodes::Symbol
+    node_failure_model::Symbol
     monitored_power_flow::Symbol
     sol::T
     frequencies_load_nodes::SavedValues{Float64,Vector{Float64}}
@@ -239,6 +240,7 @@ function simulate(network;
                   trip_lines=:dynamic,
                   trip_nodes=:dynamic,
                   trip_load_nodes=:none,
+                  node_failure_model=:change_to_BH_and_change_Pmech,
                   monitored_power_flow =:apparent, #NOTE NOT WORKING!
                   f_min = -2.5,
                   f_max = 1.5,
@@ -267,7 +269,7 @@ function simulate(network;
     #= TODO Next line, overload_cb() returns CallbackSet(vccb_lines, vccb_nodes_max, vccb_nodes_min, scb_P, scb_S).
     So it is CallbackSet(CallbackSet(vccb_lines, vccb_nodes_max, vccb_nodes_min, scb_P, scb_S)). Try out if this is
     redundant =#
-    cbs = CallbackSet(overload_cb(;trip_lines, trip_nodes, trip_load_nodes, monitored_power_flow, f_min, f_max, frequencies_load_nodes, load_S, load_P, failures, failures_nodes, failures_load_nodes, verbose));
+    cbs = CallbackSet(overload_cb(;trip_lines, trip_nodes, trip_load_nodes, node_failure_model, monitored_power_flow, f_min, f_max, frequencies_load_nodes, load_S, load_P, failures, failures_nodes, failures_load_nodes, verbose));
     if !isempty(initial_fail)
         # NOTE add node failures in case of implementing initial node failures
         cbs = CallbackSet(InitialFailCB(network, initial_fail, failtime; init_pert, P_perturb, failures, failures_nodes, verbose), cbs)
@@ -287,7 +289,7 @@ function simulate(network;
     # sol = solve(prob, KenCarp4(); callback=cbs, progress=true, solverargs...);
 
     container = SolutionContainer(network,
-                                  initial_fail, failtime, trip_lines, trip_nodes, trip_load_nodes, monitored_power_flow,
+                                  initial_fail, failtime, trip_lines, trip_nodes, trip_load_nodes, node_failure_model, monitored_power_flow,
                                   sol, frequencies_load_nodes, load_S, load_P, failures, failures_nodes, failures_load_nodes)
 
     if terminate_steady_state
@@ -553,6 +555,7 @@ This function returns a constructor for the overload callback with two kw argume
   - `trip_lines=true` : toggle whether the CB should kill lines (set K=0)
   - `trip_nodes=true` : toggle whether the CB should switch generator to (dynamic) load nodes (and set load to zero)
   - `trip__load_nodes=true` : toggle whether the CB should set the load of (dynamic) load nodes to zero
+  - `node_failure_model=:change_to_BH_and_change_Pmech` : choose node failure model. Default changes swing node to BH node and sets Pmech to zero
   - `monitored_power_flow =:apparent` : monitoring `:apparent` or `:active` power flow as line failure condition
   - `frequencies_load_nodes=nothing` : provide `SavedValues` type for frequency values of load nodes
   - `load_S=nothing` : provide `SavedValues` type for S values
@@ -568,7 +571,8 @@ are injected inside the shutdown affect. In order for this to work the affect ne
 bump the `saveiter` counter of the other (saving) callback. Very ugly.
 """
 function get_callback_generator(network::MetaGraph, nd::ODEFunction)
-    function gen_cb(;trip_lines=:dynamic, trip_nodes=:dynamic, trip_load_nodes=:dynamic, monitored_power_flow =:apparent,
+    function gen_cb(;trip_lines=:dynamic, trip_nodes=:dynamic, trip_load_nodes=:dynamic, node_failure_model=:change_to_BH_and_change_Pmech,
+                    monitored_power_flow =:apparent,
                     f_min = -1.0, f_max = 1.0, frequencies_load_nodes=nothing, load_S=nothing, load_P=nothing,
                     failures=nothing, failures_nodes=nothing, failures_load_nodes=nothing, verbose=true)
         save_S_fun = let _network=network
@@ -725,7 +729,6 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
                 end
             end
 
-
             affect! = let _failures_nodes = failures_nodes, _verbose = verbose
                 (integrator, event_idx) -> begin
                     fgen_idx = gen_node_idxs[event_idx] # index of failed generator
@@ -742,10 +745,20 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
                         P_adapted = - ustrip(get_prop(network, fgen_idx, :P_load))
                     end
 
-                    # mutated_tuple = (2.0, 0.0, vertex_p[fgen_idx][3], vertex_p[fgen_idx][4], vertex_p[fgen_idx][5])
-                    mutated_tuple = (2.0, P_adapted, vertex_p[fgen_idx][3], vertex_p[fgen_idx][4], vertex_p[fgen_idx][5])
-                    vertex_p[fgen_idx] = mutated_tuple
-                    integrator.u[ω_state_idxs[event_idx]] = 0.0 # set state to zero to not trigger condition anymore.
+                    if node_failure_model == :change_to_BH_and_change_Pmech
+                        # mutated_tuple = (2.0, 0.0, vertex_p[fgen_idx][3], vertex_p[fgen_idx][4], vertex_p[fgen_idx][5])
+                        mutated_tuple = (2.0, P_adapted, vertex_p[fgen_idx][3], vertex_p[fgen_idx][4], vertex_p[fgen_idx][5])
+                        vertex_p[fgen_idx] = mutated_tuple
+                        integrator.u[ω_state_idxs[event_idx]] = 0.0 # set state to zero to not trigger condition anymore.
+                    elseif node_failure_model == :change_to_BH
+                        mutated_tuple = (2.0, vertex_p[fgen_idx][2], vertex_p[fgen_idx][3], vertex_p[fgen_idx][4], vertex_p[fgen_idx][5])
+                        vertex_p[fgen_idx] = mutated_tuple
+                        integrator.u[ω_state_idxs[event_idx]] = 0.0
+                    elseif node_failure_model == :change_Pmech    
+                        mutated_tuple = (1.0, P_adapted, vertex_p[fgen_idx][3], vertex_p[fgen_idx][4], vertex_p[fgen_idx][5])
+                        vertex_p[fgen_idx] = mutated_tuple
+                    end
+
                     # all_failed_warnings(integrator)
                     auto_dt_reset!(integrator)
                     nothing

@@ -36,6 +36,7 @@ end
 # evtl. auch übergeben, ob complementing run
 
 N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
+node_failure_model = exp_params_dict[:node_failure_model]
 monitored_power_flow = exp_params_dict[:monitored_power_flow]
 steadystate_choice = exp_params_dict[:steadystate_choice]
 
@@ -79,6 +80,7 @@ for i in 1:ne(network)
                    trip_lines = trip_lines,
                    trip_nodes = trip_nodes,
                    trip_load_nodes = :none,
+                   node_failure_model = node_failure_model,
                    monitored_power_flow = monitored_power_flow,
                    f_min = -freq_bound,
                    f_max = freq_bound,
