@@ -49,7 +49,7 @@ end
 σ_vals = 1 # standard deviation σ
 μ_vals = 0 # mean μ
 
-N_ensemble_size = 2
+N_ensemble_size = 32
 
 # Cascading params ##############
 init_pert = [:line] # initial perturbation set constant to an initial line failure
@@ -63,7 +63,6 @@ The value in numerator of round(0.1/(2*π) is the angular frequency =#
 # freq_bounds = [0.005, 0.010, 0.015, 0.020, 0.025, 0.030, 0.035, 0.040, 0.045, 0.050, 0.055, 0.060, 0.065, 0.070, 0.075, 0.080, 0.085, 0.090, 0.095, 0.100, 0.110, 0.120, 0.130, 0.140, 0.150, 0.160, 0.170, 0.180, 0.190, 0.200, 0.210, 0.220, 0.230, 0.240, 0.250, 0.260, 0.270, 0.280, 0.290, 0.300, 0.800]
 freq_bounds = [0.005, 0.010, 0.015, 0.020, 0.025, 0.030, 0.035, 0.040, 0.045, 0.050, 0.055, 0.060, 0.065, 0.070, 0.075, 0.080, 0.085, 0.090, 0.095, 0.100, 0.110, 0.120, 0.130, 0.140, 0.150, 0.160, 0.170, 0.220, 0.250, 0.300, 0.800]
 
-freq_bounds = [0.015, 0.030]
 
 # failure_modes = [trip_lines, trip_nodes]
 # failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
