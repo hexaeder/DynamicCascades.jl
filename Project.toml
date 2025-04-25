@@ -35,6 +35,7 @@ SteadyStateDiffEq = "9672c7b4-1e72-59bd-8a11-6ac3964bc41f"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
+DiffEqCallbacks = "3"
 GraphMakie = "0.3"
 Graphs = "1"
 MetaGraphs = "0.7"
