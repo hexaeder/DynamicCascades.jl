@@ -44,7 +44,7 @@ end
     @equations begin
         Dt(θ) ~ ifelse(functional > 0 ,
             ω,                  # gen mode
-            1/τ * (-Pload + Pel) # load mode
+            1/τ * (Pmech - Pload + Pel) # load mode, # NOTE Pmech is set to zero in CB
         )
         Dt(ω) ~ ifelse(functional > 0,
             1/M * (Pmech - Pload - D*ω + Pel), # gen mode
@@ -93,17 +93,63 @@ function SwingDynLoadModel(; vidx=nothing, kwargs...)
     end
     affect = ComponentAffect([:ω], [:functional,:Pmech]) do u, p, ctx
         println("Vertex $(ctx.vidx) tripped at t=$(ctx.integrator.t)")
-        u[:ω] = 0.0
-        # HACK TODO This is doppeltgemoppelt. Maybe only do `p[:Pmech] = 0`
+        u[:ω] = 0.0 # HACK This is doppeltgemoppelt as ω is set to zero in `@mtkmodel SwingDynLoad`
         p[:functional] = 0
-        p[:Pmech] = 0 # NOTE this is necessary for plotting ΔP
+        p[:Pmech] = 0
     end
     cb = ContinousComponentCallback(cond, affect)
     set_callback!(vm, cb)
     vm
 end
 
-# NOTE Maybe redundant. Instead use `SwingDynLoadModel` with `p[:functional] = 0`
+function SwingDynLoadModel_change_Pmech_only(; vidx=nothing, kwargs...)
+    model = SwingDynLoad(name = :swing_dyn_load_change_Pmech_only; kwargs...)
+    vm = VertexModel(model, [:Pel], [:θ])
+    !isnothing(vidx) && set_graphelement!(vm, vidx)
+
+    # define callback, but only if :ωmax != Inf
+    get_default(vm, :ωmax) == Inf && return vm
+
+    cond = ComponentCondition([:ω], [:ωmax]) do u, p, t
+        abs(u[:ω]) - p[:ωmax]
+    end
+    affect = ComponentAffect([:ω], [:functional,:Pmech]) do u, p, ctx
+        Pmech = p[:Pmech]
+        println("Vertex $(ctx.vidx): Pmech=$Pmech set to Pmech=0 at t=$(ctx.integrator.t)")
+        p[:Pmech] = 0
+    end
+    cb = ContinousComponentCallback(cond, affect)
+    set_callback!(vm, cb)
+    vm
+end
+
+# not setting Pmech=0 in CB 
+function SwingDynLoadModel_change_to_BH_only(; vidx=nothing, kwargs...)
+    model = SwingDynLoad(name = :swing_dyn_load_change_to_BH_only; kwargs...)
+    vm = VertexModel(model, [:Pel], [:θ])
+    !isnothing(vidx) && set_graphelement!(vm, vidx)
+
+    # define callback, but only if :ωmax != Inf
+    get_default(vm, :ωmax) == Inf && return vm
+
+    cond = ComponentCondition([:ω], [:ωmax]) do u, p, t
+        abs(u[:ω]) - p[:ωmax]
+    end
+    affect = ComponentAffect([:ω], [:functional]) do u, p, ctx
+        println("Vertex $(ctx.vidx): Node changed to BH (Pmech kept constant) at t=$(ctx.integrator.t)")
+        u[:ω] = 0.0
+        p[:functional] = 0
+    end
+    cb = ContinousComponentCallback(cond, affect)
+    set_callback!(vm, cb)
+    vm
+end
+
+#= #NOTE Maybe redundant to have separate load model.
+Instead use `SwingDynLoadModel` with `p[:functional] = 0` 
+On the other hand it might be conceptually more straightforward
+to use a different model for a node that can not fail.
+=#
 function DynLoadModel(; vidx=nothing, kwargs...)
     model = DynLoad(name = :load; kwargs...)
     vm = VertexModel(model, [:Pel], [:θ])
@@ -240,7 +286,7 @@ function simulate_new_ND_single_model_port(exp_data_dir, task_id, initial_fail;
 
         type = get_prop(network, i, :type)
         if type == :gen
-            vm = SwingDynLoadModel(M=M,D=γ,τ=τ,ωmax=ωmax,Pmech=Pmech,Pload=Pload)
+            vm = gen_model(M=M,D=γ,τ=τ,ωmax=ωmax,Pmech=Pmech,Pload=Pload)
         elseif type == :load
             vm = DynLoadModel(τ=τ,Pload=Pload)  
         end
@@ -299,13 +345,13 @@ function simulate_new_ND_single_model_port(exp_data_dir, task_id, initial_fail;
         end
     end
 
-    return sol, nw
+    return sol
 end
 
-
+using Colors
 function plot_simulation(simulation_dir, plot_dir, df_config, task_id, initial_fail)
     sol = Serialization.deserialize(joinpath(simulation_dir, "task_id=$task_id,initial_fail=$initial_fail.sol"));
-    nw = Serialization.deserialize(joinpath(simulation_dir, "task_id=$task_id,initial_fail=$initial_fail.nw"));
+    nw = NetworkDynamics.extract_nw(sol)
 
     # calculate indices of failing lines and nodes
     all_failing_nodes_idxs = [i for i in 1:nv(nw) if sol(sol.t[end], idxs=vidxs(i, :functional))[1] == 0]
@@ -324,16 +370,15 @@ function plot_simulation(simulation_dir, plot_dir, df_config, task_id, initial_f
     fontsize = 35
     titlesize = (fontsize+5)
     linewidth = 3.5
-    fig = Figure(size=(3100,1500), fontsize= fontsize)
+    fig = Figure(size=(3100,1500), fontsize=fontsize)
     # Add a global title in the first row spanning all columns.
     xlim = sol.t[end]/3
-
-
 
     N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
 
     # FREQUENCIES ########################################################################
     fig[1,1] = ax = Axis(fig; ylabel="Frequency [Hz]", title="Lines & nodes that fail (left column), all lines & nodes (right column):  I=$M,D=$γ,τ=$τ,f_b=$freq_bound,α=$α,K=$K,N=$N,k=$k,β=$β,ensemble element=$ensemble_element", titlealign = :left, titlesize = titlesize)
+    # NOTE #TODO This works now: `sol(sol.t, idxs=vidxs(1:4, :ω))`
     for i in all_failing_nodes_idxs
         x, y = remove_zero_tail!(deepcopy(sol.t), deepcopy(map(first, sol(sol.t, idxs=vidxs(i, :f)))))
         color = node_colors_failing[findfirst(x -> x == i, all_failing_nodes_idxs)]
