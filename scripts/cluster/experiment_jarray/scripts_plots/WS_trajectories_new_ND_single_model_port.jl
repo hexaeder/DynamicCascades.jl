@@ -3,6 +3,7 @@ using ModelingToolkit
 using ModelingToolkit: D_nounits as Dt, t_nounits as t
 using OrdinaryDiffEq
 # using OrdinaryDiffEqTsit5
+using SciMLNLSolve
 using MetaGraphs
 
 
@@ -147,7 +148,7 @@ end
 
 #= #NOTE Maybe redundant to have separate load model.
 Instead use `SwingDynLoadModel` with `p[:functional] = 0` 
-On the other hand it might be conceptually more straightforward
+On the other hand it is conceptually more straightforward
 to use a different model for a node that can not fail.
 =#
 function DynLoadModel(; vidx=nothing, kwargs...)
@@ -179,8 +180,11 @@ end
 
 using SymbolicIndexingInterface: SymbolicIndexingInterface as SII
 function TerminateSelectiveSteadyState(nw; min_t = nothing)
-    # ω_idxs = SII.variable_index(nw, vidxs(1:nv(nw), :ω))
-    ω_idxs = SII.variable_index.(nw, VIndex(1:nv(nw), :ω))
+    #= `vidxs(nw, :, "ω")` returns symbolic index of vertex IF it has a state ω. This is needed for
+    networks with node models that do not have a state \omega.
+    For WS (with a single node model that has a ω stat) one can alternatively use 
+    `ω_idxs = SII.variable_index.(nw, VIndex(1:nv(nw), :ω))`=#
+    ω_idxs = SII.variable_index(nw, vidxs(nw, :, "ω"))
 
     condition = (u, t, integrator) -> begin
         if !isnothing(min_t) && t <= min_t
@@ -202,14 +206,13 @@ function TerminateSelectiveSteadyState(nw; min_t = nothing)
     affect! = (integrator) -> terminate!(integrator)
     DiscreteCallback(condition, affect!; save_positions = (true, false))
 end
-
 # less performant:
 # function TerminateSelectiveSteadyState(; min_t = nothing)
 #     condition = (u, t, integrator) -> begin
 #         if !isnothing(min_t) && t <= min_t
 #             return false
 #         end
-
+# 
 #         # getting internal cache vector containing elements of `integrator.u`
 #         du = first(get_tmp_cache(integrator))
 #         # writing the current derivative at t into `du`
@@ -228,12 +231,11 @@ end
 #     DiscreteCallback(condition, affect!; save_positions = (true, false))
 # end
 
-function simulate_new_ND_single_model_port(exp_data_dir, task_id, initial_fail;
+function simulate_new_ND(exp_name_date, task_id, initial_fail;
+    gen_model=SwingDynLoadModel,
     verbose=true,
     failtime=0.1,
     tspan=(0., 100000.),
-    trip_lines=:dynamic,
-    trip_nodes=:dynamic,
     terminate_steady_state=true,
     solverargs=(;),
     warn=true)
@@ -241,67 +243,96 @@ function simulate_new_ND_single_model_port(exp_data_dir, task_id, initial_fail;
     ###
     ### read in parameters, graphs and steady states
     ###
-    df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
+    df_config = DataFrame(CSV.File(joinpath(RESULTS_DIR, exp_name_date, "config.csv")))
 
-    # load parameters
-    N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
+    # load parameters, network (=MetaGraph object with associated parametes) and  graph (=mathematical graph)
+    if exp_name_date[1:2] == "WS" 
+        _,_,_,_,_,_,_,_,_,_,_,_,freq_bound,trip_lines,trip_nodes,_,_ = get_network_args_stripped(df_config, task_id)
+
+        # load network
+        network = import_system_wrapper(df_config, task_id)
+
+        # adjust filepaths 
+        df_config[!, :filepath_graph] = replace.(df_config[!, :filepath_graph],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
+        df_config[!, :filepath_steady_state] = replace.(df_config[!, :filepath_steady_state],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
+
+        #= #HACK `import_system_wrapper` generates new MetaGraph using `watts_strogatz` function, which
+        generates different graphs for different versions of the package (for the same seeds).
+        We need `network` as the power injections are save in the MetaGraph object.
+        Thus, we do not use `network.graph` for the graph but load the graph from the file.=#
+        # load graph
+        graph = loadgraph(df_config[task_id,:filepath_graph])
+
+        # # load steady state
+        # steady_state_dict  = CSV.File(df_config[task_id,:filepath_steady_state])
+        # x_static = steady_state_dict[:SteadyState]
+
+    elseif exp_name_date[1:3] == "RTS"
+        _,_,_,freq_bound,trip_lines,trip_nodes,_,_ = RTS_get_network_args_stripped(df_config, task_id)
+        network = RTS_import_system_wrapper(df_config, task_id)
+        graph = network.graph
+    end
 
 
-    # load network
-    network = import_system_wrapper(df_config, task_id)
-
-    # adjust filepaths 
-    df_config[!, :filepath_graph] = replace.(df_config[!, :filepath_graph],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
-    df_config[!, :filepath_steady_state] = replace.(df_config[!, :filepath_steady_state],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
-
-    # HACK 
-    #=`import_system_wrapper` generates new MetaGraph using `watts_strogatz` function, which
-    generates different graphs for different versions of the package (for the same seeds).
-    We need `network` as the power injections are save in the MetaGraph object.
-    Thus, we do not use `network.graph` for the graph but load the graph from the file.
-    =#
-    # load graph
-    graph = loadgraph(df_config[task_id,:filepath_graph])
-
-    # # load steady state
-    # steady_state_dict  = CSV.File(df_config[task_id,:filepath_steady_state])
-    # x_static = steady_state_dict[:SteadyState]
+    #= (#HACK) For the RTS network this adds missing parametes to `network`. 
+    For the WS network it does not add node parameters and it adds :_K 
+    and few line parameters that are not needed.=#
+    set_inertia!(network)
+    set_coupling!(network)
 
     ###
     ### build NetworkDynamics.jl Network
     ###
 
-    # set failure modes
-    trip_nodes == :dynamic ? ωmax = freq_bound*2π : ωmax = Inf
-    trip_lines == :dynamic ? rating = α*K : rating = Inf 
+    # set node failure mode
+    trip_nodes == :dynamic ? ωmax = freq_bound*2π : ωmax = Inf # This is a global node property
 
     # loop over vertices and assign vertex models & parameter
     vm_array = VertexModel[]
     for i in 1:nv(network)
         # P = P_inj - P_load see `balance_power!`; P_inj = Pmech
         # P_inj = P + P_load
-        P = get_prop(network, i, :P)
-        Pload = get_prop(network, i, :P_load)
+        P = ustrip(u"pu", get_prop(network, i, :P))
+        Pload = ustrip(u"pu", get_prop(network, i, :P_load))
         Pmech = P + Pload
-
+        τ = ustrip(u"s", get_prop(network, i, :timeconst))
         type = get_prop(network, i, :type)
-        if type == :gen
+        if type == :gen || type == :syncon
+            M = ustrip(u"s^2", get_prop(network, i, :_M))
+            γ = ustrip(u"s", get_prop(network, i, :damping))
             vm = gen_model(M=M,D=γ,τ=τ,ωmax=ωmax,Pmech=Pmech,Pload=Pload)
         elseif type == :load
-            vm = DynLoadModel(τ=τ,Pload=Pload)  
+            vm = DynLoadModel(τ=τ,Pload=Pload) 
+        else
+            error("The node type :$type is not defined!")
         end
         # set positions for plotting
         set_position!(vm, get_prop(network, i, :pos))
         push!(vm_array, vm)
     end
 
-    # generate `Network` object
-    nw = Network(graph, vm_array, Line(K=K,rating=rating); dealias=true)
+    # loop over edges and assign edge parameters
+    em_array = EdgeModel[]
+    for e in edges(network)
+        #= #NOTE `abs()` is used here because originally (old ND-version) `:_K` is negative 
+        and the power flow is defined as `e[1] = - K * sin(v_s[1] - v_d[1])` see 
+        org/DynamicCascades.jl/Why Coupling K is negative. =#
+        K = abs(get_prop(network, e, :_K))
+        # set line failure mode
+        trip_lines == :dynamic ? rating = ustrip(u"pu", get_prop(network, e, :rating)) : rating = Inf 
+        em = Line(K=K,rating=rating)
+        push!(em_array, em)
+    end
 
-    # Check if network is power balanced
-    nw_state = NWState(nw)
-    p = nw_state.p
-    @assert isapprox(sum(p.v[1:nv(network), :Pload]), sum(p.v[1:nv(network), :Pmech]))
+    # generate `Network` object
+    # nw = Network(graph, vm_array, Line(K=K,rating=rating); dealias=true)
+    nw = Network(graph, vm_array, em_array)
+
+    # Check if network is power balanced (this is also checked before creating `nw` when importing the MetaGraph network in import_rtsgmlc.jl)
+    p = NWParameter(nw)
+    @assert isapprox(
+        sum(p.v[map(idx -> idx.compidx, vpidxs(nw, :, "Pload")), :Pload]),
+        sum(p.v[map(idx -> idx.compidx, vpidxs(nw, :, "Pmech")), :Pmech]))
 
     # set initial perturbation CB
     init_perturb = PresetTimeComponentCallback(failtime,
@@ -312,7 +343,7 @@ function simulate_new_ND_single_model_port(exp_data_dir, task_id, initial_fail;
     )
     set_callback!(nw[EIndex(initial_fail)], init_perturb)
     # NOTE
-    #= A loop would be sytactically possible but is not the way to go as `TerminateSelectiveSteadyState`
+    #= A loop would be syntactically possible but is not the way to go as `TerminateSelectiveSteadyState`
     should not be applied componentwise. =#
     # for i in 1:nv(network)
     #     add_callback!(nw[VIndex(i)], TerminateSelectiveSteadyState(nw))
@@ -321,7 +352,10 @@ function simulate_new_ND_single_model_port(exp_data_dir, task_id, initial_fail;
     ###
     ### solve ODE problem
     ###
-    s0=find_fixpoint(nw)
+    # s0=find_fixpoint(nw) #NOTE RTS: ERROR: SingularException(1)
+    nw_state = NWState(nw)
+    x0 = solve(SteadyStateProblem(nw, uflat(nw_state), pflat(nw_state)), NLSolveJL())
+    s0 = NWState(nw, x0.u, pflat(nw_state))
 
     # check if initial loads exceed rating (it is also possible to do this check directly in the CB (s. MM HW [2025-03-24 Mo]))
     for i in 1:ne(nw)
@@ -330,11 +364,8 @@ function simulate_new_ND_single_model_port(exp_data_dir, task_id, initial_fail;
         end
     end
 
-    # prob = ODEProblem(nw, x_static, tspan, pflat(s0), callback=get_callbacks(nw)); # for using saved steady state
     min_t = isempty(initial_fail) ? nothing : failtime+eps(failtime)
     prob = ODEProblem(nw, uflat(s0), tspan, pflat(s0), callback=CallbackSet(get_callbacks(nw), TerminateSelectiveSteadyState(nw;min_t)));
-    # prob = ODEProblem(nw, uflat(s0), tspan, pflat(s0), callback=CallbackSet(get_callbacks(nw), TerminateSelectiveSteadyState(nw)));
-
     sol = solve(prob, Rodas4P(); solverargs...); 
 
     if terminate_steady_state
