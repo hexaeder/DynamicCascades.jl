@@ -66,21 +66,25 @@ end
         dstθ(t), [description = "voltage angle at dst end", input=true]
         P(t), [description = "active power flow towards node at dst end", output=true]
         Δθ(t), [description = "voltage angle difference"]
-        # srcV(t) = 1.0, [description = "voltage magnitude at src end"]
-        # dstV(t) = 1.0, [description = "voltage magnitude at dst end"]
         S(t), [description = "apparent power flow towards node at dst end"]
     end
     @parameters begin
-        K = 3, [description = "coupling constant"]
+        srcV = 1.0, [description = "voltage magnitude at src end"]
+        dstV = 1.0, [description = "voltage magnitude at dst end"]
+        # NOTE Its not possible to pass `Y` directly as ModelingToolkit’s @parameters must be real-valued
+        K = 3.0, [description = "coupling (susceptance) `K = srcV * dstV * imag(Y)`"]
+        Yabs = 1.0, [description = "admittance magnitude `Yabs = abs(Y)`"]
         # parameters for callback
         active = 1, [description = "If 1, the line is active, if 0, it is tripped"]
         rating = Inf, [description = "active power line rating"]
     end
     @equations begin
         Δθ ~ srcθ - dstθ
-        P ~ active*K*sin(Δθ)
-        # S ~ active * max(srcV, dstV) * K * √(srcV^2 + dstV^2 - 2*srcV*dstV*cos(Δθ))
-        S ~ active*K*√(2 - 2*cos(Δθ))
+        # P ~ active * K * sin(Δθ)
+        # K =  - srcV * dstV * imag(Y)
+        P ~ - active * K * sin(Δθ) 
+        # S ~ active*K*√(2 - 2*cos(Δθ)) # this works only for srcV=dstV=1 (:wattsstrogatz)
+        S ~ active * max(srcV, dstV) * Yabs * √(srcV^2 + dstV^2 - 2*srcV*dstV*cos(Δθ))
     end
 end
 
@@ -234,29 +238,82 @@ end
 #     DiscreteCallback(condition, affect!; save_positions = (true, false))
 # end
 
+# checks if LHS of ODE is close to zero.
+function issteadystate_new_ND(nw, x_static)
+    dx = similar(x_static)
+    nw(dx, x_static, pflat(NWState(nw)), 0.0) # Rate of change (derivative) of each state variable storing it in `dx`.
+    return maximum(abs.(dx))
+end
 
+
+"""
+# Arguments
+- `zeroidx::Integer=nothing`: If this flag is set, this shifts the phase angle
+at all nodes by the phase angle of the node with index `zeroidx`.
+"""
+function steadystate_new_ND(nw; verbose=false, tol=1e-7, zeroidx=nothing) 
+    verbose && println("Find steady state...")
+
+    s = NWState(nw)
+    p = pflat(s)
+    x0 = solve(SteadyStateProblem(nw, uflat(s), p), NLSolveJL()) # `uflat(s)` creates vector of zeros
+    #= `s0` is needed in order to access the symbolic vertex indices that have a θ-state.
+    In this model all vertices have a θ-state, however `uflat(s0)` returns the states ordered by 
+    the different vertex models/components. So here one cannot modify `x0.u` directly. =#
+    s0 = NWState(s, x0.u, p) # `NWState` object with steady state
+    x_static = uflat(s0)
+
+    θidx = map(idx -> idx.compidx, vidxs(s, :, "θ"))
+    if zeroidx !== nothing
+        offset = s0.v[θidx[zeroidx],:θ]
+        s0.v[θidx,:θ] .-= offset
+        x_static = uflat(s0)
+        @assert iszero(s0.v[θidx[zeroidx],:θ])
+    end
+
+    #= In order to avoid a n*2π phase shift that leads to the same physical system but allows
+    different steady states, the steady state is restricted into [-π,π].=#
+    ex = extrema(s0.v[θidx,:θ])
+    if ex[1] < -π || ex[2] > π
+        error("Steadystate: θ ∈ $ex, consider projecting into [-π,π]!")
+    end
+
+    residuum = issteadystate_new_ND(nw, x_static)
+    @assert residuum < tol "No steady state found: maximum(abs.(dx))=$residuum"
+
+    return x_static 
+end
+
+
+"""
+Choice of ODE_solver 
+    Rodas4P() might be better for WS expriment
+    AutoTsit5(Rosenbrock23()) might be better for RTS experiment 
+    AutoTsit5(Rodas5P()) might be better for RTS experiment 
+"""
 function simulate_new_ND(network;
+    verbose=true,
     graph=network.graph, 
     gen_model=SwingDynLoadModel,
-    verbose=true,
+    x_static=nothing,
     initial_fail=1,
     failtime=0.1,
     tspan=(0., 100000.),
     trip_lines = :dynamic,
     trip_nodes = :dynamic,
-    freq_bound = 1.5,
+    freq_bound = 1.0,
     terminate_steady_state=true,
+    ODE_solver = AutoTsit5(Rodas5P()),
     solverargs=(;),
     warn=true
     )
 
-
     #= (#HACK) For the RTS network this adds missing parametes to `network`. 
     For the WS network it does not add node parameters and it adds :_K 
     and few line parameters that are not needed.
-    # TODO maybe put this in import_rtsgmlc.jl=#
+    # TODO maybe put this in import_rtsgmlc.jl Update: Probably not possible with current setup=#
     set_inertia!(network)
-    set_coupling!(network)
+    set_admittance!(network)
 
     ###
     ### build NetworkDynamics.jl Network
@@ -292,25 +349,23 @@ function simulate_new_ND(network;
     # loop over edges and assign edge parameters
     em_array = EdgeModel[]
     for e in edges(network)
+        srcV = ustrip(u"pu", get_prop(network, e.src, :Vm))
+        dstV = ustrip(u"pu", get_prop(network, e.dst, :Vm))
         #= #NOTE `abs()` is used here because originally (old ND-version) `:_K` is negative 
         and the power flow is defined as `e[1] = - K * sin(v_s[1] - v_d[1])` see 
         org/DynamicCascades.jl/Why Coupling K is negative. =#
-        K = abs(get_prop(network, e, :_K))
+        Y = get_prop(network, e, :_Y)
+        K = srcV * dstV * imag(Y) 
+        Yabs = abs(Y)
+        # K = abs(get_prop(network, e, :_Y))
         # set line failure mode
         trip_lines == :dynamic ? rating = ustrip(u"pu", get_prop(network, e, :rating)) : rating = Inf 
-        em = Line(K=K,rating=rating)
+        em = Line(srcV=srcV, dstV=dstV, K=K, Yabs=Yabs, rating=rating)
         push!(em_array, em)
     end
 
     # generate `Network` object
-    # nw = Network(graph, vm_array, Line(K=K,rating=rating); dealias=true)
     nw = Network(graph, vm_array, em_array)
-
-    # Check if network is power balanced (this is also checked before creating `nw` when importing the MetaGraph network in import_rtsgmlc.jl)
-    p = NWParameter(nw)
-    @assert isapprox(
-        sum(p.v[map(idx -> idx.compidx, vpidxs(nw, :, "Pload")), :Pload]),
-        sum(p.v[map(idx -> idx.compidx, vpidxs(nw, :, "Pmech")), :Pmech]))
 
     # set initial perturbation CB
     init_perturb = PresetTimeComponentCallback(failtime,
@@ -320,30 +375,26 @@ function simulate_new_ND(network;
         end
     )
     set_callback!(nw[EIndex(initial_fail)], init_perturb)
-    # NOTE
-    #= A loop would be syntactically possible but is not the way to go as `TerminateSelectiveSteadyState_new_ND`
+    #= #NOTE A loop would be syntactically possible but is not the way to go as `TerminateSelectiveSteadyState_new_ND`
     should not be applied componentwise. =#
     # for i in 1:nv(network)
     #     add_callback!(nw[VIndex(i)], TerminateSelectiveSteadyState_new_ND(nw))
     # end
 
+
+    # Check if network is power balanced (this is also checked before creating `nw` when importing the MetaGraph network in import_rtsgmlc.jl)
+    p = NWParameter(nw)
+    @assert isapprox(
+        sum(p.v[map(idx -> idx.compidx, vpidxs(nw, :, "Pload")), :Pload]),
+        sum(p.v[map(idx -> idx.compidx, vpidxs(nw, :, "Pmech")), :Pmech]))
+
+
     ###
-    ### solve ODE problem
-    ###
+    ### calculate initial steady state and check initial overloads
+    ###    
+    x_static = isnothing(x_static) ? steadystate_new_ND(nw; verbose, zeroidx=1) : x_static
     # s0=find_fixpoint(nw) #NOTE RTS: ERROR: SingularException(1)
-    # TODO uncomment
-    nw_state = NWState(nw)
-    x0 = solve(SteadyStateProblem(nw, uflat(nw_state), pflat(nw_state)), NLSolveJL())
-    s0 = NWState(nw, x0.u, pflat(nw_state))
-
-    ### # TODO remove
-    # print(NWParameter(nw))
-    # nw_state = NWState(nw)
-    # steady_state_dict  = CSV.File("/home/brandner/Desktop/RTS_test_graph_old_ND_steady_state.csv")
-    # x_static = steady_state_dict[:SteadyState]
-    # s0 = NWState(nw, x_static, pflat(nw_state))
-    ###
-
+    s0 = NWState(nw, x_static, pflat(NWParameter(nw)))
 
     # check if initial loads exceed rating (it is also possible to do this check directly in the CB (s. MM HW [2025-03-24 Mo]))
     for i in 1:ne(nw)
@@ -352,11 +403,12 @@ function simulate_new_ND(network;
         end
     end
 
-
-
+    ###
+    ### solve ODE problem
+    ###
     min_t = isempty(initial_fail) ? nothing : failtime+eps(failtime)
     prob = ODEProblem(nw, uflat(s0), tspan, pflat(s0), callback=CallbackSet(get_callbacks(nw), TerminateSelectiveSteadyState_new_ND(nw;min_t)));
-    sol = solve(prob, Rodas4P(); solverargs...); 
+    sol = solve(prob, ODE_solver; solverargs...);
 
     if terminate_steady_state
         if sol.t[end] < tspan[2]
