@@ -23,7 +23,7 @@ exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 
 for task_id in task_id_array
-    sol, nw = simulate_new_ND_single_model_port(exp_data_dir, task_id, initial_fail;
+    sol, nw = simulate_new_ND(exp_data_dir, task_id, initial_fail;
         tspan=(0., 35.),
         solverargs = (;dtmax=0.01),
         verbose = true);
