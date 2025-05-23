@@ -53,10 +53,11 @@ function set_params_general_neworks!(g, distr_seed, N, M, γ, τ, K, α, μ, σ)
     set_prop!(g, 1:nv(g), :damping, γ)
     set_prop!(g, 1:nv(g), :timeconst, τ)
 
-    # NOTE Would have been easier to set coupling directly here: `set_prop!(network, e, :_K, K[i])`
     set_prop!(g, edges(g), :R, 0.0)
-    set_prop!(g, edges(g), :K, K)
     set_prop!(g, edges(g), :α, α)
+    #= # HACK One could set coupling directly here: `set_prop!(network, edges(g), :_K, K)`.
+    However, to be compatible with RTS model, the coupling is set via assigning `X` here 
+    and then calculating the admittance `Y` in `ND_model.jl`.=# 
     set_prop!(g, edges(g), :X, 1/K)
     set_prop!(g, edges(g), :rating, α*K)
 
