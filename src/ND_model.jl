@@ -285,8 +285,9 @@ function simulate(network;
     # sol = solve(prob, AutoVern9(Rodas5()); callback=cbs, progress=true, solverargs...); # small arefact
     # sol = solve(prob, Rodas5P(); callback=cbs, progress=true, solverargs...); # no artefact
     # sol = solve(prob, Rodas4(); callback=cbs, progress=true, solverargs...);
-    sol = solve(prob, Rodas4P(); callback=cbs, progress=true, solverargs...);
+    # sol = solve(prob, Rodas4P(); callback=cbs, progress=true, solverargs...);
     # sol = solve(prob, KenCarp4(); callback=cbs, progress=true, solverargs...);
+    sol = solve(prob, AutoTsit5(Rodas5P()); callback=cbs, progress=true, solverargs...);
 
     container = SolutionContainer(network,
                                   initial_fail, failtime, trip_lines, trip_nodes, trip_load_nodes, node_failure_model, monitored_power_flow,
@@ -478,7 +479,7 @@ function set_coupling!(network::MetaGraph)
     return K
 end
 
-function set_coupling_sum!(network)
+function set_coupling_sum!(network) # NOTE [2025-04-18 Fr] might be deprecated
     DynamicCascades.set_admittance!(network)
     DynamicCascades.set_coupling!(network)
     branches = describe_edges(network)
