@@ -69,6 +69,8 @@ function import_system_wrapper(df::DataFrame, task_id::Int)
         μ=μ, σ=σ, distr_seed=distr_seed, K=K, α=α, M=M, γ=γ, τ=τ)
 end
 
+#= #NOTE see `get_network_args`: Rather do `get_network_args` without units and use another function like get_network_args_with units
+# This way units are added and removed again. =#
 # Removing units.
 function get_network_args_stripped(df::DataFrame, task_id::Int)
     N,k,β,graph_seed,μ,σ,distr_seed,K,α,M_,γ_,τ_,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args(df, task_id)
