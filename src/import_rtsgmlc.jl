@@ -29,8 +29,8 @@ function import_system(::Val{:rtsgmlc}; losses=false, scale_inertia=1.0, kwargs.
     # bustypes = bustype.(bus_data."Bus Type")
     # set_prop!(g, 1:N, :type, bustypes)
 
-    set_prop!(g, 1:N, :P_load, bus_data."MW Load"u"MW")
-    set_prop!(g, 1:N, :Q_load, bus_data."MVAR Load"u"MW")
+    set_prop!(g, 1:N, :P_load, bus_data."MW Load"u"MW" / baseP * u"pu")
+    set_prop!(g, 1:N, :Q_load, bus_data."MVAR Load"u"MW" / baseP * u"pu")
 
     for (n, busid) in enumerate(bus_data."Bus ID")
         P_load = get_prop(g, n, :P_load)
@@ -39,14 +39,14 @@ function import_system(::Val{:rtsgmlc}; losses=false, scale_inertia=1.0, kwargs.
         controltype = bus_data."Bus Type"[n]
         generators = gen_data[gen_data."Bus ID".==busid, ["Category", "MW Inj", "MVAR Inj", "Inertia MJ/MW"]]
         if isempty(generators)
-            P_inj = 0.0u"MW"
-            Q_inj = 0.0u"MW"
+            P_inj = 0.0u"MW" / baseP * u"pu"
+            Q_inj = 0.0u"MW" / baseP * u"pu"
         else # has generators
-            P_inj = sum(generators."MW Inj")u"MW"
-            Q_inj = sum(generators."MVAR Inj")u"MW"
-            set_prop!(g, n, :P_inj, P_inj)
-            set_prop!(g, n, :Q_inj, Q_inj)
+            P_inj = sum(generators."MW Inj")u"MW" / baseP * u"pu"
+            Q_inj = sum(generators."MVAR Inj")u"MW" / baseP * u"pu"
         end
+        set_prop!(g, n, :P_inj, P_inj)
+        set_prop!(g, n, :Q_inj, Q_inj)
 
         if controltype ∈ ("PV", "Ref")
             if bus_data."Bus ID"[n] ∈ [114, 214, 314]
@@ -66,8 +66,8 @@ function import_system(::Val{:rtsgmlc}; losses=false, scale_inertia=1.0, kwargs.
         end
 
         set_prop!(g, n, :type, type)
-        set_prop!(g, n, :P, (P_inj - P_load) / baseP * u"pu")
-        set_prop!(g, n, :Q, (Q_inj - Q_load) / baseP * u"pu")
+        set_prop!(g, n, :P, P_inj - P_load)
+        set_prop!(g, n, :Q, Q_inj - Q_load)
     end
 
     # set the inertia for sync condenser
@@ -109,7 +109,7 @@ function balance_power!(network) # s. Schmierzettel S. 7, 7a
     relative_inj = abs.(nodes.P_inj[genidx]) ./ sum(abs.(nodes.P_inj[genidx]))
 
     newp = copy(nodes.P)
-    #= NOTE More natural would be to apply the following line of code to `P_inj`
+    #= #HACK More natural would be to apply the following line of code to `P_inj`
     only and then do P = P_inj - P_load again. =#
     newp[genidx] .-= relative_inj .* imbalance
 

@@ -61,4 +61,4 @@ You could make them visible permuting the nodes on the circle:=#
 f, ax, p = graphplot(watts_strogatz(100, 4, 0.1, seed=1); layout=Shell())
 p.node_pos[] = shuffle(p.node_pos[])
 
-#= NB One simply does not see the edges but they are there.
+# NB One simply does not see the edges but they are there.

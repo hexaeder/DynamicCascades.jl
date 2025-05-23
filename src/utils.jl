@@ -95,6 +95,7 @@ function seriesforidx(sv::Union{SavedValues,SciMLBase.AbstractODESolution}, idx;
     return (x, f.(y))
 end
 
+export remove_zero_tail!
 function remove_zero_tail!(x, y)
     @assert length(x) == length(y)
     tail = lastindex(y) + 1

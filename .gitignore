@@ -13,3 +13,5 @@
 *scratch*
 
 /scripts/delete_soon
+.vscode/settings.json
+src/DynamicCascades.code-workspace
