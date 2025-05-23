@@ -72,7 +72,7 @@ end
         srcV = 1.0, [description = "voltage magnitude at src end"]
         dstV = 1.0, [description = "voltage magnitude at dst end"]
         # NOTE Its not possible to pass `Y` directly as ModelingToolkit’s @parameters must be real-valued
-        K = 3.0, [description = "coupling (susceptance) `K = srcV * dstV * imag(Y)`"]
+        K = 3.0, [description = "coupling `K = - srcV * dstV * imag(Y)`"]
         Yabs = 1.0, [description = "admittance magnitude `Yabs = abs(Y)`"]
         # parameters for callback
         active = 1, [description = "If 1, the line is active, if 0, it is tripped"]
@@ -80,9 +80,7 @@ end
     end
     @equations begin
         Δθ ~ srcθ - dstθ
-        # P ~ active * K * sin(Δθ)
-        # K =  - srcV * dstV * imag(Y)
-        P ~ - active * K * sin(Δθ) 
+        P ~ active * K * sin(Δθ) 
         # S ~ active*K*√(2 - 2*cos(Δθ)) # this works only for srcV=dstV=1 (:wattsstrogatz)
         S ~ active * max(srcV, dstV) * Yabs * √(srcV^2 + dstV^2 - 2*srcV*dstV*cos(Δθ))
     end
@@ -296,6 +294,7 @@ function simulate_new_ND(network;
     graph=network.graph, 
     gen_model=SwingDynLoadModel,
     x_static=nothing,
+    zeroidx = 1, #HACK does not take effect for `x_static!=nothing`
     initial_fail=1,
     failtime=0.1,
     tspan=(0., 100000.),
@@ -308,12 +307,11 @@ function simulate_new_ND(network;
     warn=true
     )
 
-    #= (#HACK) For the RTS network this adds missing parametes to `network`. 
-    For the WS network it does not add node parameters and it adds :_K 
-    and few line parameters that are not needed.
-    # TODO maybe put this in import_rtsgmlc.jl Update: Probably not possible with current setup=#
-    set_inertia!(network)
-    set_admittance!(network)
+    ###
+    ### get parameters
+    ### 
+    set_inertia!(network) # for the WS network it does not add node parameters
+    set_admittance!(network) # NOTE this is needed for WS network as well!
 
     ###
     ### build NetworkDynamics.jl Network
@@ -349,16 +347,14 @@ function simulate_new_ND(network;
     # loop over edges and assign edge parameters
     em_array = EdgeModel[]
     for e in edges(network)
+        # set coupling: K = srcV * dstV / X = - srcV * dstV * imag(Y) , with 1/X = - Im(Y), X: reactance
         srcV = ustrip(u"pu", get_prop(network, e.src, :Vm))
         dstV = ustrip(u"pu", get_prop(network, e.dst, :Vm))
-        #= #NOTE `abs()` is used here because originally (old ND-version) `:_K` is negative 
-        and the power flow is defined as `e[1] = - K * sin(v_s[1] - v_d[1])` see 
-        org/DynamicCascades.jl/Why Coupling K is negative. =#
         Y = get_prop(network, e, :_Y)
-        K = srcV * dstV * imag(Y) 
+        K = - srcV * dstV * imag(Y)
+        set_prop!(network, e, :_K, K)
         Yabs = abs(Y)
-        # K = abs(get_prop(network, e, :_Y))
-        # set line failure mode
+        # set line failure mode and rating
         trip_lines == :dynamic ? rating = ustrip(u"pu", get_prop(network, e, :rating)) : rating = Inf 
         em = Line(srcV=srcV, dstV=dstV, K=K, Yabs=Yabs, rating=rating)
         push!(em_array, em)
@@ -375,11 +371,6 @@ function simulate_new_ND(network;
         end
     )
     set_callback!(nw[EIndex(initial_fail)], init_perturb)
-    #= #NOTE A loop would be syntactically possible but is not the way to go as `TerminateSelectiveSteadyState_new_ND`
-    should not be applied componentwise. =#
-    # for i in 1:nv(network)
-    #     add_callback!(nw[VIndex(i)], TerminateSelectiveSteadyState_new_ND(nw))
-    # end
 
 
     # Check if network is power balanced (this is also checked before creating `nw` when importing the MetaGraph network in import_rtsgmlc.jl)
@@ -392,7 +383,7 @@ function simulate_new_ND(network;
     ###
     ### calculate initial steady state and check initial overloads
     ###    
-    x_static = isnothing(x_static) ? steadystate_new_ND(nw; verbose, zeroidx=1) : x_static
+    x_static = isnothing(x_static) ? steadystate_new_ND(nw; verbose, zeroidx=zeroidx) : x_static
     # s0=find_fixpoint(nw) #NOTE RTS: ERROR: SingularException(1)
     s0 = NWState(nw, x_static, pflat(NWParameter(nw)))
 

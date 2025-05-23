@@ -109,7 +109,7 @@ function balance_power!(network) # s. Schmierzettel S. 7, 7a
     relative_inj = abs.(nodes.P_inj[genidx]) ./ sum(abs.(nodes.P_inj[genidx]))
 
     newp = copy(nodes.P)
-    #= NOTE More natural would be to apply the following line of code to `P_inj`
+    #= #HACK More natural would be to apply the following line of code to `P_inj`
     only and then do P = P_inj - P_load again. =#
     newp[genidx] .-= relative_inj .* imbalance
 
