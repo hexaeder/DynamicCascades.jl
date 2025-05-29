@@ -824,8 +824,7 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
 
             vccb_load_nodes_min = VectorContinuousCallback(load_node_condition_min, affect!, length(θ_load_node_state_idxs);
                 save_positions = (true, true),
-                # affect_neg! = nothing,
-                affect_neg! = affect!,
+                affect_neg! = nothing,
                 abstol = 10eps(), reltol = 0)
 
         else
