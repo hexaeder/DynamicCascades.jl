@@ -287,6 +287,7 @@ function simulate(network;
     # sol = solve(prob, Rodas4(); callback=cbs, progress=true, solverargs...);
     # sol = solve(prob, Rodas4P(); callback=cbs, progress=true, solverargs...);
     # sol = solve(prob, KenCarp4(); callback=cbs, progress=true, solverargs...);
+    # sol = solve(prob, AutoTsit5(Rosenbrock23()); callback=cbs, progress=true, solverargs...);
     sol = solve(prob, AutoTsit5(Rodas5P()); callback=cbs, progress=true, solverargs...);
 
     container = SolutionContainer(network,
