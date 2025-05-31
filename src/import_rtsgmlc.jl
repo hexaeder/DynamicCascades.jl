@@ -16,7 +16,7 @@ function import_system(::Val{:rtsgmlc}; losses=false, scale_inertia=1.0, kwargs.
 
     baseP = 100u"MW"
     set_prop!(g, :Pbase, baseP)
-    set_prop!(g, :NodeProps, [:n, :id, :type, :P, :Q, :H, :Vm, :Vbase,
+    set_prop!(g, :NodeProps, [:n, :id, :type, :H, :Vm, :Vbase,
                               :Va, :P_load, :P_inj, :Q_load, :Q_inj, :x, :y])
     set_prop!(g, :EdgeProps, [:src, :dst, :R, :X, :rating, :id])
 
@@ -33,8 +33,6 @@ function import_system(::Val{:rtsgmlc}; losses=false, scale_inertia=1.0, kwargs.
     set_prop!(g, 1:N, :Q_load, bus_data."MVAR Load"u"MW" / baseP * u"pu")
 
     for (n, busid) in enumerate(bus_data."Bus ID")
-        P_load = get_prop(g, n, :P_load)
-        Q_load = get_prop(g, n, :Q_load)
         # select attached generators
         controltype = bus_data."Bus Type"[n]
         generators = gen_data[gen_data."Bus ID".==busid, ["Category", "MW Inj", "MVAR Inj", "Inertia MJ/MW"]]
@@ -66,8 +64,6 @@ function import_system(::Val{:rtsgmlc}; losses=false, scale_inertia=1.0, kwargs.
         end
 
         set_prop!(g, n, :type, type)
-        set_prop!(g, n, :P, P_inj - P_load)
-        set_prop!(g, n, :Q, Q_inj - Q_load)
     end
 
     # set the inertia for sync condenser
@@ -97,25 +93,22 @@ end
 export balance_power!, lossless!
 function balance_power!(network) # s. Schmierzettel S. 7, 7a
     nodes = describe_nodes(network)
-    imbalance = sum(nodes.P)
+    imbalance = sum(nodes.P_inj) - sum(nodes.P_load)
     if imbalance ≈ 0
         println("already balanced!")
         return network
     end
     genidx = findall(!ismissing, nodes.P_inj)
 
-    # relative_inj = nodes.P_inj[genidx] ./ sum(nodes.P_inj[genidx]) # old code
     # only `P_inj` is adapted, `P_load` stays constant
     relative_inj = abs.(nodes.P_inj[genidx]) ./ sum(abs.(nodes.P_inj[genidx]))
 
-    newp = copy(nodes.P)
-    #= #HACK More natural would be to apply the following line of code to `P_inj`
-    only and then do P = P_inj - P_load again. =#
-    newp[genidx] .-= relative_inj .* imbalance
+    newp_inj = copy(nodes.P_inj)
+    newp_inj[genidx] .-= relative_inj .* imbalance
+    new_imbalance = sum(newp_inj) - sum(nodes.P_load)
+    @assert isapprox(new_imbalance, 0, atol=1e-8) "Could not balance power! Sum is $new_imbalance"
 
-    @assert isapprox(sum(newp), 0, atol=1e-8) "Could not balance power! Sum is $(sum(newp))"
-
-    set_prop!(network, 1:nv(network), :P, newp)
+    set_prop!(network, 1:nv(network), :P_inj, newp_inj)
 end
 
 function lossless!(network)
