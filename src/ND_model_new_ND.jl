@@ -243,8 +243,7 @@ end
 # end
 
 # checks if LHS of ODE is close to zero.
-function issteadystate_new_ND(network, x_static)
-    nw = nd_model_and_CB_new_ND(network;)
+function issteadystate_new_ND(nw, x_static)
     dx = similar(x_static)
     nw(dx, x_static, pflat(NWState(nw)), 0.0) # Rate of change (derivative) of each state variable storing it in `dx`.
     return maximum(abs.(dx))
@@ -256,13 +255,19 @@ end
 - `zeroidx::Integer=nothing`: If this flag is set, this shifts the phase angle
 at all nodes by the phase angle of the node with index `zeroidx`.
 """
-function steadystate_new_ND(network; verbose=false, tol=1e-7, zeroidx=nothing) 
+function steadystate_new_ND(network;
+    verbose=false, 
+    graph=network.graph,
+    tol=1e-7, 
+    zeroidx=nothing
+    ) 
+
     verbose && println("Find steady state...")
 
     #= The CBs do not affect the steady state of the system.
     This is why the default kwargs of `nd_model_and_CB_new_ND` are set to `trip_lines = :none` 
     and `trip_nodes = :none` which implies `ωmax = Inf` and `rating = Inf`.=#
-    nw = nd_model_and_CB_new_ND(network;)
+    nw = nd_model_and_CB_new_ND(network; graph=graph)
     s = NWState(nw)
     p = pflat(s)
     x0 = solve(SteadyStateProblem(nw, uflat(s), p), NLSolveJL()) # `uflat(s)` creates vector of zeros
@@ -287,7 +292,7 @@ function steadystate_new_ND(network; verbose=false, tol=1e-7, zeroidx=nothing)
         error("Steadystate: θ ∈ $ex, consider projecting into [-π,π]!")
     end
 
-    residuum = issteadystate_new_ND(network, x_static)
+    residuum = issteadystate_new_ND(nw, x_static)
     @assert residuum < tol "No steady state found: maximum(abs.(dx))=$residuum"
 
     return x_static 
@@ -304,21 +309,21 @@ i.e. reltol=1e-4 instead of default value reltol=1e-3
     AutoTsit5(Rodas5P()) might be better for RTS experiment 
 """
 function simulate_new_ND(network;
-        verbose=true,
-        graph=network.graph,
-        gen_model=SwingDynLoadModel,
-        x_static=steadystate_new_ND(network; verbose, zeroidx=1),
-        initial_fail=Int[], # multiple failures at once implented, e.g. initial_fail=[1,27]
-        failtime=0.1,
-        tspan=(0., 100000.),
-        trip_lines = :dynamic,
-        trip_nodes = :dynamic,
-        freq_bound = 1.0,
-        terminate_steady_state=true,
-        ODE_solver = AutoTsit5(Rodas5P()),
-        solverargs=(;),
-        warn=true
-        )
+    verbose=true,
+    graph=network.graph,
+    gen_model=SwingDynLoadModel,
+    x_static=steadystate_new_ND(network; graph=graph, verbose, zeroidx=1),
+    initial_fail=Int[], # multiple failures at once implented, e.g. initial_fail=[1,27]
+    failtime=0.1,
+    tspan=(0., 100000.),
+    trip_lines = :dynamic,
+    trip_nodes = :dynamic,
+    freq_bound = 1.0,
+    terminate_steady_state=true,
+    ODE_solver = AutoTsit5(Rodas5P()),
+    solverargs=(;),
+    warn=true
+    )
 
     nw = nd_model_and_CB_new_ND(network; 
             graph=graph,
@@ -331,12 +336,13 @@ function simulate_new_ND(network;
     ### checks
     ### 
 
-    # Check if network is power balanced (this is also checked before creating `nw` when importing the MetaGraph network in import_rtsgmlc.jl)
+    #= Check if network is power balanced (this is also checked before creating `nw` when
+    importing the MetaGraph network in import_rtsgmlc.jl), s. Schmierzettel 7b.=#
     p = NWParameter(nw)
     @assert isapprox(
         sum(p.v[map(idx -> idx.compidx, vpidxs(nw, :, "Pload")), :Pload]),
-        sum(p.v[map(idx -> idx.compidx, vpidxs(nw, :, "Pmech")), :Pmech]))
-
+        sum(p.v[map(idx -> idx.compidx, vpidxs(nw, :, "Pmech")), :Pmech]), atol=1e-8)
+        
     # check if initial loads exceed rating (this could also be done directly in the CB (s. MM HW [2025-03-24 Mo]))  
     s0 = NWState(nw, x_static, pflat(NWParameter(nw)))
     for i in 1:ne(nw)
