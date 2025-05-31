@@ -267,7 +267,7 @@ function steadystate_new_ND(network;
     #= The CBs do not affect the steady state of the system.
     This is why the default kwargs of `nd_model_and_CB_new_ND` are set to `trip_lines = :none` 
     and `trip_nodes = :none` which implies `ωmax = Inf` and `rating = Inf`.=#
-    nw = nd_model_and_CB_new_ND(network; graph=graph)
+    nw = nd_model_and_CB_new_ND!(network; graph=graph)
     s = NWState(nw)
     p = pflat(s)
     x0 = solve(SteadyStateProblem(nw, uflat(s), p), NLSolveJL()) # `uflat(s)` creates vector of zeros
@@ -325,7 +325,7 @@ function simulate_new_ND(network;
     warn=true
     )
 
-    nw = nd_model_and_CB_new_ND(network; 
+    nw = nd_model_and_CB_new_ND!(network; 
             graph=graph,
             gen_model=gen_model,
             trip_lines=trip_lines,
@@ -434,7 +434,7 @@ function simulate_new_ND(exp_name_date, task_id, initial_fail; kwargs...)
     return sol
 end
 
-function nd_model_and_CB_new_ND(network::MetaGraph;
+function nd_model_and_CB_new_ND!(network::MetaGraph;
         graph=network.graph,
         gen_model=SwingDynLoadModel,
         trip_lines = :none,
