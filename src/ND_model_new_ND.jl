@@ -458,8 +458,8 @@ function nd_model_and_CB_new_ND!(network::MetaGraph;
     # loop over vertices and assign vertex models & parameter
     vm_array = VertexModel[]
     for i in 1:nv(network)
-        Pmech = ustrip(u"pu", get_prop(network, i, :P_inj))
-        Pload = ustrip(u"pu", get_prop(network, i, :P_load))
+        Pmech = ustrip(u"pu", get_prop(network, i, :Pmech))
+        Pload = ustrip(u"pu", get_prop(network, i, :Pload))
         τ = ustrip(u"s", get_prop(network, i, :timeconst))
         type = get_prop(network, i, :type)
         if type == :gen || type == :syncon

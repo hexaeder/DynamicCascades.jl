@@ -46,7 +46,7 @@ Generates parameters for Erdős–Rényi and Watts-Strogatz-graph, includes dist
     NOTE: `positions` might not fit to Erdős–Rényi-graph
 """
 function set_params_general_neworks!(g, distr_seed, N, M, γ, τ, K, α, μ, σ)
-    set_prop!(g, :NodeProps, [:n, :P_inj, :P_load, :_M])
+    set_prop!(g, :NodeProps, [:n, :Pmech, :Pload, :_M])
     set_prop!(g, :EdgeProps, [:src, :dst, :X, :rating])
 
     set_prop!(g, 1:nv(g), :Vm, 1.0)
@@ -75,11 +75,11 @@ function set_params_general_neworks!(g, distr_seed, N, M, γ, τ, K, α, μ, σ)
         Random.seed!(distr_seed)
     end
     x = rand(d, 2N)
-    P_inj = x[1:N]
-    P_load = x[N+1:2N]
+    Pmech = x[1:N]
+    Pload = x[N+1:2N]
 
-    set_prop!(g, 1:nv(g), :P_inj, P_inj)
-    set_prop!(g, 1:nv(g), :P_load, P_load)
+    set_prop!(g, 1:nv(g), :Pmech, Pmech)
+    set_prop!(g, 1:nv(g), :Pload, Pload)
 
     balance_power!(g)
     # set_prop!(g, 1:nv(g), :pos, spring(g; C=5.0))

@@ -17,7 +17,7 @@ function import_system(::Val{:rtsgmlc}; losses=false, scale_inertia=1.0, kwargs.
     baseP = 100u"MW"
     set_prop!(g, :Pbase, baseP)
     set_prop!(g, :NodeProps, [:n, :id, :type, :H, :Vm, :Vbase,
-                              :Va, :P_load, :P_inj, :Q_load, :Q_inj, :x, :y])
+                              :Va, :Pload, :Pmech, :Q_load, :Q_inj, :x, :y])
     set_prop!(g, :EdgeProps, [:src, :dst, :R, :X, :rating, :id])
 
     set_prop!(g, 1:N, :id, bus_data."Bus ID")
@@ -29,7 +29,7 @@ function import_system(::Val{:rtsgmlc}; losses=false, scale_inertia=1.0, kwargs.
     # bustypes = bustype.(bus_data."Bus Type")
     # set_prop!(g, 1:N, :type, bustypes)
 
-    set_prop!(g, 1:N, :P_load, bus_data."MW Load"u"MW" / baseP * u"pu")
+    set_prop!(g, 1:N, :Pload, bus_data."MW Load"u"MW" / baseP * u"pu")
     set_prop!(g, 1:N, :Q_load, bus_data."MVAR Load"u"MW" / baseP * u"pu")
 
     for (n, busid) in enumerate(bus_data."Bus ID")
@@ -37,13 +37,13 @@ function import_system(::Val{:rtsgmlc}; losses=false, scale_inertia=1.0, kwargs.
         controltype = bus_data."Bus Type"[n]
         generators = gen_data[gen_data."Bus ID".==busid, ["Category", "MW Inj", "MVAR Inj", "Inertia MJ/MW"]]
         if isempty(generators)
-            P_inj = 0.0u"MW" / baseP * u"pu"
+            Pmech = 0.0u"MW" / baseP * u"pu"
             Q_inj = 0.0u"MW" / baseP * u"pu"
         else # has generators
-            P_inj = sum(generators."MW Inj")u"MW" / baseP * u"pu"
+            Pmech = sum(generators."MW Inj")u"MW" / baseP * u"pu"
             Q_inj = sum(generators."MVAR Inj")u"MW" / baseP * u"pu"
         end
-        set_prop!(g, n, :P_inj, P_inj)
+        set_prop!(g, n, :Pmech, Pmech)
         set_prop!(g, n, :Q_inj, Q_inj)
 
         if controltype ∈ ("PV", "Ref")
@@ -53,7 +53,7 @@ function import_system(::Val{:rtsgmlc}; losses=false, scale_inertia=1.0, kwargs.
             else
                 type = :gen
                 inertia = scale_inertia * sum(generators."Inertia MJ/MW")u"MJ/MW"
-                @assert !iszero(P_inj) "Generator $n does not inject power?"
+                @assert !iszero(Pmech) "Generator $n does not inject power?"
                 @assert !iszero(inertia) "Generator $n does not have inertia?"
                 set_prop!(g, n, :H, inertia)
             end
@@ -93,22 +93,22 @@ end
 export balance_power!, lossless!
 function balance_power!(network) # s. Schmierzettel S. 7, 7a
     nodes = describe_nodes(network)
-    imbalance = sum(nodes.P_inj) - sum(nodes.P_load)
+    imbalance = sum(nodes.Pmech) - sum(nodes.Pload)
     if imbalance ≈ 0
         println("already balanced!")
         return network
     end
-    genidx = findall(!ismissing, nodes.P_inj)
+    genidx = findall(!ismissing, nodes.Pmech)
 
-    # only `P_inj` is adapted, `P_load` stays constant
-    relative_inj = abs.(nodes.P_inj[genidx]) ./ sum(abs.(nodes.P_inj[genidx]))
+    # only `Pmech` is adapted, `Pload` stays constant
+    relative_inj = abs.(nodes.Pmech[genidx]) ./ sum(abs.(nodes.Pmech[genidx]))
 
-    newp_inj = copy(nodes.P_inj)
+    newp_inj = copy(nodes.Pmech)
     newp_inj[genidx] .-= relative_inj .* imbalance
-    new_imbalance = sum(newp_inj) - sum(nodes.P_load)
+    new_imbalance = sum(newp_inj) - sum(nodes.Pload)
     @assert isapprox(new_imbalance, 0, atol=1e-8) "Could not balance power! Sum is $new_imbalance"
 
-    set_prop!(network, 1:nv(network), :P_inj, newp_inj)
+    set_prop!(network, 1:nv(network), :Pmech, newp_inj)
 end
 
 function lossless!(network)
