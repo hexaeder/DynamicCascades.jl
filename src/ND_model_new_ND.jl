@@ -48,15 +48,15 @@ end
         τ = 1.0, [description = "dyn load time constant"]
         Pload = 1.0, [description = "Load Power"]
         # parameters for callback
-        functional = 1, [description = "If 1, the node is functional (gen + load), if 0, it is only a load"]
+        node_swing_stat = 1, [description = "If 1, the node is functional (gen + load), if 0, it is only a load"]
         ωmax = Inf, [description = "Maximum rotor frequency, used in callback"]
     end
     @equations begin
-        Dt(θ) ~ ifelse(functional > 0 ,
+        Dt(θ) ~ ifelse(node_swing_stat > 0 ,
             ω,                  # gen mode
             1/τ * (Pmech - Pload + Pel) # load mode, # NOTE Pmech is set to zero in CB
         )
-        Dt(ω) ~ ifelse(functional > 0,
+        Dt(ω) ~ ifelse(node_swing_stat > 0,
             1/M * (Pmech - Pload - D*ω + Pel), # gen mode
             0.0                                # load mode
         )
@@ -81,14 +81,14 @@ end
         K = 3.0, [description = "coupling `K = - srcV * dstV * imag(Y)`"]
         Yabs = 1.0, [description = "admittance magnitude `Yabs = abs(Y)`"]
         # parameters for callback
-        active = 1, [description = "If 1, the line is active, if 0, it is tripped"]
-        rating = Inf, [description = "active power line rating"]
+        line_stat = 1, [description = "If 1, the line is active, if 0, it is tripped"]
+        rating = Inf, [description = "apparent power line rating"]
     end
     @equations begin
         Δθ ~ srcθ - dstθ
-        P ~ active * K * sin(Δθ) 
-        # S ~ active*K*√(2 - 2*cos(Δθ)) # this works only for srcV=dstV=1 (:wattsstrogatz)
-        S ~ active * max(srcV, dstV) * Yabs * √(srcV^2 + dstV^2 - 2*srcV*dstV*cos(Δθ))
+        P ~ line_stat * K * sin(Δθ) 
+        # S ~ line_stat*K*√(2 - 2*cos(Δθ)) # this works only for srcV=dstV=1 (:wattsstrogatz)
+        S ~ line_stat * max(srcV, dstV) * Yabs * √(srcV^2 + dstV^2 - 2*srcV*dstV*cos(Δθ))
     end
 end
 
@@ -103,10 +103,10 @@ function SwingDynLoadModel(; vidx=nothing, kwargs...)
     cond = ComponentCondition([:ω], [:ωmax]) do u, p, t
         abs(u[:ω]) - p[:ωmax]
     end
-    affect = ComponentAffect([:ω], [:functional,:Pmech]) do u, p, ctx
+    affect = ComponentAffect([:ω], [:node_swing_stat,:Pmech]) do u, p, ctx
         println("Vertex $(ctx.vidx) tripped at t=$(ctx.integrator.t)")
         u[:ω] = 0.0 # HACK This is doppeltgemoppelt as ω is set to zero in `@mtkmodel SwingDynLoad`
-        p[:functional] = 0
+        p[:node_swing_stat] = 0
         p[:Pmech] = 0
     end
     cb = ContinousComponentCallback(cond, affect)
@@ -125,7 +125,7 @@ function SwingDynLoadModel_change_Pmech_only(; vidx=nothing, kwargs...)
     cond = ComponentCondition([:ω], [:ωmax]) do u, p, t
         abs(u[:ω]) - p[:ωmax]
     end
-    affect = ComponentAffect([:ω], [:functional,:Pmech]) do u, p, ctx
+    affect = ComponentAffect([:ω], [:node_swing_stat,:Pmech]) do u, p, ctx
         Pmech = p[:Pmech]
         println("Vertex $(ctx.vidx): Pmech=$Pmech set to Pmech=0 at t=$(ctx.integrator.t)")
         p[:Pmech] = 0
@@ -147,10 +147,10 @@ function SwingDynLoadModel_change_to_BH_only(; vidx=nothing, kwargs...)
     cond = ComponentCondition([:ω], [:ωmax]) do u, p, t
         abs(u[:ω]) - p[:ωmax]
     end
-    affect = ComponentAffect([:ω], [:functional]) do u, p, ctx
+    affect = ComponentAffect([:ω], [:node_swing_stat]) do u, p, ctx
         println("Vertex $(ctx.vidx): Node changed to BH (Pmech kept constant) at t=$(ctx.integrator.t)")
         u[:ω] = 0.0
-        p[:functional] = 0
+        p[:node_swing_stat] = 0
     end
     cb = ContinousComponentCallback(cond, affect)
     set_callback!(vm, cb)
@@ -158,7 +158,7 @@ function SwingDynLoadModel_change_to_BH_only(; vidx=nothing, kwargs...)
 end
 
 #= #NOTE Maybe redundant to have separate load model.
-Instead use `SwingDynLoadModel` with `p[:functional] = 0` 
+Instead use `SwingDynLoadModel` with `p[:node_swing_stat] = 0` 
 On the other hand it is conceptually more straightforward
 to use a different model for a node that can not fail.
 =#
@@ -180,9 +180,9 @@ function Line(; src=nothing, dst=nothing, kwargs...)
     cond = ComponentCondition([:S], [:rating]) do u, p, t
         u[:S] - p[:rating]
     end
-    affect = ComponentAffect([], [:active]) do u, p, ctx
+    affect = ComponentAffect([], [:line_stat]) do u, p, ctx
         println("Line $(ctx.eidx) tripped at t=$(ctx.integrator.t)")
-        p[:active] = 0
+        p[:line_stat] = 0
     end
     cb = ContinousComponentCallback(cond, affect)
     set_callback!(em, cb)
@@ -256,14 +256,14 @@ end
 at all nodes by the phase angle of the node with index `zeroidx`.
 """
 function steadystate_new_ND(network;
-    verbose=false, 
+    verbose=false,
     graph=network.graph,
     zeroidx=nothing,
-    tol=1e-7, 
+    tol=1e-7,
     problem=SteadyStateProblem,
     solver=NLSolveJL(),
     solverargs=(;)
-    ) 
+    )     
     verbose && println("Find steady state...")
 
     #= The CBs do not affect the steady state of the system.
@@ -359,9 +359,9 @@ function simulate_new_ND(network;
     if !isempty(initial_fail)
         # set initial perturbation CB
         init_perturb = PresetTimeComponentCallback(failtime,
-            ComponentAffect([], [:active]) do u, p, ctx
+            ComponentAffect([], [:line_stat]) do u, p, ctx
                 println("Shutdown line $(ctx.eidx) at t=$(ctx.integrator.t)")
-                p[:active] = 0
+                p[:line_stat] = 0
             end
         )
         # set_callback!(nw[EIndex(initial_fail)], init_perturb)
@@ -508,8 +508,8 @@ function plot_simulation(sol)
 
     # calculate indices of failing lines and nodes
     idxs_init_swing = map(idx -> idx.compidx, vidxs(nw, :, "ω")) # indices that are initially swing nodes
-    all_failing_nodes_idxs = [i for i in idxs_init_swing if sol(sol.t[end], idxs=vidxs(i, :functional))[1] == 0]
-    all_failing_lines_idxs = [i for i in 1:ne(nw) if sol(sol.t[end], idxs=eidxs(i, :active))[1] == 0]
+    all_failing_nodes_idxs = [i for i in idxs_init_swing if sol(sol.t[end], idxs=vidxs(i, :node_swing_stat))[1] == 0]
+    all_failing_lines_idxs = [i for i in 1:ne(nw) if sol(sol.t[end], idxs=eidxs(i, :line_stat))[1] == 0]
     node_colors_failing = distinguishable_colors(length(all_failing_nodes_idxs))
     line_colors_failing = distinguishable_colors(length(all_failing_lines_idxs))
 

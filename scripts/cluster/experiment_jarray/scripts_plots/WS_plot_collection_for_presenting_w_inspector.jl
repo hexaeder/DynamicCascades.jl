@@ -18,8 +18,8 @@ function inspect_failing(dir, task_id, initial_fail)
     sol = Serialization.deserialize(joinpath(dir, "task_id=$task_id,initial_fail=$initial_fail.sol"));
     nw = NetworkDynamics.extract_nw(sol)
 
-    vindices = [i for i in 1:nv(nw) if sol(sol.t[end], idxs=vidxs(i, :functional))[1] == 0]
-    eindices = [i for i in 1:ne(nw) if sol(sol.t[end], idxs=eidxs(i, :active))[1] == 0]
+    vindices = [i for i in 1:nv(nw) if sol(sol.t[end], idxs=vidxs(i, :node_swing_stat))[1] == 0]
+    eindices = [i for i in 1:ne(nw) if sol(sol.t[end], idxs=eidxs(i, :line_stat))[1] == 0]
     
     # set marker for failed vertices
     for i in vindices
@@ -318,8 +318,8 @@ inspect_failing(dir, task_id, initial_fail)
 task_id = 1446
 initial_fail = 2
 sol = Serialization.deserialize(joinpath(exp_data_dir, "trajectories_braess", "task_id=$task_id,initial_fail=$initial_fail.sol"));
-vindices = [i for i in 1:100 if sol(sol.t[end], idxs=vidxs(i, :functional))[1] == 0]
-eindices = [i for i in 1:200 if sol(sol.t[end], idxs=eidxs(i, :active))[1] == 0]
+vindices = [i for i in 1:100 if sol(sol.t[end], idxs=vidxs(i, :node_swing_stat))[1] == 0]
+eindices = [i for i in 1:200 if sol(sol.t[end], idxs=eidxs(i, :line_stat))[1] == 0]
 
 inspect(sol; restart=true, reset=true)
 set_sol!(sol) # optional if after inspect(sol)
