@@ -258,10 +258,12 @@ at all nodes by the phase angle of the node with index `zeroidx`.
 function steadystate_new_ND(network;
     verbose=false, 
     graph=network.graph,
+    zeroidx=nothing,
     tol=1e-7, 
-    zeroidx=nothing
+    problem=SteadyStateProblem,
+    solver=NLSolveJL(),
+    solverargs=(;)
     ) 
-
     verbose && println("Find steady state...")
 
     #= The CBs do not affect the steady state of the system.
@@ -270,7 +272,7 @@ function steadystate_new_ND(network;
     nw = nd_model_and_CB_new_ND!(network; graph=graph)
     s = NWState(nw)
     p = pflat(s)
-    x0 = solve(SteadyStateProblem(nw, uflat(s), p), NLSolveJL()) # `uflat(s)` creates vector of zeros
+    x0 = solve(problem(nw, uflat(s), p), solver; solverargs...) # `uflat(s)` creates vector of zeros
     #= `s0` is needed in order to access the symbolic vertex indices that have a θ-state.
     In this model all vertices have a θ-state, however `uflat(s0)` returns the states ordered by 
     the different vertex models/components. So here one cannot modify `x0.u` directly. =#
@@ -320,7 +322,7 @@ function simulate_new_ND(network;
     trip_nodes = :dynamic,
     freq_bound = 1.0,
     terminate_steady_state=true,
-    ODE_solver = AutoTsit5(Rodas5P()),
+    solver = AutoTsit5(Rodas5P()),
     solverargs=(;),
     warn=true
     )
@@ -373,7 +375,7 @@ function simulate_new_ND(network;
     ###
     min_t = isempty(initial_fail) ? nothing : failtime+eps(failtime)
     prob = ODEProblem(nw, uflat(s0), tspan, pflat(s0), callback=CallbackSet(get_callbacks(nw), TerminateSelectiveSteadyState_new_ND(nw;min_t)));
-    sol = solve(prob, ODE_solver; solverargs...);
+    sol = solve(prob, solver; solverargs...);
 
     if terminate_steady_state
         if sol.t[end] < tspan[2]
