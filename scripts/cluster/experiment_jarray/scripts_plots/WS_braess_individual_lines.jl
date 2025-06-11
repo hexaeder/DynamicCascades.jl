@@ -3,7 +3,7 @@ Plotting scripts: Braessness of individual lines.
 """
 
 include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
-include(abspath(@__DIR__, "WS_trajectories_new_ND_single_model_port.jl"))
+include("/home/brandner/.julia/dev/DynamicCascades/src/ND_model_new_ND.jl")
 
 using DynamicCascades
 using Graphs
@@ -106,8 +106,9 @@ function dist_vertices_after_edge_removal(graph)
 end
 
 """
-Saves a df for each frequency bound f_b  in `freq_bounds` (for given intertia I)
+Saves a df for each frequency bound f_b  in `freq_bounds` (for given inertia I)
 Output-columns in df: ArrayTaskID,ensemble_element,initially_failed_line,number_failures_lines,number_failures_nodes
+(This function only preprocesses the result data)
 """
 function write_failures_f_b_to_df(exp_name_date, freq_bounds, I)
     exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
@@ -184,8 +185,10 @@ function write_network_measures_to_df(exp_name_date)
     number_of_task_ids_between_graphs = length(df_config.ArrayTaskID)/N_ensemble_size
     task_ids = 1:number_of_task_ids_between_graphs:length(df_config.ArrayTaskID)
     for (ensemble_element, task_id) in enumerate(task_ids)
-        ## x-Axis
-        sol = simulate_new_ND(exp_data_dir, Int(task_id), 1;
+        #= #HACK (that saves effort) `sol` passed to `ρ_Pmech_Pflow`. For `ρ_Pmech_Pflow`
+        one could also only generate `nw` and then use `s0 = NWState(nw, x_static, pflat(NWParameter(nw)))`.
+        =#
+        sol = simulate_new_ND(exp_name_date, Int(task_id), 1;
                 verbose=true,
                 failtime=0.1,
                 tspan = (0, 0.100001),
@@ -316,8 +319,8 @@ exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 I = 7.5
 freq_bounds = [0.03, 0.15]
 
-write_failures_f_b_to_df(exp_name_date, freq_bounds, I)
-write_network_measures_to_df(exp_name_date)
+# write_failures_f_b_to_df(exp_name_date, freq_bounds, I)
+# write_network_measures_to_df(exp_name_date) # NOTE For WS set `res_tol=1e-5,` in `steadystate_new_ND`
 
 # choose `f_b_narrow` and `f_b_wide`
 f_b_narrow = 0.03
@@ -545,8 +548,8 @@ if plot_center_only == true
     xlims!(ax21, -lim, lim); ylims!(ax21, -lim, lim)
     xlims!(ax31, -lim, lim); ylims!(ax31, -lim, lim)
 end
-CairoMakie.save(joinpath(MA_DIR, "braessness", "exp=$exp_nrs,braessness_vs_braessness_failures=$failures,logcount_colorscale,,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I,dim=$dimensions,fancy=$fancy_colors,center=$plot_center_only.pdf"),fig)
-CairoMakie.save(joinpath(MA_DIR, "braessness", "exp=$exp_nrs,braessness_vs_braessness_failures=$failures,logcount_colorscale,,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I,dim=$dimensions,fancy=$fancy_colors,center=$plot_center_only.png"),fig)
+# CairoMakie.save(joinpath(MA_DIR, "braessness", "exp=$exp_nrs,braessness_vs_braessness_failures=$failures,logcount_colorscale,,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I,dim=$dimensions,fancy=$fancy_colors,center=$plot_center_only.pdf"),fig)
+# CairoMakie.save(joinpath(MA_DIR, "braessness", "exp=$exp_nrs,braessness_vs_braessness_failures=$failures,logcount_colorscale,,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I,dim=$dimensions,fancy=$fancy_colors,center=$plot_center_only.png"),fig)
 fig
 
 
