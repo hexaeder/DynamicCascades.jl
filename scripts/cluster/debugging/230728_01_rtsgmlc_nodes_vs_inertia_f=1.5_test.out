@@ -1,2 +1,0 @@
-/var/spool/slurmd/job27080763/slurm_script: line 15: 16149 Killed                  julia 230728_01_rtsgmlc_nodes_vs_inertia_f=1.5_test.jl
-slurmstepd: error: Detected 1 oom-kill event(s) in step 27080763.batch cgroup.

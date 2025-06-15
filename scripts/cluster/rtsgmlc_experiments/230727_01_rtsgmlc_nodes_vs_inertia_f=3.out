@@ -1,1 +1,0 @@
-/var/spool/slurmd/job27076022/slurm_script: line 15:  7469 Segmentation fault      julia 230727_01_rtsgmlc_nodes_vs_inertia_f=3.jl

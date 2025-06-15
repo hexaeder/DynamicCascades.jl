@@ -1,46 +1,34 @@
 """
-Watts-Strogatz-Network-Ensemble: Using job array framework. Only varying rewiring
-probability β and only considering node failures.
+RTS-GMLC-Testcase: Using job array framework. Transition that appears when varying the frequency bounds.
+Line and node failures summed. Narrow and intermediate bound.
 """
 
 include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
 
-if ON_YOGA
-    using Revise
-else # if on PIK-HPC or Pool
-    Pkg.instantiate()
-    # Pkg.precompile()
-end
 
 using GraphMakie
-using Colors
+using Colors, ColorSchemes
 using CairoMakie
-
 
 # plotting parameters
 create_posprocessing_data = false # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
-line_colors = [Makie.wong_colors()[1], Makie.wong_colors()[2], Makie.wong_colors()[4], Makie.wong_colors()[3]]  # https://docs.makie.org/stable/explanations/colors/
-colormap_frequencies = false
 opacity = 0.3
-fontsize = labelsize = 26
+fontsize = labelsize = 40
+line_colors = [Makie.wong_colors()[3], Makie.wong_colors()[5], Makie.wong_colors()[6]]
 # markers
 markersize = 15
-markers_labels = [
-    (:utriangle, ":utriangle"),
-    (:rect, ":rect"),
-    # (:star5, "star5"),
-    (:circle, ":circle"),
-]
 
-exp_name_date = "WS_k=4_exp01_PIK_HPC_K_=3,N_G=32_20240128_215811.815"
+exp_name_date = "RTS_exp01+exp02_uebergang_frequency"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
-left_out_frequencies = [0.005, 0.010, 0.015, 0.020, 0.025, 0.035, 0.040,
-    0.045, 0.050, 0.055, 0.060, 0.065, 0.070, 0.075, 0.080, 0.085, 0.090, 0.095, 0.100,
-    0.110, 0.120, 0.130, 0.140, 0.150, 0.160, 0.170, 0.180, 0.190, 0.200,
-    0.210, 0.220, 0.230, 0.240, 0.250, 0.260, 0.270, 0.280, 0.290, 0.300, 0.800]
-left_out_β_values = [0.9]
+left_out_frequencies = [0.01, 0.08, 0.1, 0.12, 0.14, 0.16, 0.18, 0.20, 0.22, 0.24, 0.26, 0.28, 0.30,
+    0.32, 0.34, 0.36, 0.38, 0.40, 0.42, 0.44, 0.46, 0.49, 0.50, 0.51, 0.52, 0.53, 0.54, 0.55,
+    0.56, 0.57, 0.58, 0.59, 0.60, 0.61, 0.62, 0.63, 0.66, 0.68, 0.70, 0.72, 0.74,
+    0.8, 0.85, 0.90, 1.00, 1.2, 1.4, 1.6, 1.8, 2.0] # combined runs
+left_out_inertia_values = []
+
+
 
 ################################################################################
 ###################### Calculate mean and standard error #######################
@@ -56,7 +44,7 @@ if create_posprocessing_data == true
     df_avg_error = deepcopy(df_config)
 
     # Delete columns
-    select!(df_avg_error, Not([:graph_seed, :distr_seed, :filepath, :ensemble_element]))
+    select!(df_avg_error, Not([:ensemble_element]))
 
     # Keep only the first N_rows rows
     df_avg_error = df_avg_error[1:num_parameter_combinations, :]
@@ -85,7 +73,7 @@ if create_posprocessing_data == true
     would the be to save `ne(network)` and `nv(network)` in df_config while preprocessing
     (Straighforward to implement but not necessarily needed).
     =#
-    network = import_system_wrapper(df_config, 1)
+    network = RTS_import_system_wrapper(df_config, 1)
     # Find numer of (potentially failing) generator nodes.
     if [get_prop(network,i,:type) for i in 1:nv(network)] == [:gen for i in 1:nv(network)]
         # This is the case for WS networks where initially all nodes are swing equation nodes.
@@ -106,40 +94,17 @@ if create_posprocessing_data == true
         for i in 0:num_parameter_combinations:(length(df_config[!,:ArrayTaskID]) - 1)
             # try...catch is for execution of postprocessing while not all jobs have finished
             try
-                N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, (task_id + i))
+                M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = RTS_get_network_args_stripped(df_config, (task_id + i))
 
                 exp_data = joinpath(RESULTS_DIR, exp_name_date)
-                graph_combinations_path = joinpath(exp_data, "k=$k,β=$β")
+                graph_combinations_path = exp_data
 
                 failure_mode_string = joinpath(graph_combinations_path, "trip_lines=$trip_lines,trip_nodes=$trip_nodes")
                 failure_mode_frequ_bound = joinpath(failure_mode_string, "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound")
 
-                # NOTE use this only WHEN MERGING TWO EXPERIMENTS ###############
-                # This is a bit hacky...
-                file_path = ""
-                test_counter = 0
-                # read out all parameters , exept of seeds, read out ensemble_element find file in folder that matches both
-                N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, (task_id + i))
-                string1 = "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound,N=$N,k=$k,β=$β"
-                string2 = "μ=$μ,σ=$σ"
-                string3 = "K=$K,α=$α,M=$M,γ=$γ,τ=$τ,init_pert=$init_pert,ensemble_element=$ensemble_element."
-                strings_to_match = [string1, string2, string3]
-                files_in_dir = readdir(failure_mode_frequ_bound)
-                for file_name in files_in_dir
-                    if all(x -> x == true, [occursin(s, file_name) for s in strings_to_match])
-                        file_path = joinpath(failure_mode_frequ_bound, file_name)
-                        test_counter += 1
-                        if test_counter > 1
-                            error("Two files with the same parameters!")
-                        end
-                    end
-                end
-                df_result = DataFrame(CSV.File(file_path))
-                ################################################################
-
                 # USE THIS ONLY FOR SINGLE EXPERIMENT ###############################
-                # filename = string("/", string_network_args(df_config, task_id + i), ".csv")
-                # df_result = DataFrame(CSV.File(string(failure_mode_frequ_bound, filename)))
+                filename = string("/", RTS_string_network_args(df_config, task_id + i), ".csv")
+                df_result = DataFrame(CSV.File(string(failure_mode_frequ_bound, filename)))
                 ################################################################
 
                 number_failures_lines = df_result[!, :number_failures_lines]
@@ -188,7 +153,6 @@ if create_posprocessing_data == true
     CSV.write(joinpath(RESULTS_DIR, exp_name_date, "all_failures.csv"), df_all_failures)
 end
 
-
 ################################################################################
 ################################ Plotting  #####################################
 ################################################################################
@@ -197,22 +161,19 @@ freq_bounds = exp_params_dict[:freq_bounds]
 
 filtered_freq_bounds = filter!(x->x ∉ left_out_frequencies, deepcopy(freq_bounds))
 filtered_inertia_values = filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values))
-filtered_β_values = filter!(x->x ∉ left_out_β_values, deepcopy(exp_params_dict[:β]))
 
-fig_nodes_only = Figure(fontsize = fontsize)
-ax_nodes_only = Axis(fig_nodes_only[1, 1],
-    title = "",
-    xlabel = L"Inertia I [$s^2$]",
-    ylabel = normalize ? "normalized average of node failures" : L"Averaged node failures $N_{fail}^N$",
+fig_lines_and_nodes = Figure(fontsize = fontsize)
+ax_lines_and_nodes = Axis(fig_lines_and_nodes[1, 1],
+    xlabel = "Scaling factor of inertia",
+    ylabel = normalize ? "normalized average of failures" : L"Averaged failures $N_{fail}$",
 )
+
 
 # Create figures depending on the modes (loop).
 failure_modes = exp_params_dict[:failure_modes]
-β_vals = exp_params_dict[:β]
 
 df_avg_error = DataFrame(CSV.File(joinpath(RESULTS_DIR, exp_name_date, "avg_error.csv")))
 inertia_values = exp_params_dict[:inertia_values]
-
 
 #= Different inertia values for: Ensemble average over normalized average of
 failures (the latter for a single network) =#
@@ -229,7 +190,7 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
     end
 
     # Leave certain jobs out:
-    N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
+    M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = RTS_get_network_args_stripped(df_config, task_id)
     # frequency bounds
     if freq_bound ∈ left_out_frequencies
         continue
@@ -238,11 +199,6 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
     if M ∈ left_out_inertia_values
         continue
     end
-    # β values
-    if β ∈ left_out_β_values
-        continue
-    end
-
 
     # Read out ensemble_avg and ensemble_standard_error
     if normalize == true
@@ -262,30 +218,28 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
     # Only plot if all inertia values are pushed to `y_lines`, `y_nodes`, `err_lines`, `err_nodes`
     if M == maximum(filtered_inertia_values)
         # frequency argument first for a nice order in the legend
-        N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
+        M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = RTS_get_network_args_stripped(df_config, task_id)
 
-        marker_index = findfirst(x -> x == β, β_vals)
-        marker = markers_labels[marker_index][1]
-        marker_label = markers_labels[marker_index][2]
-        color_index = colormap_frequencies ? findfirst(x -> x == freq_bound, filtered_freq_bounds) : marker_index
-
-        if (trip_lines == :none &&  trip_nodes == :dynamic)
-            scatterlines!(ax_nodes_only, filtered_inertia_values, y_nodes, marker = marker,  markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
-            band!(ax_nodes_only, filtered_inertia_values, y_nodes + err_nodes, y_nodes - err_nodes, transparency=true, color = (line_colors[color_index], opacity))
+        color_index = findfirst(x -> x == freq_bound, filtered_freq_bounds)
+        if (trip_lines == :dynamic &&  trip_nodes == :dynamic)
+            if sum_lines_nodes == true
+                # scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes, marker = marker, markersize = markersize, label = "f_b=$freq_bound", color = line_colors[color_index])
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes, color = line_colors[color_index], label = "f_b=$freq_bound")
+            else
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines, linestyle=:dash, marker = marker, markersize = markersize, label = "f_b=$freq_bound", color = line_colors[color_index])
+                band!(ax_lines_and_nodes, filtered_inertia_values, y_lines + err_lines, y_lines - err_lines, transparency=true, color = (line_colors[color_index], opacity))
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_nodes, marker = marker, markersize = markersize, color = line_colors[color_index])
+            end
         end
     end
 end
-N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, 1)
-#  See https://docs.makie.org/stable/reference/blocks/legend/
-if sum_lines_nodes == false
-    lines!(ax_lines_and_nodes, [NaN], [NaN]; label="node failures: ___ (solid) \nline failures:   ----- (dashed)", color=:white, linewidth=3)
-end
-axislegend(ax_nodes_only, position = :rt, labelsize=labelsize)
+M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = RTS_get_network_args_stripped(df_config, 1)
+axislegend(ax_lines_and_nodes, position = :ct, labelsize=labelsize)
+ylims!(ax_lines_and_nodes,0,5)
 
-k_str = string(exp_params_dict[:k])
+# Save plots
 filtered_freq_bounds_str = string(filtered_freq_bounds)
-K_str = string(exp_params_dict[:K])
-
-# CairoMakie.save(joinpath(MA_DIR, "WS", "nodes_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_nodes_only)
-# CairoMakie.save(joinpath(MA_DIR, "WS", "nodes_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_nodes_only)
-fig_nodes_only
+# filtered_freq_bounds_str = "all_frequencies"
+CairoMakie.save(joinpath(exp_data_dir, "braess_plots", "RTS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
+CairoMakie.save(joinpath(exp_data_dir, "braess_plots", "RTS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
+fig_lines_and_nodes
