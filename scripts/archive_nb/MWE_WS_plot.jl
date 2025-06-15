@@ -1,20 +1,15 @@
-"""
-Watts-Strogatz example networks with N=10 for showing the effect of different
-β-values
-"""
-
 using Graphs
 using CairoMakie
 using GraphMakie
 using GraphMakie.NetworkLayout
 # It is `watts_strogatz(n, k, β)`
 
-watts_strogatz(20, 4, 0.1, seed=1) # {100, 200} undirected simple Int64 graph
-watts_strogatz(20, 4, 0.9, seed=1) # {100, 200} undirected simple Int64 graph
+watts_strogatz(100, 4, 0.1, seed=1) # {100, 200} undirected simple Int64 graph
+watts_strogatz(100, 4, 0.9, seed=1) # {100, 200} undirected simple Int64 graph
 # As expected the graphs have the same number of edges and nodes as n and k are not changed
 
 # Now plot the graphs
-function simple_WS_plot(g, β)
+function simple_WS_plot(g)
     f, ax, p = graphplot(g, layout=Shell())
 
     hidedecorations!(ax); hidespines!(ax)
@@ -29,21 +24,14 @@ function simple_WS_plot(g, β)
     # fixed_layout(_) = positions
     # # set new layout
     # p.layout = fixed_layout; autolimits!(ax)
-    p.edge_width = 3.0
-    p.node_size=20
-    ax.title = "β=$β"
-    ax.titlesize = 40
+    p.edge_width = 1.0
 
     return f
 end
 
-N=10
-β = [0.1, 0.25, 0.5]
-for i in β
-    CairoMakie.save(joinpath(MA_DIR, "WS", "WS_β=$i.pdf"),simple_WS_plot(watts_strogatz(N, 4, i, seed=1),i))
-    CairoMakie.save(joinpath(MA_DIR, "WS", "WS_β=$i.pdf"),simple_WS_plot(watts_strogatz(N, 4, i, seed=1),i))
-    CairoMakie.save(joinpath(MA_DIR, "WS", "WS_β=$i.pdf"),simple_WS_plot(watts_strogatz(N, 4, i, seed=1),i))
-end
+CairoMakie.save("WS_01.png",simple_WS_plot(watts_strogatz(100, 4, 0.1, seed=1)))
+CairoMakie.save("WS_09.png",simple_WS_plot(watts_strogatz(100, 4, 0.9, seed=1)))
+
 # Explanation HW
 f, ax, p = graphplot(watts_strogatz(100, 4, 0.1, seed=1); layout=Shell())
 length(get_edge_plot(p).paths[])
@@ -61,4 +49,4 @@ You could make them visible permuting the nodes on the circle:=#
 f, ax, p = graphplot(watts_strogatz(100, 4, 0.1, seed=1); layout=Shell())
 p.node_pos[] = shuffle(p.node_pos[])
 
-#= NB One simply does not see the edges but they are there.
+#= NB One simply does not see the edges but they are there.=#
