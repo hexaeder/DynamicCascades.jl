@@ -28,29 +28,45 @@ using Serialization
 Returns for each initially triggered edge the number of line and node failures separately.
 """
 function get_line_failures(df_config, task_id)
-    N,k,β,graph_seed,μ,σ,distr_seed,K,α,I,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
-    graph_combinations_path = joinpath(exp_data_dir, "k=$k,β=$β")
-    failure_mode_string = joinpath(graph_combinations_path, "trip_lines=$trip_lines,trip_nodes=$trip_nodes")
-    failure_mode_frequ_bound = joinpath(failure_mode_string, "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound")
-    filename = "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound,N=$N,k=$k,β=$β,graph_seed=$graph_seed,μ=$μ,σ=$σ,distr_seed=$distr_seed,K=$K,α=$α,M=$I,γ=$γ,τ=$τ,init_pert=$init_pert,ensemble_element=$ensemble_element.csv"
-    df_result = DataFrame(CSV.File(joinpath(graph_combinations_path,failure_mode_string,failure_mode_frequ_bound,filename)))
+    if "graph_seed" in names(df_config)
+        N,k,β,graph_seed,μ,σ,distr_seed,K,α,I,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
+        graph_combinations_path = joinpath(exp_data_dir, "k=$k,β=$β")
+        failure_mode_string = joinpath(graph_combinations_path, "trip_lines=$trip_lines,trip_nodes=$trip_nodes")
+        failure_mode_frequ_bound = joinpath(failure_mode_string, "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound")
+        filename = "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound,N=$N,k=$k,β=$β,graph_seed=$graph_seed,μ=$μ,σ=$σ,distr_seed=$distr_seed,K=$K,α=$α,M=$I,γ=$γ,τ=$τ,init_pert=$init_pert,ensemble_element=$ensemble_element.csv"
+        df_result = DataFrame(CSV.File(joinpath(graph_combinations_path,failure_mode_string,failure_mode_frequ_bound,filename)))
+    else
+        I,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = RTS_get_network_args_stripped(df_config, task_id)
+        failure_mode_string = joinpath(exp_data_dir, "trip_lines=$trip_lines,trip_nodes=$trip_nodes")
+        failure_mode_frequ_bound = joinpath(failure_mode_string, "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound")
+        filename = "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound,M=$I,γ=$γ,τ=$τ,init_pert=$init_pert,ensemble_element=$ensemble_element.csv"
+        df_result = DataFrame(CSV.File(joinpath(failure_mode_string,failure_mode_frequ_bound,filename)))
+    end
     number_failures_lines = df_result[!, :number_failures_lines]
     number_failures_nodes = df_result[!, :number_failures_nodes]
+
     return number_failures_lines, number_failures_nodes
 end
 
 """
 Get taks_id for given parameters.
 """
-function get_task_id(df_config, f_b, I, ensemble_element)
-    for task_id in df_config.ArrayTaskID
-        _,_,_,_,_,_,_,_,_,I_,_,_,freq_bound_,_,_,_,ensemble_element_ = get_network_args_stripped(df_config, task_id)
-        if I==I_&& f_b==freq_bound_ && ensemble_element==ensemble_element_
+function get_task_id(df, f_b, I, ensemble_element)
+    for task_id in df.ArrayTaskID
+        if I==df[task_id,:inertia_values] && f_b==df[task_id,:freq_bounds] && ensemble_element==df[task_id,:ensemble_element]
             println("task_id=$task_id")
             return task_id
         end
     end
 end
+
+
+if "graph_seed" in names(df_config)
+    println("Column graph_seed exists")
+else
+    println("No graph_seed column")
+end
+
 
 """
 Calculates for each edge of the network the correlation 
@@ -69,9 +85,9 @@ function ρ_Pmech_Pflow(sol)
         # get Plow at source and dst of edge
         Pflow_src = sol(0, idxs=eidxs(e_index, :P))[1] # NOTE `sol(0, idxs=eidxs(e_index, :P))` returns 1-Element vector
 
-        # get Pmech at source and dst vertices
-        Pmech_src = sol(0, idxs=vidxs(src_idx, :Pmech))[1]
-        Pmech_dst = sol(0, idxs=vidxs(dst_idx, :Pmech))[1]
+        # get Pmech at source and dst vertices, `catch` for load nodes with RTS network that don't have `Pmech`
+        Pmech_src = try sol(0, idxs=vidxs(src_idx, :Pmech))[1] catch; 0. end
+        Pmech_dst = try sol(0, idxs=vidxs(dst_idx, :Pmech))[1] catch; 0. end
 
         # Pmech_Pflow_e_index = Pflow_src * (Pmech_src - Pmech_dst) / abs(Pflow_src)^2
         Pmech_Pflow_e_index = Pflow_src * (Pmech_src - Pmech_dst)
@@ -100,6 +116,12 @@ function dist_vertices_after_edge_removal(graph)
         state = dijkstra_shortest_paths(g, src_idx)
         # retrieve the distance from vertex src_idx to vertex dst_idx
         dist_e_index = state.dists[dst_idx]
+
+        # set distance to zero for dead ends
+        if dist_e_index > ne(graph)
+            dist_e_index = 0
+        end
+
         push!(dist, dist_e_index)
     end
     dist
@@ -114,15 +136,11 @@ function write_failures_f_b_to_df(exp_name_date, freq_bounds, I)
     exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
     df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
 
-    # adjust filepaths 
-    df_config[!, :filepath_graph] = replace.(df_config[!, :filepath_graph],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
-    df_config[!, :filepath_steady_state] = replace.(df_config[!, :filepath_steady_state],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
-
     exp_params_dict = Serialization.deserialize(joinpath(exp_data_dir, "exp.params"))
     N_ensemble_size = exp_params_dict[:N_ensemble_size]
 
     dir = joinpath(exp_data_dir, "braessness_lines", "braessness_data")
-    ispath(dir) || mkdir(dir)
+    ispath(dir) || mkpath(dir)
 
     for f_b in freq_bounds
         # create df
@@ -167,11 +185,7 @@ Output-columns in df: ensemble_element,initially_failed_line,rho,dist
 function write_network_measures_to_df(exp_name_date)
     exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
     df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
-    
-    # adjust filepaths 
-    df_config[!, :filepath_graph] = replace.(df_config[!, :filepath_graph],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
-    df_config[!, :filepath_steady_state] = replace.(df_config[!, :filepath_steady_state],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
-    
+        
     exp_params_dict = Serialization.deserialize(joinpath(exp_data_dir, "exp.params"))
     N_ensemble_size = exp_params_dict[:N_ensemble_size]
 
@@ -298,6 +312,118 @@ function colorswitcher(z; fancy_colors=true)
 end
 
 
+function plot_braessness_vs_rho_scatter_and_histograms(exp_name_date, f_b_narrow, f_b_wide, I)
+    braessness_lines, braessness_nodes = get_braessness(exp_name_date, f_b_narrow, f_b_wide, I)
+    x_ρ,_ = get_network_measures(exp_name_date)
+
+    fig = Figure(size = (2100,1500), fontsize = fontsize)
+    xscale = Makie.pseudolog10  # maps 0→0, then log10(count+1)
+    # Top‐left: log‐count histogram of x_ρ
+    fig[1, 1] = ax11 = Axis(fig; yscale=xscale, ylabel = "count", titlealign = :left, titlesize  = titlesize,
+        title  = "f_b_n=$f_b_narrow, f_b_w=$f_b_wide, I=$I")
+    # Bottom‐left: scatter ρ vs Braessness
+    fig[2, 1] = ax21 = Axis(fig; xlabel = "ρ_Pmech_Pflow", ylabel = "Braessness")
+    # Bottom‐right: horizontal log‐count histogram of Braessness
+    fig[2, 2] = ax22 = Axis(fig; xscale=xscale, xlabel = "count")
+    fig[2, 3] = ax23 = Axis(fig; xscale=xscale, xlabel = "count")
+    fig[2, 4] = ax24 = Axis(fig; xscale=xscale, xlabel = "count")
+
+    # link the marginal histograms to the scatter
+    linkxaxes!(ax21, ax11); linkyaxes!(ax21, ax22, ax23, ax24); linkxaxes!(ax22, ax23, ax24)
+
+    # center scatter
+    labels = ["line & node failures", "line failures", "node failures"]
+    ys     = [braessness_lines .+ braessness_nodes, braessness_lines, braessness_nodes]
+    cols   = (:blue, :orange, :red)
+    for (lbl, y, col) in zip(labels, ys, cols)
+        scatter!(ax21, x_ρ, y; label=lbl, color=col, markersize = markersize)
+    end
+
+    # top histogram: counts of x_ρ
+    strokewidth = 0
+    μ11= round(mean(x_ρ), digits=3)
+    hist!(ax11, x_ρ; bins=200, label="<ρ_Pmech_Pflow>=$μ11", color=:black, strokewidth=strokewidth)
+
+    # bottom right histograms: counts of Braessness
+    μ22 = round(mean(braessness_lines .+ braessness_nodes), digits=3)
+    μ23 = round(mean(braessness_lines), digits=3)
+    μ24 = round(mean(braessness_nodes), digits=3)
+    
+    # bins
+    all_breaessnesses = vcat(braessness_lines .+ braessness_nodes, braessness_lines, braessness_nodes)
+    max_braessness = maximum(all_breaessnesses)
+    min_braessness = minimum(all_breaessnesses)
+    bins= (min_braessness-0.5):1:(max_braessness+0.5)
+    
+    hist!(ax22, braessness_lines .+ braessness_nodes; label="<Braessness>=$μ22", color=:blue , bins=bins, direction=:x, strokewidth=strokewidth)
+    hist!(ax23, braessness_lines; label="<Braessness>=$μ23", color=:orange, bins=bins, direction=:x, strokewidth=strokewidth)
+    hist!(ax24, braessness_nodes; label="<Braessness>=$μ24", color=:red , bins=bins, direction=:x, strokewidth=strokewidth)
+
+    hidexdecorations!(ax11)
+    hideydecorations!(ax22); hideydecorations!(ax23); hideydecorations!(ax24)
+    axislegend(ax11; position = :rt, labelsize=fontsize)
+    axislegend(ax21; position = :rt, labelsize=fontsize-8)
+    axislegend(ax22; position = :rt, labelsize=fontsize)
+    axislegend(ax23; position = :rt, labelsize=fontsize)
+    axislegend(ax24; position = :rt, labelsize=fontsize)
+    ax11.yticks = [0, 1, 10, 100, 600]
+    ax22.xticks = ax23.xticks = ax24.xticks = [0, 1, 10, 100, 1000, 5000]
+    
+    return fig
+end
+
+
+function plot_braessness_vs_dist_histograms(exp_name_date, f_b_narrow, f_b_wide, I)
+    braessness_lines, braessness_nodes = get_braessness(exp_name_date, f_b_narrow, f_b_wide, I)
+    _, x_dist = get_network_measures(exp_name_date)
+
+    fig = Figure(size = (2100, 1700), fontsize = fontsize)
+    rows = [1,2,3]
+    data_arr = [(braessness_lines .+ braessness_nodes), braessness_lines, braessness_nodes]
+    ylabels = ["Braessness lines and nodes", "Braessness lines", "Braessness nodes"]
+    colors = [:blue, :orange, :red]
+
+    for (row, data, ylabel, color) in zip(rows, data_arr, ylabels, colors)
+        # get categories (here the different distances), exclude 0
+        cats = filter(c -> c != 0, sort(unique(x_dist)))
+
+        # Create a 1×length(cats) grid of Axes for all n categories
+        axs = [Axis(fig[row, i];
+                    xscale = Makie.pseudolog10,
+                    xlabel = i == ceil(Int, length(cats)/2) && row == maximum(rows) ? "Count" : "",
+                    ylabel = i == 1 ? ylabel : "",
+                    title  = row == 1 ? "d=$(cats[i])" : ""
+                )
+                for (i, c) in enumerate(cats)]
+
+        linkyaxes!(axs...); linkxaxes!(axs...)
+        row < maximum(rows) ? hidexdecorations!.(axs[1:end], grid=false) : nothing
+        hideydecorations!.(axs[2:end])
+
+        #= compute bin count for each row so all d-panels share the same bin width.
+        `0.5` makes sure that bins centrally placed rigt to the y-ticks =#
+        const_nbins = (minimum(data)-0.5):1:(maximum(data)+0.5)
+
+        # Draw each histogram in its own Axis
+        for (c, ax) in zip(cats, axs)
+            # Braessness of the lines with dist = c
+            ys = data[findall(x -> x == c, x_dist)]
+            μ = round(mean(ys), digits=3)
+            # println("c=$c, ys=$ys, bins=$const_nbins") # NOTE use this for checking
+            hist!(ax, ys;
+                bins      = const_nbins,
+                direction = :x,
+                label     = "<Braessness>=$μ",
+                color     = color,
+                strokewidth = 0)
+            ax.xticks = [0, 1, 10, 100, 1000]
+        end
+
+        [axislegend(i; position = :rt, labelsize=fontsize-6) for i in axs]
+    end
+    return fig
+end
+
 ################################################################################
 ############################## Plotting scripts ################################
 ################################################################################
@@ -325,124 +451,31 @@ freq_bounds = [0.03, 0.15]
 # choose `f_b_narrow` and `f_b_wide`
 f_b_narrow = 0.03
 f_b_wide = 0.15
-braessness_lines, braessness_nodes = get_braessness(exp_name_date, f_b_narrow, f_b_wide, I);
-x_ρ, x_dist = get_network_measures(exp_name_date);
-
-# model = Serialization.deserialize(joinpath(RESULTS_DIR, exp_name_date, "exp.params"))[:node_failure_model]
-model = "full_failure"
 N_nodes = Serialization.deserialize(joinpath(RESULTS_DIR, exp_name_date, "exp.params"))[:N_nodes]
-
 
 ###
 ### Braessness histograms
 ###
-fig = Figure(size = (2100,1500), fontsize = fontsize)
-xscale = Makie.pseudolog10  # maps 0→0, then log10(count+1)
-# Top‐left: log‐count histogram of x_ρ
-fig[1, 1] = ax11 = Axis(fig; yscale=xscale, ylabel = "count", titlealign = :left, titlesize  = titlesize,
-    title  = "f_b_n=$f_b_narrow, f_b_w=$f_b_wide, I=$I")
-# Bottom‐left: scatter ρ vs Braessness
-fig[2, 1] = ax21 = Axis(fig; xlabel = "ρ_Pmech_Pflow", ylabel = "Braessness")
-# Bottom‐right: horizontal log‐count histogram of Braessness
-fig[2, 2] = ax22 = Axis(fig; xscale=xscale, xlabel = "count")
-fig[2, 3] = ax23 = Axis(fig; xscale=xscale, xlabel = "count")
-fig[2, 4] = ax24 = Axis(fig; xscale=xscale, xlabel = "count")
-
-# link the marginal histograms to the scatter
-linkxaxes!(ax21, ax11); linkyaxes!(ax21, ax22, ax23, ax24); linkxaxes!(ax22, ax23, ax24)
-
-# center scatter
-labels = ["line & node failures", "line failures", "node failures"]
-ys     = [braessness_lines .+ braessness_nodes, braessness_lines, braessness_nodes]
-cols   = (:blue, :orange, :red)
-for (lbl, y, col) in zip(labels, ys, cols)
-    scatter!(ax21, x_ρ, y; label=lbl, color=col, markersize = markersize)
-end
-
-# top histogram: counts of x_ρ
-strokewidth = 0
-μ11= round(mean(x_ρ), digits=3)
-hist!(ax11, x_ρ; bins=200, label="<ρ_Pmech_Pflow>=$μ11", color=:black, strokewidth=strokewidth)
-
-# bottom right histogram: counts of Braessness
-bins22 = maximum(braessness_lines .+ braessness_nodes) - minimum(braessness_lines .+ braessness_nodes)
-bins23 = maximum(braessness_lines) - minimum(braessness_lines)
-bins24 = maximum(braessness_nodes) - minimum(braessness_nodes)
-
-μ22 = round(mean(braessness_lines .+ braessness_nodes), digits=3)
-μ23 = round(mean(braessness_lines), digits=3)
-μ24 = round(mean(braessness_nodes), digits=3)
-
-hist!(ax22, braessness_lines .+ braessness_nodes; label="<Braessness>=$μ22", color=:blue , bins=bins22, direction=:x, strokewidth=strokewidth)
-hist!(ax23, braessness_lines; label="<Braessness>=$μ23", color=:orange, bins=bins23, direction=:x, strokewidth=strokewidth)
-hist!(ax24, braessness_nodes; label="<Braessness>=$μ24", color=:red , bins=bins24, direction=:x, strokewidth=strokewidth)
-
-hidexdecorations!(ax11)
-hideydecorations!(ax22); hideydecorations!(ax23); hideydecorations!(ax24)
-axislegend(ax11; position = :rt, labelsize=fontsize)
-axislegend(ax21; position = :rt, labelsize=fontsize-8)
-axislegend(ax22; position = :rt, labelsize=fontsize)
-axislegend(ax23; position = :rt, labelsize=fontsize)
-axislegend(ax24; position = :rt, labelsize=fontsize)
-ax11.yticks = [0, 1, 10, 100, 600]
-ax22.xticks = ax23.xticks = ax24.xticks = [0, 1, 10, 100, 1000, 5000]
+## Braessness vs rho
+fig = plot_braessness_vs_rho_scatter_and_histograms(exp_name_date, f_b_narrow, f_b_wide, I)
 # CairoMakie.save(joinpath(exp_data_dir, "braessness_lines", "scatter_histograms_and_rho_braessness_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.pdf"),fig)
 # CairoMakie.save(joinpath(exp_data_dir, "braessness_lines", "scatter_histograms_and_rho_braessness_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.png"),fig)
-fig
 
-
-###
-### histogramms for x_dist
-###
-fig = Figure(size = (2100, 1700), fontsize = fontsize)
-rows = [1,2,3]
-data_arr = [(braessness_lines .+ braessness_nodes), braessness_lines, braessness_nodes]
-ylabels = ["Braessness lines and nodes", "Braessness lines", "Braessness nodes"]
-colors = [:blue, :orange, :red]
-
-for (row, data, ylabel, color) in zip(rows, data_arr, ylabels, colors)
-    # get categories (here the different distances)
-    cats = sort(unique(x_dist))
-
-    # Create a 1×length(cats) grid of Axes for all n categories
-    axs = [Axis(fig[row, c];
-                xscale=Makie.pseudolog10,
-                xlabel = c == cats[length(cats)÷2] ? "Count" : "",
-                ylabel = c == minimum(cats) ? ylabel : "",
-                title  = row == 1 ? "d=$c" : ""
-                )
-            for c in cats]
-
-    # Optionally link all x-axes so panning one pans the rest
-    linkyaxes!(axs...); linkxaxes!(axs...)
-    row < maximum(rows) ? hidexdecorations!.(axs[1:end], grid=false) : nothing
-    hideydecorations!.(axs[2:end])
-
-    # Draw each histogram in its own Axis
-    for (c, ax) in zip(cats, axs)
-        # Braessness of the lines with dist = c
-        ys = data[findall(x -> x == c, x_dist)]
-        μ = round(mean(ys), digits=3)
-        min_ys = 
-        hist!(ax, ys;
-            bins      = maximum(ys) - minimum(ys)+1,
-            direction = :x,
-            label     = "<Braessness>=$μ",
-            color     = color,
-            strokewidth = 0)
-        ax.xticks = [0, 1, 10, 100, 1000]
-    end
-
-    [axislegend(i; position = :rt, labelsize=fontsize-6) for i in axs]
-end
+## Braessness vs distance
+fig = plot_braessness_vs_dist_histograms(exp_name_date, f_b_narrow, f_b_wide, I)
 # CairoMakie.save(joinpath(exp_data_dir, "braessness_lines", "braessness_dist_braessness_histogram_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.pdf"),fig)
 # CairoMakie.save(joinpath(exp_data_dir, "braessness_lines", "braessness_dist_braessness_histogram_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.png"),fig)
-fig
 
 
 ### 
 ### Braessness vs Braessness
 ###
+braessness_lines, braessness_nodes = get_braessness(exp_name_date, f_b_narrow, f_b_wide, I);
+x_ρ, x_dist = get_network_measures(exp_name_date);
+
+# model = Serialization.deserialize(joinpath(RESULTS_DIR, exp_name_date, "exp.params"))[:node_failure_model]
+model = "full_failure"
+
 
 ## BH+Pmech
 exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250321_171511.976"
@@ -599,6 +632,78 @@ Colorbar(fig[1,2], sc11; label = "full failure", width = 30)
 # CairoMakie.save(joinpath(MA_DIR, "braessness", "braessness_vs_braessness_lines_and_nodes_3D_logcount_colorscale,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.pdf"),fig)
 # CairoMakie.save(joinpath(MA_DIR, "braessness", "braessness_vs_braessness_lines_and_nodes_3D_logcount_colorscale,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.png"),fig)
 fig
+
+
+######
+###### RTS
+######
+exp_name_date = "RTS_exp01+exp02_uebergang_frequency"
+exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
+
+# choose inertia
+I = 5.1 # scaling factor
+freq_bounds = [0.24, 0.7]
+
+# write_failures_f_b_to_df(exp_name_date, freq_bounds, I)
+# write_network_measures_to_df(exp_name_date)
+
+# choose `f_b_narrow` and `f_b_wide`
+f_b_narrow = 0.24
+f_b_wide = 0.7
+N_nodes = 73 # nv(import_system(:rtsgmlc))
+
+
+###
+### Braessness histograms
+###
+## Braessness vs rho
+fig = plot_braessness_vs_rho_scatter_and_histograms(exp_name_date, f_b_narrow, f_b_wide, I)
+# CairoMakie.save(joinpath(exp_data_dir, "braessness_lines", "scatter_histograms_and_rho_braessness_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.pdf"),fig)
+# CairoMakie.save(joinpath(exp_data_dir, "braessness_lines", "scatter_histograms_and_rho_braessness_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.png"),fig)
+
+## Braessness vs distance
+fig = plot_braessness_vs_dist_histograms(exp_name_date, f_b_narrow, f_b_wide, I)
+# CairoMakie.save(joinpath(exp_data_dir, "braessness_lines", "dist_braessness_histogram_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.pdf"),fig)
+# CairoMakie.save(joinpath(exp_data_dir, "braessness_lines", "dist_braessness_histogram_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.png"),fig)
+
+
+
+###
+### Braessness of single lines that interconnect large subgrids
+###
+braessness_lines, braessness_nodes = get_braessness(exp_name_date, f_b_narrow, f_b_wide, I);
+braessness_lines_plus_nodes = braessness_lines .+ braessness_nodes
+x_ρ, x_dist = get_network_measures(exp_name_date);
+
+
+# TODO maybe check rating
+# TODO check trajectories
+## line 37
+line = 37
+edge = collect(edges(import_system(:rtsgmlc).graph))[line] # Edge 21(gen) => 73(load)
+braessness_lines_plus_nodes[line] # 0
+x_ρ[line] # 3.89
+x_dist[line] # 17
+
+## line 73
+line = 73
+edge = collect(edges(import_system(:rtsgmlc).graph))[line] # Edge 47(gen) => 66(gen)
+braessness_lines_plus_nodes[line] # 0
+x_ρ[line] # 1.00
+x_dist[line] # 17 
+
+## line 108
+line = 108
+edge = collect(edges(import_system(:rtsgmlc).graph))[line] # Edge 71(gen) => 73(load)
+braessness_lines_plus_nodes[line] # 0
+x_ρ[line] # -7.06
+x_dist[line] # 17
+
+
+"""
+ - Check rating and initial load of these lines. (Lines may be weekly loaded in initial state)
+"""
+
 
 ################################################################################
 ########################## Old plotting scripts ################################
