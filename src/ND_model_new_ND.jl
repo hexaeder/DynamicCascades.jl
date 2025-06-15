@@ -190,7 +190,7 @@ function Line(; src=nothing, dst=nothing, kwargs...)
 end
 
 using SymbolicIndexingInterface: SymbolicIndexingInterface as SII
-function TerminateSelectiveSteadyState_new_ND(nw; min_t = nothing)
+function TerminateSelectiveSteadyState_new_ND(nw; min_t = nothing, tol=1e-6)
     #= `vidxs(nw, :, "ω")` returns symbolic index of vertex IF it has a state ω. This is needed for
     networks with node models that do not have a state \omega.
     For WS (with a single node model that has a ω stat) one can alternatively use 
@@ -208,7 +208,7 @@ function TerminateSelectiveSteadyState_new_ND(nw; min_t = nothing)
         # see https://docs.sciml.ai/DiffEqDocs/dev/basics/integrator/#SciMLBase.get_du!
         DiffEqBase.get_du!(du, integrator)
         for i in eachindex(ω_idxs)
-            if abs(du[ω_idxs[i]]) > 1e-6
+            if abs(du[ω_idxs[i]]) > tol
                 return false
             end
         end
@@ -254,12 +254,16 @@ end
 # Arguments
 - `zeroidx::Integer=nothing`: If this flag is set, this shifts the phase angle
 at all nodes by the phase angle of the node with index `zeroidx`.
+- `relax_init_guess` If set to `true` initial guess (array of zeros) is replaced
+by relaxing the network into a steady state, which is then taken as initial guess for 
+fixpoint solver.
 """
 function steadystate_new_ND(network;
     verbose=false,
     graph=network.graph,
     zeroidx=nothing,
-    tol=1e-7,
+    res_tol=1e-7,
+    relax_init_guess = false,
     problem=SteadyStateProblem,
     solver=NLSolveJL(),
     solverargs=(;)
@@ -271,8 +275,14 @@ function steadystate_new_ND(network;
     and `trip_nodes = :none` which implies `ωmax = Inf` and `rating = Inf`.=#
     nw = nd_model_and_CB_new_ND!(network; graph=graph)
     s = NWState(nw)
+    x0_init_guess = uflat(s)
+    if relax_init_guess == true
+        prob = ODEProblem(nw, uflat(s), (0., 10000.), pflat(s), callback=TerminateSelectiveSteadyState_new_ND(nw; tol=1e-12));
+        sol = solve(prob, Rodas4P(); reltol=1e-12, abstol=1e-12);
+        x0_init_guess = sol[end]
+    end
     p = pflat(s)
-    x0 = solve(problem(nw, uflat(s), p), solver; solverargs...) # `uflat(s)` creates vector of zeros
+    x0 = solve(problem(nw, x0_init_guess, p), solver; solverargs...) # `uflat(s)` creates vector of zeros
     #= `s0` is needed in order to access the symbolic vertex indices that have a θ-state.
     In this model all vertices have a θ-state, however `uflat(s0)` returns the states ordered by 
     the different vertex models/components. So here one cannot modify `x0.u` directly. =#
@@ -295,7 +305,7 @@ function steadystate_new_ND(network;
     end
 
     residuum = issteadystate_new_ND(nw, x_static)
-    @assert residuum < tol "No steady state found: maximum(abs.(dx))=$residuum"
+    @assert residuum < res_tol "No steady state found: maximum(abs.(dx))=$residuum"
 
     return x_static 
 end
@@ -303,12 +313,14 @@ end
 
 """
 Choice of ODE_solver 
+  - default: #TODO Rodas4P()
+  - NOTE With AutoTsit5(Rodas4P()) the CB `TerminateSelectiveSteadyState_new_ND` does not
+    fire. This is probably as `dt` gets too large with higher order stiff solvers (see
+    https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems)
+
+Choice of solverargs
 the order and number of failures doesnt change with increased precision, 
 i.e. reltol=1e-4 instead of default value reltol=1e-3
-# BUG remove
-    Rodas4P() might be better for WS expriment
-    AutoTsit5(Rosenbrock23()) might be better for RTS experiment 
-    AutoTsit5(Rodas5P()) might be better for RTS experiment 
 """
 function simulate_new_ND(network;
     verbose=true,
@@ -322,7 +334,7 @@ function simulate_new_ND(network;
     trip_nodes = :dynamic,
     freq_bound = 1.0,
     terminate_steady_state=true,
-    solver = AutoTsit5(Rodas5P()),
+    solver = Rodas4P(),
     solverargs=(;),
     warn=true
     )
@@ -460,14 +472,14 @@ function nd_model_and_CB_new_ND!(network::MetaGraph;
     # loop over vertices and assign vertex models & parameter
     vm_array = VertexModel[]
     for i in 1:nv(network)
-        Pmech = ustrip(u"pu", get_prop(network, i, :Pmech))
         Pload = ustrip(u"pu", get_prop(network, i, :Pload))
         τ = ustrip(u"s", get_prop(network, i, :timeconst))
         type = get_prop(network, i, :type)
         if type == :gen || type == :syncon
             M = ustrip(u"s^2", get_prop(network, i, :_M))
             γ = ustrip(u"s", get_prop(network, i, :damping))
-            vm = gen_model(M=M,D=γ,τ=τ,ωmax=ωmax,Pmech=Pmech,Pload=Pload)
+            Pmech = ustrip(u"pu", get_prop(network, i, :Pmech))
+            vm = gen_model(M=M, D=γ,τ=τ,ωmax=ωmax,Pmech=Pmech,Pload=Pload)
         elseif type == :load
             vm = DynLoadModel(τ=τ,Pload=Pload) 
         else
