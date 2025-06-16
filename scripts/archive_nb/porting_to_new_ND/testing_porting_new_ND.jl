@@ -8,7 +8,7 @@ See scripts/archive_nb/porting_to_new_ND/testing_old_ND.jl
 
 ## new ND
 include(abspath(@__DIR__, "..", "..", "cluster/experiment_jarray/helpers_jarray.jl"))
-include("/home/brandner/.julia/dev/DynamicCascades/src/ND_model_new_ND.jl")
+
 damping = 0.1u"s"
 scale_inertia = 1.2
 tconst = 1.0u"s"
@@ -21,7 +21,7 @@ network = loadgraph(filepath, MGFormat())
 # steady_state_dict  = CSV.File("/home/brandner/.julia/dev/for_testing_delete_soon/RTS_test_graph_old_ND_steady_state.csv")
 # x_static = steady_state_dict[:SteadyState]
 
-sol = simulate_new_ND(network;
+sol = simulate(network;
     gen_model=SwingDynLoadModel,
     initial_fail=27,
     tspan=(0., 3.),
@@ -166,13 +166,13 @@ sol = simulate_new_ND_single_model_port(exp_data_dir, task_id, initial_fail;
 
 ## wrapper after adapting new ND to RTS
 include(abspath(@__DIR__, "..", "..", "cluster/experiment_jarray/helpers_jarray.jl"))
-include("/home/brandner/.julia/dev/DynamicCascades/src/ND_model_new_ND.jl")
+
 exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250321_171511.976"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 task_id = 1728
 initial_fail = 78
 
-sol = simulate_new_ND(exp_name_date, task_id, initial_fail;
+sol = simulate(exp_name_date, task_id, initial_fail;
     gen_model=SwingDynLoadModel,
     tspan=(0., 40.),
     solverargs = (;dtmax=0.01),
@@ -277,7 +277,7 @@ n_load
 #= Testing load node frequencies
 see worktree-mwe_old_ND_maybe_plots/scripts/archive_nb/porting_to_new_ND/testing_load_node_frequencies.jl =#
 include(abspath(@__DIR__, "..", "..", "cluster/experiment_jarray/helpers_jarray.jl"))
-include("/home/brandner/.julia/dev/DynamicCascades/src/ND_model_new_ND.jl")
+
 using CairoMakie
 CairoMakie.activate!()
 
@@ -285,7 +285,7 @@ damping = 0.1u"s"
 scale_inertia = 1.0
 network = import_system(:rtsgmlc; damping, scale_inertia, tconst = 0.01u"s")
 
-sol = simulate_new_ND(network;
+sol = simulate(network;
     graph=network.graph, 
     gen_model=SwingDynLoadModel,
     verbose=true,

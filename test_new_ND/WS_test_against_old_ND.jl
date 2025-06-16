@@ -17,7 +17,7 @@ set_prop!(network, 1:nv(network), :Pmech, Pmech)
 set_prop!(network, 1:nv(network), :Pload, Pload)
 
 filepath = joinpath(abspath(@__DIR__,"WS_test_data", string(filename,"_steady_state_new_ND.csv")))
-# x_static = steadystate_new_ND(network; verbose=true, zeroidx=1)  
+# x_static = steadystate(network; verbose=true, zeroidx=1)  
 # # write steady state to .csv
 # CSV.write(filepath, Dict(:SteadyState => x_static))
 
@@ -25,7 +25,7 @@ filepath = joinpath(abspath(@__DIR__,"WS_test_data", string(filename,"_steady_st
 x_static = DataFrame(CSV.File(filepath)).SteadyState
 
 
-simulate_new_ND(network;
+simulate(network;
     gen_model=SwingDynLoadModel,
     x_static=x_static,
     initial_fail=78,
@@ -58,7 +58,7 @@ Vertex 60 tripped at t=33.760593498538924
 Terminated on steady state at 669.4255648511929
 =#
 
-simulate_new_ND(network;
+simulate(network;
     gen_model=SwingDynLoadModel,
     x_static=x_static,
     initial_fail=78,
@@ -87,7 +87,7 @@ Line 148 tripped at t=42.28700839938836
 Terminated on steady state at 713.0886641873707
 =#
 
-simulate_new_ND(network;
+simulate(network;
     gen_model=SwingDynLoadModel,
     x_static=x_static,
     initial_fail=78,

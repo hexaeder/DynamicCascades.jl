@@ -4,8 +4,7 @@ See scripts/archive_nb/porting_to_new_ND/tests_old_ND.jl
 
 # TODO automate tests (with CI?)
 
-include(abspath(@__DIR__, "..", "scripts/cluster/experiment_jarray/helpers_jarray.jl"))
-include("/home/brandner/.julia/dev/DynamicCascades/src/ND_model_new_ND.jl")
+include(abspath(@__DIR__, "..", "scripts/helpers_jarray.jl"))
 
 using DataFrames
 using Serialization
@@ -93,7 +92,7 @@ end
 Uncomment for saving RTS steady state
 """
 # network = import_system(:rtsgmlc; damping=0.1u"s", scale_inertia=1, tconst=0.01u"s")
-# x_static = steadystate_new_ND(network;
+# x_static = steadystate(network;
 #                                 verbose=true,
 #                                 zeroidx=1,
 #                                 res_tol=1e-7,
@@ -149,10 +148,11 @@ choose_solver = false
 quick_test = true
 
 ## solver settings
+using OrdinaryDiffEq
 solver = Rodas4P(); solver_string = "Rodas4P()"
 reltol=1e-8 # NOTE choose this tolerance for simulations
 abstol=1e-6
-solverargs = (;reltol=reltol, abstol=abstol) # default: reltol=1e-3, abstol=1e-6)
+solverargs = (;reltol=reltol, abstol=abstol) # default: reltol=1e-3, abstol=1e-6
 
 ## parameters to be tested
 # varying parameters
@@ -187,7 +187,7 @@ for
 
     network = import_system(:rtsgmlc; damping=damping, scale_inertia=scale_inertia, tconst=tconst)
 
-    sol = simulate_new_ND(network;
+    sol = simulate(network;
         gen_model=gen_model,
         x_static=x_static,
         initial_fail=initial_fail,
@@ -343,13 +343,13 @@ for
         CSV.write(joinpath(abspath(@__DIR__,"sol_objects_test", string(filename,"_power_injections.csv"))), Dict(:Pmech => Pmech, :Pload => Pload))
 
         # calculate reference steady state
-        x_static = steadystate_new_ND(network; verbose=true, res_tol=1e-5, relax_init_guess=false, zeroidx=1)  
+        x_static = steadystate(network; verbose=true, res_tol=1e-5, relax_init_guess=false, zeroidx=1)  
 
         # save reference steady state to .csv
         CSV.write(joinpath(abspath(@__DIR__,"sol_objects_test", string(filename,"_steady_state.csv"))), Dict(:SteadyState => x_static))
 
         # calc reference solution
-        sol = simulate_new_ND(network;
+        sol = simulate(network;
             gen_model=gen_model,
             x_static=x_static,
             initial_fail=initial_fail,
@@ -383,7 +383,7 @@ for
         x_static = DataFrame(CSV.File(joinpath(abspath(@__DIR__,"sol_objects_test", string(filename,"_steady_state.csv"))))).SteadyState
         
         # calc solution to be tested
-        sol = simulate_new_ND(network;
+        sol = simulate(network;
             graph=graph,
             gen_model=gen_model,
             x_static=x_static,

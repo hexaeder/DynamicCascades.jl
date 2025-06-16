@@ -42,7 +42,7 @@ function __init__()
     Unitful.register(DynamicCascades)
 end
 
-include("utils.jl")
+include("helpers.jl")
 
 """
     bustype(i::Int)
@@ -101,53 +101,9 @@ Edge properties:
 import_system(sym::Symbol; kwargs...) = import_system(Val(sym); kwargs...)
 
 include("import_rtsgmlc.jl")
-include("import_rts96.jl")
-include("import_kaiser2020.jl")
-include("import_schaefer2018.jl")
-include("import_square.jl")
-include("import_isolator_toymodel.jl")
-include("import_toymodel.jl")
 include("import_general_networks.jl")
-include("import_slack_gen.jl")
-
-"""
-    describe_nodes(g::MetaGraph; firstcols=Vector{String}())
-
-Returns DataFrame with all the node meta data.
-"""
-function describe_nodes(g::MetaGraph; firstcols=Vector{String}())
-    df = DataFrame(; n=Int[])
-    for n in 1:nv(g)
-        row = push!(props(g, n), :n=>n)
-        push!(df, row, cols=:union)
-    end
-    firstcols = String.(firstcols) # convert to string if given as Symbol
-    has_prop(g, :NodeProps) &&
-        append!(firstcols, String.(get_prop(g, :NodeProps)))
-    append!(firstcols, names(df)) |> unique!
-    select!(df, firstcols)
-end
-
-"""
-    describe_edges(g::MetaGraph; firstcols=Vector{String}())
-
-Returns DataFrame with all the edge meta data.
-"""
-function describe_edges(g::MetaGraph; firstcols=Vector{String}())
-    df = DataFrame(; src=Int[], dst=Int[])
-    for e in edges(g)
-        row = push!(props(g, e), :src=>e.src, :dst=>e.dst)
-        push!(df, row, cols=:union)
-    end
-    firstcols = String.(firstcols) # convert to string if given as Symbol
-    has_prop(g, :EdgeProps) &&
-        append!(firstcols, String.(get_prop(g, :EdgeProps)))
-    append!(firstcols, names(df)) |> unique!
-    select!(df, firstcols)
-end
 
 include("ND_model.jl")
-include("analyse_solution.jl")
-include("inspect_solution.jl")
+include("visualization.jl")
 
 end

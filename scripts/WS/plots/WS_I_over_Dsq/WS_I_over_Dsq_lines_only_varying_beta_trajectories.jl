@@ -1,0 +1,292 @@
+"""
+Watts-Strogatz-Network: Related to the curve in WS_lines+nodes_uebergang.jl with
+frequency bound f_b=0.03. Plotting all frequency and power flow trajectories of all
+nodes and lines that fail for I=[0.2, 3.0, 30.0].
+"""
+
+include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
+
+using DynamicCascades
+using Graphs
+using MetaGraphs
+using Unitful
+using Statistics
+using GraphMakie
+using Colors
+using DynamicCascades: PLOT_DIR
+
+using CairoMakie
+# using GLMakie
+# GLMakie.activate!()
+
+# time_stepsize = 10
+#
+# sol.load_S.t[1:time_stepsize:end_time]
+# sol.load_S.t[1:time_stepsize:end]
+
+
+initial_fail = 2
+task_id_array = [10, 13, 17]
+task_id = 17
+exp_name_date = "WS_k=4_exp05_1_I_over_Dsq_lines_PIK_HPC_K_=3,N_G=32_20250123_203156.161"
+
+exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
+df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
+exp_params_dict = Serialization.deserialize(joinpath(exp_data_dir, "exp.params"))
+
+N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
+monitored_power_flow = exp_params_dict[:monitored_power_flow]
+steadystate_choice = exp_params_dict[:steadystate_choice]
+# steadystate_choice = :relaxation
+
+#= Generate and save sol-Objects, the data for the plots. Only use this for recreating
+the solution objects =#
+network = import_system_wrapper(df_config, task_id)
+# NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE Achtung hardcoded
+steady_state_dict  = CSV.File("/home/brandner/nb_data/HU_Master/2122WS/MA/MA_data/results_NB/WS_k=4_exp05_1_I_over_Dsq_lines_PIK_HPC_K_=3,N_G=32_20250123_203156.161/k=4,β=0.25/steady_states_graphs/graph_seed=2,distr_seed=2,k=4,β=0.25,ensemble_element=1.csv")
+x_static = steady_state_dict[:SteadyState]
+
+# sol = simulate(network;
+#                x_static=x_static,
+#                initial_fail = [initial_fail],
+#                init_pert = init_pert,
+#                tspan = (0, 1000),
+#                trip_lines = trip_lines,
+#                trip_nodes = trip_nodes,
+#                trip_load_nodes = :none,
+#                monitored_power_flow = monitored_power_flow,
+#                f_min = -freq_bound,
+#                f_max = freq_bound,
+#                solverargs = (;dtmax=0.01),
+#                verbose = true);
+#
+# Serialization.serialize(joinpath(exp_data_dir, "trajectories", "task_id=$task_id.sol"), sol)
+
+
+
+# Solution objects
+sol10 = Serialization.deserialize(joinpath(exp_data_dir, "trajectories", "task_id=10.sol"))
+sol13 = Serialization.deserialize(joinpath(exp_data_dir, "trajectories", "task_id=13.sol"))
+sol17 = Serialization.deserialize(joinpath(exp_data_dir, "trajectories", "task_id=17.sol"))
+
+################################################################################
+########################### nodal P trajectories ###############################
+################################################################################
+
+function get_ΔP_ΔS_at_node(node_idx, sol, network)
+    all_edges = collect(edges(network.graph))
+    s_ΔP = Float32[] # ΔP for all time steps
+    s_ΔS = Float32[] # ΔS for all time steps
+    # loop over all timesteps
+    for tstep in 1:length(sol.load_P.saveval)
+        if node_idx in sol.failures_nodes.saveval
+            if sol.load_P.t[tstep] >= sol.failures_nodes.t[findfirst(x -> x == node_idx, sol.failures_nodes.saveval)]
+                P_i = sol.sol.prob.p[1][node_idx][2]
+            else
+                P_i = get_prop(network, node_idx, :P)
+            end
+        else
+            P_i = get_prop(network, node_idx, :P)
+        end
+
+        load_P = sol.load_P.saveval[tstep]
+        load_S = sol.load_S.saveval[tstep]
+        P_e = 0
+        S_e = 0
+        # sum over all incoming and outgoing flows at node_idx
+        for j in 1:ne(network)
+            #= edges are listed source to destination, with destination > source,
+            e.g. for edge Edge 1 => 3 at node_idx=3 one has to multiply power flow
+            by -1. =#
+            if all_edges[j].src == node_idx
+                P_e += load_P[j]
+                #= get sign of power injection at node. this is only possible via the
+                active power flows as the function `calculate_apparent_power!` returns
+                only positive values =#
+                S_e += (load_S[j] * sign(load_P[j]))
+            end
+            if all_edges[j].dst == node_idx
+                P_e -= load_P[j]
+                S_e -= (load_S[j] * sign(load_P[j]))
+            end
+        end
+        # add power injection
+        ΔP = P_i - P_e # TODO check
+        append!(s_ΔP, ΔP)
+        ΔS = P_i - S_e # TODO check
+        append!(s_ΔS, ΔS)
+    end
+    s_ΔP, s_ΔS
+end
+
+# all_failing_lines_idxs = [14, 78, 106, 131, 135, 146, 147, 148, 149, 194, 199]
+# all_failing_nodes_idxs = [29, 58, 59, 60, 61, 62, 92, 98]
+all_failing_lines_idxs = Int64[1:200...]
+all_failing_nodes_idxs = Int64[1:100...]
+
+node_colors = distinguishable_colors(length(all_failing_nodes_idxs)+1)
+deleteat!(node_colors, 2) # delete yellow
+line_colors = distinguishable_colors(length(all_failing_lines_idxs)+1)
+deleteat!(line_colors, 2) # delete yellow
+
+################################################################################
+############################ Line and nodes ####################################
+################################################################################
+fontsize = 35
+titlesize = (fontsize+5)
+linewidth = 3.5
+# fig = Figure(resolution=(2100,1500), fontsize= fontsize)
+# xlim_c = 36.0
+fig = Figure(resolution=(3100,1500), fontsize= fontsize)
+xlim_a = 3
+xlim_b = 10.0
+xlim_c = 30.0
+
+# FREQUENCIES ########################################################################
+# frequencies of failed gen nodes I=0.2 s^2
+sol = sol10
+fig[1,1] = ax = Axis(fig; ylabel="Frequency [Hz]", title=L"Inertia $I=0.2$ $s^2$, $D=\sqrt{I}$ $s$", titlealign = :left, titlesize = titlesize)
+(nd, p, overload_cb) = nd_model(network)
+state_idx = idx_containing(nd, "ω") # array: indices of ω-states
+node_idx = map(s -> parse(Int, String(s)[4:end]), nd.syms[state_idx]) # array: indices of vertices that are generators
+# failing_nodes_idxs = sol.failures_nodes.saveval
+failing_nodes_idxs = all_failing_nodes_idxs
+for (i, l) in pairs([state_idx[findfirst(x -> x == i, node_idx)] for i in failing_nodes_idxs])
+    t, s = seriesforidx(sol.sol, l)
+    s = s./(2*π)
+    node_idx = failing_nodes_idxs[i]
+    lines!(ax, t, s; label="Node $node_idx", color=node_colors[i], linewidth=linewidth)
+    scatter!(ax, (t[end], s[end]); color=node_colors[i], marker=:star5, markersize=25)
+end
+xlims!(ax, 0, xlim_a)
+
+# frequencies of failed gen nodes I=3.0 s^2
+sol = sol13
+fig[1,2] = ax = Axis(fig; ylabel="Frequency [Hz]", title=L"Inertia $I=3.0$ $s^2$, $D=\sqrt{I}$ $s$", titlealign = :left, titlesize = titlesize)
+(nd, p, overload_cb) = nd_model(network)
+state_idx = idx_containing(nd, "ω") # array: indices of ω-states
+node_idx = map(s -> parse(Int, String(s)[4:end]), nd.syms[state_idx]) # array: indices of vertices that are generators
+failing_nodes_idxs = all_failing_nodes_idxs
+for (i, l) in pairs([state_idx[findfirst(x -> x == i, node_idx)] for i in failing_nodes_idxs])
+    t, s = seriesforidx(sol.sol, l)
+    s = s./(2*π)
+    node_idx = failing_nodes_idxs[i]
+    lines!(ax, t, s; label="Node $node_idx", color=node_colors[i], linewidth=linewidth)
+    scatter!(ax, (t[end], s[end]); color=node_colors[i], marker=:star5, markersize=25)
+end
+xlims!(ax, 0, xlim_b)
+
+# frequencies of failed gen nodes I=20.0 s^2
+sol = sol17
+fig[1,3] = ax = Axis(fig; ylabel="Frequency [Hz]", title=L"Inertia $I=20.0$ $s^2$, $D=\sqrt{I}$ $s$", titlealign = :left, titlesize = titlesize)
+(nd, p, overload_cb) = nd_model(network)
+state_idx = idx_containing(nd, "ω") # array: indices of ω-states
+node_idx = map(s -> parse(Int, String(s)[4:end]), nd.syms[state_idx]) # array: indices of vertices that are generators
+failing_nodes_idxs = all_failing_nodes_idxs
+for (i, l) in pairs([state_idx[findfirst(x -> x == i, node_idx)] for i in failing_nodes_idxs])
+    t, s = seriesforidx(sol.sol, l)
+    s = s./(2*π)
+    node_idx = failing_nodes_idxs[i]
+    lines!(ax, t, s; label="Node $node_idx", color=node_colors[i], linewidth=linewidth)
+    scatter!(ax, (t[end], s[end]); color=node_colors[i], marker=:star5, markersize=25)
+end
+xlims!(ax, -1., xlim_c)
+
+# FLOWS ########################################################################
+# failed power flows I=0.2 s^2
+sol = sol10
+fig[3,1] = ax = Axis(fig; xlabel="Time [s]", ylabel="App. power flow [p.u.]")
+# failing_lines_idxs = sol.failures.saveval
+failing_lines_idxs = all_failing_lines_idxs
+for (i, l) in pairs(failing_lines_idxs)
+    t, s = seriesforidx(sol.load_S, l)
+    line_idx = failing_lines_idxs[i]
+    lines!(ax, t, s; label="Line $line_idx", color=line_colors[i], linewidth=linewidth)
+    scatter!(ax, (t[end], s[end]); color=line_colors[i], marker=:star5, markersize=25)
+end
+xlims!(ax, 0, xlim_a)
+
+# failed power flows I=3.0 s^2
+sol = sol13
+fig[3,2] = ax = Axis(fig; xlabel="Time [s]", ylabel="App. power flow [p.u.]")
+# failing_lines_idxs = sol.failures.saveval
+failing_lines_idxs = all_failing_lines_idxs
+for (i, l) in pairs(failing_lines_idxs)
+    t, s = seriesforidx(sol.load_S, l)
+    line_idx = failing_lines_idxs[i]
+    lines!(ax, t, s; label="Line $line_idx", color=line_colors[i], linewidth=linewidth)
+    scatter!(ax, (t[end], s[end]); color=line_colors[i], marker=:star5, markersize=25)
+end
+xlims!(ax, 0, xlim_b)
+
+# failed power flows I=20.0 s^2
+sol = sol17
+fig[3,3] = ax = Axis(fig; xlabel="Time [s]", ylabel="App. power flow [p.u.]")
+# failing_lines_idxs = sol.failures.saveval
+failing_lines_idxs = all_failing_lines_idxs
+for (i, l) in pairs(failing_lines_idxs)
+    t, s = seriesforidx(sol.load_S, l)
+    line_idx = failing_lines_idxs[i]
+    lines!(ax, t, s; label="Line $line_idx", color=line_colors[i], linewidth=linewidth)
+    scatter!(ax, (t[end], s[end]); color=line_colors[i], marker=:star5, markersize=25)
+end
+xlims!(ax, -1., xlim_c)
+
+# ΔP TRAJECTORIES ##############################################################
+
+# ΔP trajectories I=0.2 s^2
+sol = sol10
+task_id = 10
+network = import_system_wrapper(df_config, task_id)
+fig[2,1] = ax = Axis(fig; xlabel="Time [s]", ylabel="ΔP [p.u.]")
+# failing_nodes_idxs = sol.failures_nodes.saveval
+failing_nodes_idxs = all_failing_nodes_idxs
+for (i, l) in pairs(failing_nodes_idxs)
+    t = sol.load_P.t
+    s_ΔP, s_ΔS = get_ΔP_ΔS_at_node(l, sol, network)
+    node_idx = failing_nodes_idxs[i]
+    lines!(ax, t, s_ΔP; label="Node $node_idx", color=node_colors[i], linewidth=linewidth)
+    # plot failure time
+    # tt, s = seriesforidx(sol.load_S, l)
+    # scatter!(ax, (tt[end], s_ΔS[length(tt)]); color=node_colors[i], marker=:star5, markersize=25)
+end
+xlims!(ax, 0, xlim_a)
+
+# ΔP trajectories I=3.0 s^2
+sol = sol13
+task_id = 13
+network = import_system_wrapper(df_config, task_id)
+fig[2,2] = ax = Axis(fig; xlabel="Time [s]", ylabel="ΔP [p.u.]")
+# failing_nodes_idxs = sol.failures_nodes.saveval
+failing_nodes_idxs = all_failing_nodes_idxs
+for (i, l) in pairs(failing_nodes_idxs)
+    t = sol.load_P.t
+    s_ΔP, s_ΔS = get_ΔP_ΔS_at_node(l, sol, network)
+    node_idx = failing_nodes_idxs[i]
+    lines!(ax, t, s_ΔP; label="Node $node_idx", color=node_colors[i], linewidth=linewidth)
+    # plot failure time
+    # tt, s = seriesforidx(sol.load_S, l)
+    # scatter!(ax, (tt[end], s_ΔS[length(tt)]); color=node_colors[i], marker=:star5, markersize=25)
+end
+xlims!(ax, 0, xlim_b)
+
+
+# ΔP trajectories I=20.0 s^2
+sol = sol17
+task_id = 17
+network = import_system_wrapper(df_config, task_id)
+fig[2,3] = ax = Axis(fig; xlabel="Time [s]", ylabel="ΔP [p.u.]")
+# failing_nodes_idxs = sol.failures_nodes.saveval
+failing_nodes_idxs = all_failing_nodes_idxs
+for (i, l) in pairs(failing_nodes_idxs)
+    t = sol.load_P.t
+    s_ΔP, s_ΔS = get_ΔP_ΔS_at_node(l, sol, network)
+    node_idx = failing_nodes_idxs[i]
+    lines!(ax, t, s_ΔP; label="Node $node_idx", color=node_colors[i], linewidth=linewidth)
+    # # plot failure time
+    # tt, s = seriesforidx(sol.sol, l)
+    # scatter!(ax, (tt[end], s_ΔP[length(tt)]); color=node_colors[i], marker=:star5, markersize=25)
+end
+xlims!(ax, -1., xlim_c)
+
+fig
