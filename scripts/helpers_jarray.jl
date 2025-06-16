@@ -5,18 +5,19 @@ utilities for running the same experiments on different machines.
 @assert VERSION == v"1.11.0"
 const ON_YOGA = occursin("L7440", gethostname())
 const ON_PIK_HPC = occursin("cs", gethostname())
+# const ON_PIK_HPC = occursin("login", gethostname())
 const ON_POOL = occursin("pool", gethostname())
 
 @info "Initialize environment"
 if ON_YOGA
     PKG_DIR = "/home/brandner/.julia/dev/DynamicCascades"
-    server_string = "L7440_"
+    server_string = "L7440"
 elseif ON_PIK_HPC
     PKG_DIR = "/home/brandner/DynamicCascades.jl"
-    server_string = "PIK_HPC_"
+    server_string = "PIK_HPC"
 elseif ON_POOL
     PKG_DIR = "/users/stud/brandner/MA/repos/DynamicCascades.jl"
-    server_string = "POOL_"
+    server_string = "POOL"
 end
 
 

@@ -1,4 +1,4 @@
-include(abspath(@__DIR__, "..", "scripts/helpers_jarray.jl"))
+include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
 
 # PARAMETERS ###################################################################
 exp_name_date = ARGS[2]
@@ -27,7 +27,7 @@ end
 
 
 # SIMULATION ###################################################################
-_,_,_,freq_bound,trip_lines,trip_nodes,init_pert,_ = RTS_get_network_args_stripped(df_config, task_id)
+_,_,_,freq_bound,trip_lines,trip_nodes,_,_ = RTS_get_network_args_stripped(df_config, task_id)
 gen_model = exp_params_dict[:gen_model]
 solver = exp_params_dict[:solver]
 
@@ -35,7 +35,7 @@ solver = exp_params_dict[:solver]
 network = RTS_import_system_wrapper(df_config, task_id)
 
 # read in steady state. The steady state is the same for all simulations
-x_static = DataFrame(CSV.File(abspath(@__DIR__, "..", "data/RTS-GMLC/steady_state_RTS-GMLC_20250604.csv"))).SteadyState
+x_static = DataFrame(CSV.File(abspath(@__DIR__, "..", "..", "data/RTS-GMLC/steady_state_RTS-GMLC_20250604.csv"))).SteadyState
 
 number_failures_lines = Float64[]
 number_failures_nodes = Float64[]
@@ -44,7 +44,6 @@ for i in 1:ne(network)
                     gen_model=gen_model,
                     x_static=x_static,
                     initial_fail = Int[i],
-                    init_pert = init_pert,
                     tspan = (0, 100000),
                     trip_lines = trip_lines,
                     trip_nodes = trip_nodes,

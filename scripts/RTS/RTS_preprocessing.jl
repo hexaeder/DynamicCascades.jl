@@ -7,36 +7,27 @@ end
 # PARAMETERS ###################################################################
 
 # Experiment name
-name = "RTS_test_new_ND_"
-long_name = "This is the long name of the experiment" # for providing more details
+name = "RTS_exp04_variation_frequency+inertia_"
+long_name = "Variation of frequency and inertia in the line and node failure model." # for providing more details
+using OrdinaryDiffEq
 solver = Rodas4P()
 
 
 # MetaGraph params ###############
-# inertia_values = [0.2, 0.5, 1.0, 3.0, 5.0, 7.5, 10.0, 20.0, 30.0]
-# inertia_values = [0.2, 0.5, 0.8, 1.1, 1.4, 1.7, 2.0, 3.0, 4.0, 5.1, 6.1, 7.1, 8.0, 9.0, 10.0, 15.0, 21.0]
-inertia_values = [0.2, 1.0]
+inertia_values = [0.2, 0.5, 0.8, 1.0, 1.4, 1.7, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 20.0]
 γ_vals = 0.1 # damping swing equation nodes γ
 τ_vals = 0.01 # time constant τ
 N_ensemble_size = 1
 
 # Cascading params ##############
-init_pert = [:line] # initial perturbation set constant to an initial line failure
-
+init_pert = [:line] # initial perturbation
 monitored_power_flow = :apparent
 
 # frequency bounds
-# freq_bounds = [0.40, 0.42, 0.44, 0.46, 0.48, 0.49, 0.50, 0.51, 0.52, 0.53, 0.54, 0.55, 0.56, 0.57, 0.58, 0.59, 0.60, 0.61, 0.62, 0.63, 0.64, 0.66, 0.68, 0.70]
-# freq_bounds = [0.01, 0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20, 0.22, 0.24, 0.26, 0.28, 0.30, 0.32, 0.34, 0.36, 0.38, 0.72, 0.74, 0.8, 0.85, 0.90, 1.00, 1.2, 1.4, 1.6, 1.8, 2.0]
-
-# freq_bounds = [0.01, 0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20, 0.22, 0.24, 0.26, 0.28, 0.30,
-#     0.32, 0.34, 0.36, 0.38, 0.40, 0.42, 0.44, 0.46, 0.48, 0.49, 0.50, 0.51, 0.52, 0.53, 0.54,
-#     0.55, 0.56, 0.57, 0.58, 0.59, 0.60, 0.61, 0.62, 0.63, 0.64, 0.66, 0.68, 0.70, 0.72, 0.74,
-#     0.8, 0.85, 0.90, 1.00, 1.2, 1.4, 1.6, 1.8, 2.0] # combined runs
-
-# freq_bounds = [0.01, 0.08, 0.16, 0.24, 0.32, 0.40, 0.48, 0.56, 0.64, 0.70, 0.8, 0.90, 1.00, 1.2, 1.4, 1.6] # nodes only
-# freq_bounds = [0.48]
-freq_bounds = [0.14, 0.64]
+freq_bounds = [0.01, 0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20, 0.22, 0.24, 0.26, 0.28, 0.30,
+    0.32, 0.34, 0.36, 0.38, 0.40, 0.42, 0.44, 0.46, 0.48, 0.49, 0.50, 0.51, 0.52, 0.53, 0.54,
+    0.55, 0.56, 0.57, 0.58, 0.59, 0.60, 0.61, 0.62, 0.63, 0.64, 0.66, 0.68, 0.70, 0.72, 0.74,
+    0.8, 0.85, 0.90, 1.00, 1.2, 1.4, 1.6, 1.8, 2.0]
 
 # failure_modes = [trip_lines, trip_nodes]
 # failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
@@ -109,7 +100,7 @@ exp_name_date_dict = Dict(
     :N_inertia => N_inertia,
     )
 
-CSV.write("sbatch_dict_$name.csv", exp_name_date_dict, writeheader=false) # TODO adapt
+CSV.write("sbatch_dict_$name.csv", exp_name_date_dict, writeheader=false)
 
 
 # Generate directories

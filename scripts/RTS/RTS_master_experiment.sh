@@ -1,11 +1,11 @@
 #!/bin/bash
 
 ############################## Parameters to be chosen #########################
-name=RTS_test_new_ND_
-# inertia_values=[0.2, 0.5, 0.8, 1.1, 1.4, 1.7, 2.0, 3.0, 4.0, 5.1, 6.1, 7.1, 8.0, 9.0, 10.0, 15.0, 21.0]
+name=RTS_exp04_variation_frequency+inertia_
+# inertia_values = [0.2, 0.5, 0.8, 1.0, 1.4, 1.7, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 20.0]
 qos_array=(short short short short short short short short short short short short short short short short short)
-times_array=(1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00 1-00:00:00)
-cpus_array=(4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4)
+times_array=(0-03:00:00 0-03:00:00 0-03:00:00 0-04:00:00 0-04:00:00 0-04:00:00 0-05:00:00 0-05:00:00 0-05:00:00 0-06:00:00 0-06:00:00 0-06:00:00 0-07:00:00 0-07:00:00 0-08:00:00 0-08:00:00 0-08:00:00)
+cpus_array=(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)
 
 ############################## Preprocessing ###################################
 echo "------------------------------------------------------------"
@@ -17,7 +17,7 @@ echo "------------------------------------------------------------"
 PREPROC=$(sbatch RTS_preprocessing_HPC.sh | cut -f 4 -d' ')
 echo "SLURM JOB ID Preprocessing: $PREPROC"
 
-sleeptime=200
+sleeptime=500
 echo "Sleeping $sleeptime seconds until variables for Slurm are assigned."
 sleep $sleeptime
 

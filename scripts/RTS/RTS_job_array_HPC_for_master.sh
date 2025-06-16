@@ -15,7 +15,4 @@ job_array_index=$2
 
 cd /home/brandner/DynamicCascades.jl/scripts/RTS
 
-# module purge
-# module load julia/1.8.2
-
 julia RTS_job.jl $SLURM_ARRAY_TASK_ID $exp_name_date $job_array_index

@@ -10,9 +10,9 @@ using Unitful
 export DATA_DIR, MA_DATA, RESULTS_DIR, PLOT_DIR, MA_DIR, RES_GEN_NET # , F_BELEG_DIR
 export ON_YOGA, ON_PIK_HPC, ON_POOL
 
-# @assert VERSION == v"1.8.4"
 const ON_YOGA = occursin("L7440", gethostname())
 const ON_PIK_HPC = occursin("cs", gethostname())
+# const ON_PIK_HPC = occursin("login", gethostname())
 const ON_POOL = occursin("pool", gethostname())
 
 if ON_YOGA
