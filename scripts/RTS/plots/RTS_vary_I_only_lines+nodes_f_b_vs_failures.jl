@@ -1,8 +1,6 @@
 """
 """
 #  NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE Check normalized sum of lines and nodes again.
-include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
-
 
 
 using GraphMakie
@@ -11,16 +9,16 @@ using CairoMakie
 
 
 # plotting parameters
-create_posprocessing_data = true # set to `false` for fast plotting
-sum_lines_nodes = true
-normalize = false
+create_posprocessing_data = false # set to `false` for fast plotting
+sum_lines_nodes = false
+normalize = true
 opacity = 0.30
 fontsize = labelsize = 25
 # markers
 marker = (:circle, ":circle")
 markersize = 7
 
-exp_name_date = "RTS_exp01+exp02_uebergang_frequency"
+exp_name_date = "RTS_exp04_variation_frequency+inertia_PIK_HPC_20250616_213442.721"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 # left_out_frequencies = [0.01, 0.08, 0.1, 0.12, 0.14, 0.16, 0.18, 0.20, 0.22, 0.26, 0.28, 0.30,
 #     0.32, 0.34, 0.36, 0.38, 0.40, 0.42, 0.44, 0.46, 0.48, 0.49, 0.51, 0.52, 0.53, 0.54, 0.55,
@@ -33,124 +31,10 @@ left_out_frequencies = [0.01, 0.08, 1.8, 2.0]
 ###################### Calculate mean and standard error #######################
 ################################################################################
 if create_posprocessing_data == true
-    # load config file, and parameters
-    df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
-    exp_params_dict = Serialization.deserialize(joinpath(exp_data_dir, "exp.params"))
-
-    N_ensemble_size = exp_params_dict[:N_ensemble_size]
-    num_parameter_combinations = Int(length(df_config[!,:ArrayTaskID])/N_ensemble_size)
-
-    df_avg_error = deepcopy(df_config)
-
-    # Delete columns
-    select!(df_avg_error, Not([:ensemble_element]))
-
-    # Keep only the first N_rows rows
-    df_avg_error = df_avg_error[1:num_parameter_combinations, :]
-
-    # add columns to df
-    # normalized
-    df_avg_error[!, :ensemble_avg_norm_avg_line_failures] .= NaN; df_avg_error[!, :ensemble_avg_norm_avg_node_failures] .= NaN;
-    df_avg_error[!, :ensemble_SE_norm_avg_line_failures] .= NaN; df_avg_error[!, :ensemble_SE_norm_avg_node_failures] .= NaN;
-    df_avg_error[!, :ensemble_SE_norm_avg_node_plus_line_failures] .= NaN
-
-    # not normalized
-    df_avg_error[!, :ensemble_avg_line_failures] .= NaN; df_avg_error[!, :ensemble_avg_node_failures] .= NaN;
-    df_avg_error[!, :ensemble_SE_line_failures] .= NaN; df_avg_error[!, :ensemble_SE_node_failures] .= NaN;
-    df_avg_error[!, :ensemble_SE_avg_node_plus_line_failures] .= NaN
-
-    # DataFrame with failures for ALL ArrayTaskIDs
-    df_all_failures = deepcopy(df_config)
-    df_all_failures[!, :avg_line_failures] .= NaN ; df_all_failures[!, :avg_node_failures] .= NaN;
-    df_all_failures[!, :norm_avg_line_failures] .= NaN ; df_all_failures[!, :norm_avg_node_failures] .= NaN;
-
-    #= NOTE / ENHANCEMENT: [2024-02-04 So]
-    Here, `network` is only generated once. This is possible as all WS networks in one
-    experiment have the same number of lines and nodes. If other networks are used, where
-    in an ensemble of networks the number of lines and nodes varies (e.g. `:erdosrenyi`),
-    `network` has to be generated for each element of the ensemble. The optimal soulution
-    would the be to save `ne(network)` and `nv(network)` in df_config while preprocessing
-    (Straighforward to implement but not necessarily needed).
-    =#
-    network = RTS_import_system_wrapper(df_config, 1)
-    # Find numer of (potentially failing) generator nodes.
-    if [get_prop(network,i,:type) for i in 1:nv(network)] == [:gen for i in 1:nv(network)]
-        # This is the case for WS networks where initially all nodes are swing equation nodes.
-        nr_gen_nodes = nv(network)
-    else
-        # This is the case for the RTS testcases where initially NOT all nodes are swing equation nodes.
-        nd, = nd_model(network)
-        ω_state_idxs = idx_containing(nd, "ω")
-        gen_node_idxs = map(s -> parse(Int, String(s)[4:end]), nd.syms[ω_state_idxs])
-        nr_gen_nodes = length(gen_node_idxs)
-    end
-
-
-    for task_id in df_avg_error.ArrayTaskID
-        # loop over all elements of an ensemble
-        avg_line_failures_ensemble = Float64[]; avg_node_failures_ensemble = Float64[]
-        norm_avg_line_failures_ensemble = Float64[]; norm_avg_node_failures_ensemble = Float64[]
-        for i in 0:num_parameter_combinations:(length(df_config[!,:ArrayTaskID]) - 1)
-            # try...catch is for execution of postprocessing while not all jobs have finished
-            try
-                M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = RTS_get_network_args_stripped(df_config, (task_id + i))
-
-                exp_data = joinpath(RESULTS_DIR, exp_name_date)
-                graph_combinations_path = exp_data
-
-                failure_mode_string = joinpath(graph_combinations_path, "trip_lines=$trip_lines,trip_nodes=$trip_nodes")
-                failure_mode_frequ_bound = joinpath(failure_mode_string, "trip_lines=$trip_lines,trip_nodes=$trip_nodes,freq_bound=$freq_bound")
-
-                # USE THIS ONLY FOR SINGLE EXPERIMENT ###############################
-                filename = string("/", RTS_string_network_args(df_config, task_id + i), ".csv")
-                df_result = DataFrame(CSV.File(string(failure_mode_frequ_bound, filename)))
-                ################################################################
-
-                number_failures_lines = df_result[!, :number_failures_lines]
-                number_failures_nodes = df_result[!, :number_failures_nodes]
-
-                # average of a single run (one set of parameters, averaged over the number of lines of the network)
-                # normalized
-                norm_avg_line_failures = mean(number_failures_lines)/(ne(network)-1)
-                norm_avg_node_failures = mean(number_failures_nodes)/nr_gen_nodes
-                push!(norm_avg_line_failures_ensemble, norm_avg_line_failures)
-                push!(norm_avg_node_failures_ensemble, norm_avg_node_failures)
-                # not normalized
-                avg_line_failures = mean(number_failures_lines)
-                avg_node_failures = mean(number_failures_nodes)
-                push!(avg_line_failures_ensemble, avg_line_failures)
-                push!(avg_node_failures_ensemble, avg_node_failures)
-
-                # normalized
-                df_all_failures[(task_id + i), :norm_avg_line_failures] = norm_avg_line_failures
-                df_all_failures[(task_id + i), :norm_avg_node_failures] = norm_avg_node_failures
-                # not normalized
-                df_all_failures[(task_id + i), :avg_line_failures] = avg_line_failures
-                df_all_failures[(task_id + i), :avg_node_failures] = avg_node_failures
-
-            catch
-                continue
-            end
-        end
-        # Calculate ensemble_avg and ensemble_standard_error and write to df
-        # normalized
-        df_avg_error[task_id,:ensemble_avg_norm_avg_line_failures] = mean(norm_avg_line_failures_ensemble)
-        df_avg_error[task_id,:ensemble_avg_norm_avg_node_failures] = mean(norm_avg_node_failures_ensemble)
-        df_avg_error[task_id,:ensemble_SE_norm_avg_line_failures] = 1 / sqrt(N_ensemble_size) * std(norm_avg_line_failures_ensemble; corrected=true)
-        df_avg_error[task_id,:ensemble_SE_norm_avg_node_failures] = 1 / sqrt(N_ensemble_size) * std(norm_avg_node_failures_ensemble; corrected=true)
-        df_avg_error[task_id,:ensemble_SE_norm_avg_node_plus_line_failures] = 1 / sqrt(N_ensemble_size) * std((norm_avg_line_failures_ensemble + norm_avg_node_failures_ensemble); corrected=true)
-
-        # not normalized
-        df_avg_error[task_id,:ensemble_avg_line_failures] = mean(avg_line_failures_ensemble)
-        df_avg_error[task_id,:ensemble_avg_node_failures] = mean(avg_node_failures_ensemble)
-        df_avg_error[task_id,:ensemble_SE_line_failures] = 1 / sqrt(N_ensemble_size) * std(avg_line_failures_ensemble; corrected=true)
-        df_avg_error[task_id,:ensemble_SE_node_failures] = 1 / sqrt(N_ensemble_size) * std(avg_node_failures_ensemble; corrected=true)
-        df_avg_error[task_id,:ensemble_SE_avg_node_plus_line_failures] = 1 / sqrt(N_ensemble_size) * std((avg_line_failures_ensemble + avg_node_failures_ensemble); corrected=true)
-    end
-
-    CSV.write(joinpath(RESULTS_DIR, exp_name_date, "avg_error.csv"), df_avg_error)
-    CSV.write(joinpath(RESULTS_DIR, exp_name_date, "all_failures.csv"), df_all_failures)
+    postprocess_jarray_data(exp_name_date)
 end
+df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
+exp_params_dict = Serialization.deserialize(joinpath(exp_data_dir, "exp.params"))
 
 
 ################################################################################
@@ -164,7 +48,7 @@ for i in inertia_values
     left_out_inertia_values = filter(x -> x != i, deepcopy(inertia_values))
 
 
-    fig_lines_and_nodes = Figure(fontsize = fontsize)
+    fig_lines_and_nodes = Figure(size=(800,600),fontsize = fontsize)
     ax_lines_and_nodes = Axis(fig_lines_and_nodes[1, 1], xticklabelrotation=π/2,
     # title = sum_lines_nodes ? "Summed line and node failures" : "Line and node failures",
     xlabel = "Frequency bound f_b [Hz]",
