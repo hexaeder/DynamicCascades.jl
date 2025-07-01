@@ -1,5 +1,4 @@
-includet(abspath(@__DIR__, "..", "helpers_jarray.jl"))
-includet(abspath(@__DIR__, "WS_trajectories_new_ND_single_model_port.jl"))
+includet(abspath(@__DIR__, "..", "..", "..","helpers_jarray.jl"))
 
 using DynamicCascades
 using NetworkDynamics
@@ -62,15 +61,38 @@ exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 sub_dir = "general_investigations"
 initial_fail = 35
 task_id = 68 # 140
-sol = inspect_failing(exp_data_dir, sub_dir, task_id, initial_fail)
-set_sol!(sol) # optional if after inspect(sol)
+# sol = inspect_failing(exp_data_dir, sub_dir, task_id, initial_fail)
+
+# ωmax = 0.251
+# Find steady state...
+# Shutdown line 35 at t=0.1
+# Vertex 58 tripped at t=1.6799790081136325
+sol = simulate(exp_name_date, 68, initial_fail;
+    gen_model=SwingDynLoadModel,
+    tspan=(0., 40.),
+    solverargs = (;dtmax=0.01),
+    verbose = true);
+
+# ωmay = 0.503
+# Find steady state...
+# Shutdown line 35 at t=0.1
+# Line 142 tripped at t=2.3283051398978425
+# Vertex 58 tripped at t=2.941264178376854
+sol2 = simulate(exp_name_date, 140, initial_fail;
+    gen_model=SwingDynLoadModel,
+    tspan=(0., 40.),
+    solverargs = (;dtmax=0.01),
+    verbose = true);   
+
+inspect(sol)
 set_state!(; t=0.06009656910048066, tmin=0.0, tmax=4.810359414780986)
 set_graphplot!(; nstate=[:ω], estate=[:S], nstate_rel=false, estate_rel=false, ncolorrange=(-0.25132743f0, 0.25132743f0), ecolorrange=(0.0f0, 1.8353579f0))
 define_timeseries!([
     (; selcomp=[VIndex(58), VIndex(60)], states=[:ω, :ωmax], rel=false),
     (; selcomp=[EIndex(35), EIndex(142)], states=[:S, :rating], rel=false),
-])
-
+    ])
+    
+set_sol!(sol) # optional if after inspect(sol)
 
 
 

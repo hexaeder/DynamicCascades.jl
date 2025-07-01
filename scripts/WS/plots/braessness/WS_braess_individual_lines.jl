@@ -2,9 +2,6 @@
 Plotting scripts: Braessness of individual lines.
 """
 
-include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
-
-
 using DynamicCascades
 using Graphs
 using MetaGraphs
@@ -60,12 +57,6 @@ function get_task_id(df, f_b, I, ensemble_element)
     end
 end
 
-
-if "graph_seed" in names(df_config)
-    println("Column graph_seed exists")
-else
-    println("No graph_seed column")
-end
 
 
 """
@@ -438,33 +429,40 @@ markersize = 8
 ######
 ###### WS
 ######
-exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250321_171511.976"
+# exp_name_date = "WS_k=4_exp10_vary_I_only_lines_and_nodes_N=20_PIK_HPC_K_=3,N_G=16_20250410_185732.694"
+exp_name_date = "WS_k=4_exp12_vary_I_only_lines_and_nodes_change_Pmech_complement_f_bPIK_HPC_K_=3,N_G=32_20250420_142151.671"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 
 # choose inertia
 I = 7.5
 freq_bounds = [0.03, 0.15]
+# freq_bounds = [0.005, 0.01, 0.015, 0.02, 0.025, 0.03, 0.035, 0.04, 0.045, 0.05, 0.055, 0.06, 0.065, 0.07, 0.075, 0.08, 0.085, 0.09, 0.095, 0.1, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.22, 0.25, 0.3, 0.8]
 
-# write_failures_f_b_to_df(exp_name_date, freq_bounds, I)
-# write_network_measures_to_df(exp_name_date) # NOTE For WS set `res_tol=1e-5,` in `steadystate`
+write_failures_f_b_to_df(exp_name_date, freq_bounds, I)
+write_network_measures_to_df(exp_name_date) # NOTE For WS set `res_tol=1e-5,` in `steadystate`
 
 # choose `f_b_narrow` and `f_b_wide`
 f_b_narrow = 0.03
 f_b_wide = 0.15
+
+# f_b_narrow = 0.03
+# f_b_wide = 0.035
+
 N_nodes = Serialization.deserialize(joinpath(RESULTS_DIR, exp_name_date, "exp.params"))[:N_nodes]
+model = SwingDynLoadModel_change_Pmech_only
 
 ###
 ### Braessness histograms
 ###
 ## Braessness vs rho
 fig = plot_braessness_vs_rho_scatter_and_histograms(exp_name_date, f_b_narrow, f_b_wide, I)
-# CairoMakie.save(joinpath(exp_data_dir, "braessness_lines", "scatter_histograms_and_rho_braessness_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.pdf"),fig)
-# CairoMakie.save(joinpath(exp_data_dir, "braessness_lines", "scatter_histograms_and_rho_braessness_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.png"),fig)
+CairoMakie.save(joinpath(exp_data_dir, "braessness_lines", "scatter_histograms_and_rho_braessness_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.pdf"),fig)
+CairoMakie.save(joinpath(exp_data_dir, "braessness_lines", "scatter_histograms_and_rho_braessness_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.png"),fig)
 
 ## Braessness vs distance
 fig = plot_braessness_vs_dist_histograms(exp_name_date, f_b_narrow, f_b_wide, I)
-# CairoMakie.save(joinpath(exp_data_dir, "braessness_lines", "braessness_dist_braessness_histogram_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.pdf"),fig)
-# CairoMakie.save(joinpath(exp_data_dir, "braessness_lines", "braessness_dist_braessness_histogram_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.png"),fig)
+CairoMakie.save(joinpath(exp_data_dir, "braessness_lines", "braessness_dist_braessness_histogram_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.pdf"),fig)
+CairoMakie.save(joinpath(exp_data_dir, "braessness_lines", "braessness_dist_braessness_histogram_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.png"),fig)
 
 
 ### 
@@ -637,19 +635,22 @@ fig
 ######
 ###### RTS
 ######
-exp_name_date = "RTS_exp01+exp02_uebergang_frequency"
+exp_name_date = "RTS_exp04_variation_frequency+inertia_PIK_HPC_20250616_213442.721"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 
 # choose inertia
-I = 5.1 # scaling factor
-freq_bounds = [0.24, 0.7]
+I = 3 # scaling factor
+freq_bounds = [0.01, 0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20, 0.22, 0.24, 0.26, 0.28, 0.30,
+    0.32, 0.34, 0.36, 0.38, 0.40, 0.42, 0.44, 0.46, 0.48, 0.49, 0.50, 0.51, 0.52, 0.53, 0.54,
+    0.55, 0.56, 0.57, 0.58, 0.59, 0.60, 0.61, 0.62, 0.63, 0.64, 0.66, 0.68, 0.70, 0.72, 0.74,
+    0.8, 0.85, 0.90, 1.00, 1.2, 1.4, 1.6, 1.8, 2.0]
 
 # write_failures_f_b_to_df(exp_name_date, freq_bounds, I)
 # write_network_measures_to_df(exp_name_date)
 
 # choose `f_b_narrow` and `f_b_wide`
-f_b_narrow = 0.24
-f_b_wide = 0.7
+f_b_narrow = 0.3
+f_b_wide = 1.0
 N_nodes = 73 # nv(import_system(:rtsgmlc))
 
 
@@ -675,14 +676,13 @@ braessness_lines, braessness_nodes = get_braessness(exp_name_date, f_b_narrow, f
 braessness_lines_plus_nodes = braessness_lines .+ braessness_nodes
 x_ρ, x_dist = get_network_measures(exp_name_date);
 
-
 # TODO maybe check rating
 # TODO check trajectories
 ## line 37
 line = 37
 edge = collect(edges(import_system(:rtsgmlc).graph))[line] # Edge 21(gen) => 73(load)
 braessness_lines_plus_nodes[line] # 0
-x_ρ[line] # 3.89
+x_ρ[line] # 3.98
 x_dist[line] # 17
 
 ## line 73

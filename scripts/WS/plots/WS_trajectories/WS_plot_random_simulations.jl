@@ -1,5 +1,5 @@
 include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
-include(abspath(@__DIR__, "WS_trajectories_new_ND_single_model_port.jl"))
+
 
 using DynamicCascades
 using NetworkDynamics
