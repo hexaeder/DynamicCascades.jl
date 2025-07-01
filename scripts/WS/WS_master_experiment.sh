@@ -17,12 +17,12 @@ echo "------------------------------------------------------------"
 PREPROC=$(sbatch WS_preprocessing_HPC.sh | cut -f 4 -d' ')
 echo "SLURM JOB ID Preprocessing: $PREPROC"
 
-sleeptime=300
+sleeptime=500
 echo "Sleeping $sleeptime seconds until variables for Slurm are assigned."
 sleep $sleeptime
 
 # Read the CSV file into a variable
-sbatch_dict=$(cat "/home/brandner/DynamicCascades.jl/scripts/cluster/experiment_jarray/sbatch_dict_$name.csv")
+sbatch_dict=$(cat "/home/brandner/DynamicCascades.jl/scripts/WS/sbatch_dict_$name.csv")
 # Extract index value as an array that may be passed to `--array`
 exp_name_date=$(echo "$sbatch_dict" | grep 'exp_name_date' | cut -d ',' -f 2- | tr -d '[]' | sed 's/"//g')
 job_array_length=$(echo "$sbatch_dict" | grep 'job_array_length' | cut -d ',' -f 2- | tr -d '[]' | sed 's/"//g')
@@ -43,7 +43,7 @@ for job_array_index in $(seq 1 1 $N_inertia); do
     MODEL_JOBARRAY=$(sbatch --depend=afterany:$PREPROC --qos=$qos --time=$time --job-name=$job_name --chdir=$workdir --cpus-per-task=$cpus --array=1-$job_array_length WS_job_array_HPC_for_master.sh $exp_name_date $job_array_index | cut -f 4 -d' ')
     echo "SLURM JOB ID JOBARRAY $job_array_index: $MODEL_JOBARRAY"
     ############################## Postprocessing ##############################
-    POSTPROC=$(sbatch --depend=afterany:$MODEL_JOBARRAY --job-name="sacct_infos_$job_name" --chdir=$sacct_dir sacct_postprocessing.sh $MODEL_JOBARRAY $sacct_dir $job_array_index | cut -f 4 -d' ') 
+    POSTPROC=$(sbatch --depend=afterany:$MODEL_JOBARRAY --job-name="sacct_infos_$job_name" --chdir=$sacct_dir /home/brandner/DynamicCascades.jl/scripts/sacct_postprocessing.sh $MODEL_JOBARRAY $sacct_dir $job_array_index | cut -f 4 -d' ')
     echo "SLURM JOB ID Postprocessing $job_array_index: $POSTPROC"
 done
 

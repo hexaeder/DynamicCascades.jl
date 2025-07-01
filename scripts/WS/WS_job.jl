@@ -1,4 +1,6 @@
-include(abspath(@__DIR__, "..", "scripts/helpers_jarray.jl"))
+include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
+
+# CHECK whole script before simulating
 
 # PARAMETERS ###################################################################
 exp_name_date = ARGS[2]
@@ -25,22 +27,19 @@ if length(ARGS) == 4
     task_id = job_array_index + (task_id -1) * N_inertia * N_freq_bounds + N_inertia * (freq_bound_index - 1)
 end
 
-# in in WS_master_experiment.sh indices der neuen f_b Werte übergeben
-# evtl. auch übergeben, ob complementing run
-
-N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
-monitored_power_flow = exp_params_dict[:monitored_power_flow]
-steadystate_choice = exp_params_dict[:steadystate_choice]
-
-# Alternative of loading graphs that have been generated during postprocessing
-# filepath_graph = df_config[task_id,:filepath]
-# network = loadgraph(filepath_graph, MGFormat())
-#= NOTE Saving graphs takes really long during preprocessing and one needs to save
-a graph for each parameter configuration.
-NOTE hange inertia value of graph in case of loading graphs from .mg-files.
-=> use correct inertia value via set_prop!(network, 1:nv(network), :_M, inertia_values[i] * 1u"s^2") =#
 
 # SIMULATION ###################################################################
+_,k,β,_,_,_,_,_,_,_,_,_,freq_bound,trip_lines,trip_nodes,_,_ = get_network_args_stripped(df_config, task_id)
+gen_model = exp_params_dict[:gen_model]
+solver = exp_params_dict[:solver]
+
+
+# Alternative: Load mathematical graph that has been generated during postprocessing:
+# filepath_graph = df_config[task_id,:filepath_graph]
+# graph = loadgraph(filepath_graph)
+#= NOTE Saving networks takes really long during preprocessing and one needs to save
+a network for each parameter configuration.=#
+    
 # read in network (includes parameters) from df_config
 network = import_system_wrapper(df_config, task_id)
 
@@ -53,24 +52,23 @@ number_failures_lines = Float64[]
 number_failures_nodes = Float64[]
 for i in 1:ne(network)
     sol = simulate(network;
-                   x_static=x_static,
-                   initial_fail = Int[i],
-                   init_pert = init_pert,
-                   tspan = (0, 100000),
-                   trip_lines = trip_lines,
-                   trip_nodes = trip_nodes,
-                   trip_load_nodes = :none,
-                   monitored_power_flow = monitored_power_flow,
-                   f_min = -freq_bound,
-                   f_max = freq_bound,
-                   solverargs = (;dtmax=0.01), # CHECK this severly prolongs simulations
-                   verbose = true);
-    push!(number_failures_lines, length(sol.failures.saveval)-1) # `-1` as we don't want to count the initial failure
-    push!(number_failures_nodes, length(sol.failures_nodes.saveval))
-    # CHECK TODO Replace by
-    # eindices = [i for i in 1:ne(network) if sol(sol.t[end], idxs=eidxs(i, :line_stat))[1] == 0]
-    # vindices = [i for i in 1:nv(network) if sol(sol.t[end], idxs=vidxs(i, :node_swing_stat))[1] == 0]
+                    gen_model=gen_model,
+                    x_static=x_static,
+                    initial_fail = Int[i],
+                    tspan = (0, 100000),
+                    trip_lines = trip_lines,
+                    trip_nodes = trip_nodes,
+                    freq_bound = freq_bound,
+                    solver = solver,
+                    solverargs = (;reltol=1e-8, abstol=1e-6),
+                    verbose = true);
 
+    nw = NetworkDynamics.extract_nw(sol)
+    idxs_init_swing = map(idx -> idx.compidx, vidxs(nw, :, "ω")) # indices that are initially swing nodes
+    all_failing_nodes_idxs = [i for i in idxs_init_swing if sol(sol.t[end], idxs=vidxs(i, :node_swing_stat))[1] == 0]
+    all_failing_lines_idxs = [i for i in 1:ne(nw) if sol(sol.t[end], idxs=eidxs(i, :line_stat))[1] == 0]
+    push!(number_failures_nodes, length(all_failing_nodes_idxs))
+    push!(number_failures_lines, length(all_failing_lines_idxs)-1) # `-1` as we don't want to count the initial failure
 end
 df_failures = DataFrame()
 df_failures[!, :number_failures_lines] = number_failures_lines
