@@ -7,7 +7,7 @@ function plot_simulation(sol)
 
     # calculate indices of failing lines and nodes
     idxs_init_swing = map(idx -> idx.compidx, vidxs(nw, :, "ω")) # indices that are initially swing nodes
-    all_failing_nodes_idxs = [i for i in idxs_init_swing if sol(sol.t[end], idxs=vidxs(i, :node_swing_stat))[1] == 0]
+    all_failing_nodes_idxs = [i for i in idxs_init_swing if sol(sol.t[end], idxs=vidxs(i, :node_swing_stat))[1] != 1]
     all_failing_lines_idxs = [i for i in 1:ne(nw) if sol(sol.t[end], idxs=eidxs(i, :line_stat))[1] == 0]
     node_colors_failing = distinguishable_colors(length(all_failing_nodes_idxs))
     line_colors_failing = distinguishable_colors(length(all_failing_lines_idxs))

@@ -48,15 +48,22 @@ end
         τ = 1.0, [description = "dyn load time constant"]
         Pload = 1.0, [description = "Load Power"]
         # parameters for callback
-        node_swing_stat = 1, [description = "If 1, the node is functional (gen + load), if 0, it is only a load"]
+        node_swing_stat = 1, [description = """ indicates node type: 
+                                                1: swing node
+                                                0: full failure (inertia failure and power failure)
+                                                2: inertia failure
+                                                3: power failure """]
         ωmax = Inf, [description = "Maximum rotor frequency, used in callback"]
     end
     @equations begin
-        Dt(θ) ~ ifelse(node_swing_stat > 0 ,
-            ω,                  # gen mode
+        #= #NOTE depending on `node_swing_stat`, `Pmech` is set to zero in CB. `Pmech` is
+        kept in the follwing equations to allow changing `Pmech` to other values than zero 
+        without changing these equations.=#
+        Dt(θ) ~ ifelse((node_swing_stat == 1) | (node_swing_stat == 3),
+            ω,                          # gen mode
             1/τ * (Pmech - Pload + Pel) # load mode, # NOTE Pmech is set to zero in CB
         )
-        Dt(ω) ~ ifelse(node_swing_stat > 0,
+        Dt(ω) ~ ifelse((node_swing_stat == 1) | (node_swing_stat == 3),
             1/M * (Pmech - Pload - D*ω + Pel), # gen mode
             0.0                                # load mode
         )
@@ -92,6 +99,8 @@ end
     end
 end
 
+#= TODO Reduce code duplification in `SwingDynLoadModel`, `SwingDynLoadModel_change_Pmech_only` 
+and `SwingDynLoadModel_change_to_BH_only` by defining different `affect`-functions.=#
 function SwingDynLoadModel(; vidx=nothing, kwargs...)
     model = SwingDynLoad(name = :swing_dyn_load; kwargs...)
     vm = VertexModel(model, [:Pel], [:θ])
@@ -105,29 +114,8 @@ function SwingDynLoadModel(; vidx=nothing, kwargs...)
     end
     affect = ComponentAffect([:ω], [:node_swing_stat,:Pmech]) do u, p, ctx
         println("Vertex $(ctx.vidx) tripped at t=$(ctx.integrator.t)")
-        u[:ω] = 0.0 # HACK This is doppeltgemoppelt as ω is set to zero in `@mtkmodel SwingDynLoad`
+        u[:ω] = 0.0
         p[:node_swing_stat] = 0
-        p[:Pmech] = 0
-    end
-    cb = ContinousComponentCallback(cond, affect)
-    set_callback!(vm, cb)
-    vm
-end
-
-function SwingDynLoadModel_change_Pmech_only(; vidx=nothing, kwargs...)
-    model = SwingDynLoad(name = :swing_dyn_load_change_Pmech_only; kwargs...)
-    vm = VertexModel(model, [:Pel], [:θ])
-    !isnothing(vidx) && set_graphelement!(vm, vidx)
-
-    # define callback, but only if :ωmax != Inf
-    get_default(vm, :ωmax) == Inf && return vm
-
-    cond = ComponentCondition([:ω], [:ωmax]) do u, p, t
-        abs(u[:ω]) - p[:ωmax]
-    end
-    affect = ComponentAffect([:ω], [:node_swing_stat,:Pmech]) do u, p, ctx
-        Pmech = p[:Pmech]
-        println("Vertex $(ctx.vidx): Pmech=$Pmech set to Pmech=0 at t=$(ctx.integrator.t)")
         p[:Pmech] = 0
     end
     cb = ContinousComponentCallback(cond, affect)
@@ -150,7 +138,28 @@ function SwingDynLoadModel_change_to_BH_only(; vidx=nothing, kwargs...)
     affect = ComponentAffect([:ω], [:node_swing_stat]) do u, p, ctx
         println("Vertex $(ctx.vidx): Node changed to BH (Pmech kept constant) at t=$(ctx.integrator.t)")
         u[:ω] = 0.0
-        p[:node_swing_stat] = 0
+        p[:node_swing_stat] = 2
+    end
+    cb = ContinousComponentCallback(cond, affect)
+    set_callback!(vm, cb)
+    vm
+end
+
+function SwingDynLoadModel_change_Pmech_only(; vidx=nothing, kwargs...)
+    model = SwingDynLoad(name = :swing_dyn_load_change_Pmech_only; kwargs...)
+    vm = VertexModel(model, [:Pel], [:θ])
+    !isnothing(vidx) && set_graphelement!(vm, vidx)
+
+    # define callback, but only if :ωmax != Inf
+    get_default(vm, :ωmax) == Inf && return vm
+
+    cond = ComponentCondition([:ω], [:ωmax]) do u, p, t
+        abs(u[:ω]) - p[:ωmax]
+    end
+    affect = ComponentAffect([:ω], [:node_swing_stat,:Pmech]) do u, p, ctx
+        println("Vertex $(ctx.vidx): Pmech=$(p[:Pmech]) set to Pmech=0 at t=$(ctx.integrator.t)")
+        p[:node_swing_stat] = 3
+        p[:Pmech] = 0
     end
     cb = ContinousComponentCallback(cond, affect)
     set_callback!(vm, cb)

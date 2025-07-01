@@ -37,7 +37,7 @@ end
 # calculate number of line and node failures at end of cascade
 N_nodes = nv(nw)
 N_lines = ne(nw)
-vindices = [i for i in 1:N_nodes if sol(sol.t[end], idxs=vidxs(i, :node_swing_stat))[1] == 0]
+vindices = [i for i in 1:N_nodes if sol(sol.t[end], idxs=vidxs(i, :node_swing_stat))[1] != 1]
 eindices = [i for i in 1:N_lines if sol(sol.t[end], idxs=eidxs(i, :line_stat))[1] == 0]
 number_of_node_failures = length(vindices)
 number_of_line_failures = length(eindices) - 1
@@ -73,7 +73,7 @@ sol = Serialization.deserialize(joinpath(exp_data_dir, "trajectories_braess", "t
 inspect(sol; restart=true, reset=true)
 set_sol!(sol) # optional if after inspect(sol)
 set_graphplot!(; nstate=[:ω], estate=[:S], nstate_rel=false, estate_rel=false)
-vindices = [i for i in 1:N_nodes if sol(sol.t[end], idxs=vidxs(i, :node_swing_stat))[1] == 0]
+vindices = [i for i in 1:N_nodes if sol(sol.t[end], idxs=vidxs(i, :node_swing_stat))[1] != 1]
 eindices = [i for i in 1:N_lines if sol(sol.t[end], idxs=eidxs(i, :line_stat))[1] == 0]
 define_timeseries!([
     (; selcomp=[VIndex(i) for i in vindices], states=[:ω, :ωmax], rel=false),

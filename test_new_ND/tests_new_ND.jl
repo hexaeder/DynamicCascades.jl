@@ -17,10 +17,10 @@ function collect_failure_times(sol, indices, idxs_fun)
     failure_times = Tuple{Int, Float64}[]
     for i in indices
         # check if element i has failed by the end
-        if sol(sol.t[end], idxs = idxs_fun(i))[1] == 0
-            # loop through all (saved) time steps t to find the first j where line_stat/node_swing_stat == 0
+        if sol(sol.t[end], idxs = idxs_fun(i))[1] != 1 # see `SwingDynLoad`
+            # loop through all (saved) time steps t to find the first j where line_stat/node_swing_stat != 1
             for j in eachindex(sol.t)
-                if sol(sol.t[j], idxs = idxs_fun(i))[1] == 0
+                if sol(sol.t[j], idxs = idxs_fun(i))[1] != 1
                     push!(failure_times, (i, sol.t[j]))
                     break
                 end
