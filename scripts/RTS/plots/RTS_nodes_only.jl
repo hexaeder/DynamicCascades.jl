@@ -39,7 +39,7 @@ directories = ["/results_plotting/node_failures_only/20230729_034424.446inertia_
 ang_freq_bounds = [0.24, 0.32, 0.64, 1.59]
 
 # plot data
-fig = Figure(fontsize = fontsize)
+fig = Figure(size=(800,600),fontsize = fontsize)
 Axis(fig[1, 1],
     title = show_title ? "Variation of frequency bounds" : "",
     xlabel = "Scaling factor of inertia I",
