@@ -579,4 +579,78 @@ end
 has_prop(g, keys::KEY_ITER, prop::Symbol) = all(k -> has_prop(g, k, prop), keys)
 
 
+###
+### analyze sol-object
+###
 
+using DataFrames
+
+export describe_failures
+
+"""
+    describe_failures(sol)
+
+Extracts failure times for both nodes and lines from `sol` and returns a DataFrame with columns
+  - `:network_element`  : "name" of the failed vertex or edge,
+  - `:idx`              : integer index of that vertex/edge,
+  - `:failure_time`     : time of failure.
+Rows are sorted by `failure_time`. 
+
+Note that in legacy branch `mwe_old_ND_maybe_plots` the failure times were 
+saved using `SavingCallback`.
+"""
+function describe_failures(sol)
+    nw = NetworkDynamics.extract_nw(sol)
+
+    # collect failure times for nodes and for lines
+    failure_times_swing_nodes = collect_failure_times(sol,
+                                    map(idx -> idx.compidx, vidxs(nw, :, "ω")), # indices that are initially swing nodes
+                                    i -> vidxs(nw, i, :node_swing_stat))
+
+    failure_times_lines = collect_failure_times(sol, 
+                                    1:ne(nw),
+                                    i -> eidxs(nw, i, :line_stat))
+
+    # pair failure times with `network_element` in df
+    rows_nodes = build_rows(failure_times_swing_nodes, NetworkDynamics.describe_vertices(nw))
+    rows_lines = build_rows(failure_times_lines, NetworkDynamics.describe_edges(nw))
+
+    df = DataFrame(vcat(rows_nodes, rows_lines))
+    sort!(df, :failure_time)
+
+    return df
+end
+
+#= helper: returns sorted Vector of with line/node index and failure time.
+`indices`: line/node indices to be checked whether a failure occured
+# `idxs_fun(i)`: e.g. `i -> vidxs(nw, i, :node_swing_stat)` =#
+function collect_failure_times(sol, indices, idxs_fun)
+    failure_times = Tuple{Int, Float64}[]
+    for i in indices
+        # check if element i has failed by the end
+        if sol(sol.t[end], idxs = idxs_fun(i))[1] != 1 # see `SwingDynLoad`
+            # loop through all (saved) time steps t to find the first j where line_stat/node_swing_stat != 1
+            for j in eachindex(sol.t)
+                if sol(sol.t[j], idxs = idxs_fun(i))[1] != 1
+                    push!(failure_times, (i, sol.t[j]))
+                    break
+                end
+            end
+        end
+    end
+    sort!(failure_times, by = x -> x[2]) # sort by second column of tuple
+    return failure_times
+end
+
+#= helper: connects the failure time with the name of the network element (swing_dyn_load, line, etc.)
+that is failing and produces a Vector of NamedTuples (network_element, idx, failure_time)
+desc_df = NetworkDynamics.describe_vertices(nw) or NetworkDynamics.describe_edges(nw)
+with columns :idx and :name. =#
+function build_rows(failure_times::Vector{Tuple{Int,Float64}}, desc_df::DataFrame)
+    rows = NamedTuple[]
+    for (idx, t) in failure_times
+        name = desc_df.name[desc_df.idx .== idx][1]
+        push!(rows, (network_element = name, idx = idx, failure_time = t))
+    end
+    return rows
+end
