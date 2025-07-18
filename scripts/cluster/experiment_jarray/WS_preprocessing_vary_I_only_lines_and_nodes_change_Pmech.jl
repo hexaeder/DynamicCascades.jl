@@ -19,7 +19,7 @@ N_new_freq_bounds = length([2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
 ################################################################################
 
 # Experiment name
-name = "WS_k=4_exp12_vary_I_only_lines_and_nodes_change_Pmech_complement_f_b_"
+name = "WS_k=4_exp12_vary_I_only_lines_and_nodes_change_Pmech_"
 long_name = "Updated version: Without CB triggering multiple times, see commit 8234f4b30fb09993b638392d8320eaf934f35c8c. Only variation of inertia I. As in MA but using the same states for all number_of_task_ids_between_graphs. Line and node failure model. Change Pmech." # for providing more details
 save_graph_and_filepath = true
 solver_name = "Rodas4P()"
@@ -62,8 +62,7 @@ The value in numerator of round(0.1/(2*π) is the angular frequency =#
 # This is frequency not angular frequency
 # freq_bounds = [0.005, 0.010, 0.015, 0.020, 0.025, 0.030, 0.035, 0.040, 0.045, 0.050, 0.055, 0.060, 0.065, 0.070, 0.075, 0.080, 0.085, 0.090, 0.095, 0.100, 0.110, 0.120, 0.130, 0.140, 0.150, 0.160, 0.170, 0.180, 0.190, 0.200, 0.210, 0.220, 0.230, 0.240, 0.250, 0.260, 0.270, 0.280, 0.290, 0.300, 0.800]
 # freq_bounds = [0.005, 0.010, 0.015, 0.020, 0.025, 0.030, 0.035, 0.040, 0.045, 0.050, 0.055, 0.060, 0.065, 0.070, 0.075, 0.080, 0.085, 0.090, 0.095, 0.100, 0.110, 0.120, 0.130, 0.140, 0.150, 0.160, 0.170, 0.220, 0.250, 0.300, 0.800]
-
-freq_bounds = [0.005, 0.010, 0.015, 0.025, 0.030, 0.035, 0.140, 0.150, 0.160]
+freq_bounds = [0.005, 0.01, 0.015, 0.02, 0.025, 0.03, 0.035, 0.04, 0.045, 0.05, 0.055, 0.06, 0.065, 0.07, 0.075, 0.08, 0.085, 0.09, 0.095, 0.1, 0.11, 0.12, 0.8]
 # failure_modes = [trip_lines, trip_nodes]
 # failure_modes = [[:dynamic, :dynamic], [:dynamic, :none], [:none, :dynamic]]
 # failure_modes = [[:dynamic, :dynamic], [:dynamic, :none]]
