@@ -329,7 +329,8 @@ function simulate(exp_name_date, task_id, initial_fail; kwargs...)
 
         # adjust filepaths 
         df_config[!, :filepath_graph] = replace.(df_config[!, :filepath_graph],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
-        # df_config[!, :filepath_steady_state] = replace.(df_config[!, :filepath_steady_state],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
+        df_config[!, :filepath_steady_state] = replace.(df_config[!, :filepath_steady_state],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
+        df_config[!, :filepath_power_injections] = replace.(df_config[!, :filepath_power_injections],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
 
         #= #HACK `import_system_wrapper` generates `networks`, which is a MetaGraph using `watts_strogatz`.
         `watts_strogatz` generates different graphs for different versions of its package (for the same seeds).
@@ -339,9 +340,17 @@ function simulate(exp_name_date, task_id, initial_fail; kwargs...)
         # load graph
         graph = loadgraph(df_config[task_id,:filepath_graph])
 
-        # # load steady state # NOTE Be cautious: States are ordered differently in old/new ND.
-        # steady_state_dict  = CSV.File(df_config[task_id,:filepath_steady_state])
-        # x_static = steady_state_dict[:SteadyState]
+        simulations_executed_with_new_ND = false
+        if simulations_executed_with_new_ND == true
+            # load steady state # NOTE Be cautious: States are ordered differently in old/new ND. 
+            steady_state_dict  = CSV.File(df_config[task_id,:filepath_steady_state])
+            x_static = steady_state_dict[:SteadyState]
+
+            # read in power injections 
+            power_injections_dict = CSV.File(df_config[task_id,:filepath_power_injections])
+            set_prop!(network, 1:nv(network), :Pmech, power_injections_dict[:Pmech])
+            set_prop!(network, 1:nv(network), :Pload, power_injections_dict[:Pload])
+        end
 
     elseif exp_name_date[1:3] == "RTS"
         _,_,_,freq_bound,trip_lines,trip_nodes,_,_ = RTS_get_network_args_stripped(df_config, task_id)
@@ -351,6 +360,7 @@ function simulate(exp_name_date, task_id, initial_fail; kwargs...)
 
     sol = simulate(network;
         graph=graph,
+        x_static= simulations_executed_with_new_ND ? x_static : steadystate(network; graph=graph, verbose, zeroidx=1),
         initial_fail=initial_fail,
         trip_lines=trip_lines,
         trip_nodes=trip_nodes,

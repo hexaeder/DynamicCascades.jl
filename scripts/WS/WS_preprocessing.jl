@@ -70,7 +70,7 @@ exp_name_params = "K_=$K_vals,N_G=$N_ensemble_size"
 exp_name = string(name, server_string, exp_name_params)
 
 ################################################################################
-preprocess(complement_to_existing_exp, existing_exp_name, name, exp_name, long_name,
-    save_graph_and_filepath, solver_name, steadystate_choice, N_ensemble_size, k_vals, β_vals, N_nodes, 
+preprocess_WS(complement_to_existing_exp, existing_exp_name, name, exp_name, long_name,
+    save_network_data, solver_name, steadystate_choice, N_ensemble_size, k_vals, β_vals, N_nodes, 
     inertia_values, K_vals, γ_vals, relate_inertia_and_damping, γ_eq_sq_I, γ_eq_I, τ_vals, σ_vals, μ_vals,
     failure_modes, gen_model, init_pert, freq_bounds, α_vals, monitored_power_flow)

@@ -105,16 +105,15 @@ end
 ###
 ### pre- and postprocessing functions for WS- and RTS-job array framework
 ###
-
-export preprocess, postprocess_jarray_data
+using Dates
+export preprocess_WS, postprocess_jarray_data
 
 #= TODO 
- - This is much slower with new ND. Maybe set `res_tol=1e-6`.
- - use kwargs!!! # BUG 
- - rename as `preprocess_WS`
+ - This is much slower with new ND. Not thoroughly tested why this is the case. Set `res_tol=1e-6` for small performance increase.
+ - use kwargs!!!
 =# 
-function preprocess(complement_to_existing_exp, existing_exp_name, name, exp_name, long_name,
-    save_graph_and_filepath, solver_name, steadystate_choice, N_ensemble_size, k_vals, β_vals, N_nodes, 
+function preprocess_WS(complement_to_existing_exp, existing_exp_name, name, exp_name, long_name,
+    save_network_data, solver_name, steadystate_choice, N_ensemble_size, k_vals, β_vals, N_nodes, 
     inertia_values, K_vals, γ_vals, relate_inertia_and_damping, γ_eq_sq_I, γ_eq_I, τ_vals, σ_vals, μ_vals,
     failure_modes, gen_model, init_pert, freq_bounds, α_vals, monitored_power_flow;
     max_trials = 1000)
@@ -134,7 +133,7 @@ function preprocess(complement_to_existing_exp, existing_exp_name, name, exp_nam
 
     # Writing parameters to files
     exp_params_dict = Dict(
-        :save_graph_and_filepath => save_graph_and_filepath,
+        :save_network_data => save_network_data,
         :exp_name => exp_name, :long_name => long_name,
         :solver_name => solver_name, :steadystate_choice => steadystate_choice,
         :N_ensemble_size => N_ensemble_size,
@@ -171,7 +170,7 @@ function preprocess(complement_to_existing_exp, existing_exp_name, name, exp_nam
 
     # add columns `graph_seed`, `distr_seed` and `filepath` to df
     df_hpe[!, :graph_seed] .= 0; df_hpe[!, :distr_seed] .= 0
-    df_hpe[!, :filepath_steady_state] .= "<filepath>"; df_hpe[!, :filepath_graph] .= "<filepath>"
+    df_hpe[!, :filepath_steady_state] .= "<filepath>"; df_hpe[!, :filepath_graph] .= "<filepath>"; df_hpe[!, :filepath_power_injections] .= "<filepath>"
 
     # For each row/ArrayTaskID of df_hpe add element of ensemble.
     df_hpe[!, :ensemble_element] = vcat([fill(i, length(hyperparam)) for i in 1:N_ensemble_size]...)
@@ -287,6 +286,8 @@ function preprocess(complement_to_existing_exp, existing_exp_name, name, exp_nam
                         x_static = steadystate(network; zeroidx=1, res_tol=1e-7, relax_init_guess = true) 
                     end
 
+                    #= #NOTE This is a very conservative test. Alternative (not significantly faster): call `nd_model_and_CB!`,
+                    then check if initial loads exceed rating (see `simulate`) =#
                     simulate(network;
                         gen_model=gen_model,
                         x_static=x_static,
@@ -301,34 +302,38 @@ function preprocess(complement_to_existing_exp, existing_exp_name, name, exp_nam
                     steady_state_check_approved = true
 
                     # Save steady state and graph, create directories for steady states.
-                    if save_graph_and_filepath == true
+                    if save_network_data == true
 
-                        # save steady
+                        graph_params = "graph_seed=$graph_seed_,distr_seed=$distr_seed_,k=$k,β=$β,ensemble_element=$ensemble_element"
+
+                        # steady sate
                         steady_state_folder_path = joinpath(graph_combinations_path, "steady_states_graphs")
                         ispath(steady_state_folder_path) || mkdir(steady_state_folder_path)
-
-                        graph_params = "graph_seed=$graph_seed_,distr_seed=$distr_seed_,k=$k,β=$β,ensemble_element=$ensemble_element"
                         filepath_SS = joinpath(steady_state_folder_path, string(graph_params,".csv"))
-
                         # Assign filepath to df
                         df_hpe[task_id:end,:filepath_steady_state] .= filepath_SS
-
                         # save steady state
-                        steady_state_dict = Dict(:SteadyState => x_static)
-                        CSV.write(filepath_SS, steady_state_dict)
+                        CSV.write(filepath_SS, Dict(:SteadyState => x_static))
 
-                        # save graph
+                        # graph
                         graph_folder_path = joinpath(graph_combinations_path, "graphs")
                         ispath(graph_folder_path) || mkdir(graph_folder_path)
-
-                        graph_params = "graph_seed=$graph_seed_,distr_seed=$distr_seed_,k=$k,β=$β,ensemble_element=$ensemble_element"
                         filepath_g = joinpath(graph_folder_path, string(graph_params,"_graph"))
-
                         # Assign filepath to df
                         df_hpe[task_id:end,:filepath_graph] .= filepath_g
-
                         # save graph
                         savegraph(filepath_g, network.graph)
+
+                        # power injections
+                        power_injections_folder_path = joinpath(graph_combinations_path, "power_injections")
+                        ispath(power_injections_folder_path) || mkdir(power_injections_folder_path)
+                        filepath_PI = joinpath(power_injections_folder_path, string(graph_params,".csv"))
+                        # Assign filepath to df
+                        df_hpe[task_id:end,:filepath_power_injections] .= filepath_PI
+                        # save power injections
+                        Pmech = get_prop(network, 1:nv(network), :Pmech)
+                        Pload = get_prop(network, 1:nv(network), :Pload)
+                        CSV.write(filepath_PI, Dict(:Pmech => Pmech, :Pload => Pload))
                     end
 
                 # If a there is at least one parameter configuration for which no steady state exists:
@@ -400,7 +405,7 @@ function postprocess_jarray_data(exp_name_date)
     (Straighforward to implement but not necessarily needed).
     =#
     if exp_name_date[1:2] == "WS"
-        select!(df_avg_error, Not([:graph_seed, :distr_seed, :filepath_steady_state, :ensemble_element]))
+        select!(df_avg_error, Not([:graph_seed, :distr_seed, :filepath_steady_state, :filepath_graph, :filepath_power_injections, :ensemble_element]))
         network = import_system_wrapper(df_config, 1)
     elseif exp_name_date[1:3] == "RTS"
         select!(df_avg_error, Not([:ensemble_element]))
@@ -585,7 +590,7 @@ has_prop(g, keys::KEY_ITER, prop::Symbol) = all(k -> has_prop(g, k, prop), keys)
 
 using DataFrames
 
-export describe_failures
+export describe_failures, collect_failure_times
 
 """
     describe_failures(sol)
@@ -653,4 +658,31 @@ function build_rows(failure_times::Vector{Tuple{Int,Float64}}, desc_df::DataFram
         push!(rows, (network_element = name, idx = idx, failure_time = t))
     end
     return rows
+end
+
+
+export get_slurm_id
+"""
+Helper for reading out the output of a simulation on HPC.
+Jobs are grouped in job arrays with same inertia constant allowing to adapt the slurm 
+flag `--qos`. Thus `task_id` does not correspond to the slurm job_id. This function
+returns the slurm job_id in order to manually read out the output of a simulation with 
+given `task_id` in `/output`
+
+Example: `WS_k=4_exp12_vary_I_only_lines_and_nodes_change_Pmech_complement_f_b,idx=2-3318425_44-csn14c171.out`
+Here job_array_index=2, slurm_id=44
+
+"""
+function get_slurm_id(exp_name_date, task_id)
+    exp_params_dict = Serialization.deserialize(joinpath(RESULTS_DIR, exp_name_date, "exp.params"))
+    inertia_values = exp_params_dict[:inertia_values]
+    N_inertia = length(inertia_values)
+
+    df_config = DataFrame(CSV.File(joinpath(RESULTS_DIR, exp_name_date, "config.csv")))
+    job_array_index = findfirst(x -> x == df_config[task_id, :inertia_values], inertia_values)
+
+    slurm_id = (task_id - job_array_index) / N_inertia + 1
+
+    println("job_array_index=$job_array_index, slurm_id=$slurm_id")
+    return job_array_index, slurm_id
 end

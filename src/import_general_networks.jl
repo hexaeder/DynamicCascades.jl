@@ -4,7 +4,7 @@ using NetworkLayout
 
 # NOTE
 #=Inconsistency of RNG across the different Julia versions for WS-graphs (and probably ER-graphs (not tested)).
-Power injection are consistent bewtwen Julia v1.8.4 and v1.11.0 but should be saved asweel in the future: TODO=#
+Power injection are consistent between Julia v1.8.4 and v1.11.0 but but are saved to be on the save side.=#
 
 """
     import_system(:erdosrenyi)

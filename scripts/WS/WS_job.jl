@@ -37,7 +37,7 @@ solver = exp_params_dict[:solver]
 # Alternative: Load mathematical graph that has been generated during postprocessing:
 # filepath_graph = df_config[task_id,:filepath_graph]
 # graph = loadgraph(filepath_graph)
-#= NOTE Saving networks takes really long during preprocessing and one needs to save
+#= NOTE Saving networks takes really long during preprocessing and one would need to save
 a network for each parameter configuration.=#
     
 # read in network (includes parameters) from df_config
@@ -46,6 +46,11 @@ network = import_system_wrapper(df_config, task_id)
 # read in steady state
 steady_state_dict  = CSV.File(df_config[task_id,:filepath_steady_state])
 x_static = steady_state_dict[:SteadyState]
+
+# read in power injections 
+power_injections_dict = CSV.File(df_config[task_id,:filepath_power_injections])
+set_prop!(network, 1:nv(network), :Pmech, power_injections_dict[:Pmech])
+set_prop!(network, 1:nv(network), :Pload, power_injections_dict[:Pload])
 
 
 number_failures_lines = Float64[]
