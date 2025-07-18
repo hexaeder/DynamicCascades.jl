@@ -734,12 +734,7 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
             affect! = let _failures_nodes = failures_nodes, _verbose = verbose
                 (integrator, event_idx) -> begin
                     fgen_idx = gen_node_idxs[event_idx] # index of failed generator
-                    _verbose && println("Shutdown node $fgen_idx at t = $(integrator.t)")
-
-                    if _failures_nodes !== nothing
-                        push!(_failures_nodes.t, integrator.t)
-                        push!(_failures_nodes.saveval, fgen_idx)
-                    end
+                    
                     vertex_p = integrator.p[1]
 
                     P_adapted = 0.0
@@ -748,17 +743,34 @@ function get_callback_generator(network::MetaGraph, nd::ODEFunction)
                     end
 
                     if node_failure_model == :change_to_BH_and_change_Pmech
+                        _verbose && println("Shutdown node $fgen_idx at t = $(integrator.t)")
+                        if _failures_nodes !== nothing
+                            push!(_failures_nodes.t, integrator.t)
+                            push!(_failures_nodes.saveval, fgen_idx)
+                        end
                         # mutated_tuple = (2.0, 0.0, vertex_p[fgen_idx][3], vertex_p[fgen_idx][4], vertex_p[fgen_idx][5])
                         mutated_tuple = (2.0, P_adapted, vertex_p[fgen_idx][3], vertex_p[fgen_idx][4], vertex_p[fgen_idx][5])
                         vertex_p[fgen_idx] = mutated_tuple
                         integrator.u[ω_state_idxs[event_idx]] = 0.0 # set state to zero to not trigger condition anymore.
                     elseif node_failure_model == :change_to_BH
+                        _verbose && println("Node $fgen_idx changed to BH (P kept constant) at t = $(integrator.t)")
+                        if _failures_nodes !== nothing
+                            push!(_failures_nodes.t, integrator.t)
+                            push!(_failures_nodes.saveval, fgen_idx)
+                        end
                         mutated_tuple = (2.0, vertex_p[fgen_idx][2], vertex_p[fgen_idx][3], vertex_p[fgen_idx][4], vertex_p[fgen_idx][5])
                         vertex_p[fgen_idx] = mutated_tuple
                         integrator.u[ω_state_idxs[event_idx]] = 0.0
-                    elseif node_failure_model == :change_Pmech    
-                        mutated_tuple = (1.0, P_adapted, vertex_p[fgen_idx][3], vertex_p[fgen_idx][4], vertex_p[fgen_idx][5])
-                        vertex_p[fgen_idx] = mutated_tuple
+                    elseif node_failure_model == :change_Pmech
+                        if vertex_p[fgen_idx][2] != P_adapted
+                            _verbose && println("Vertex $fgen_idx: P=$(vertex_p[fgen_idx][2]) set to -P_load=$P_adapted at t=$(integrator.t)")
+                            if _failures_nodes !== nothing
+                                push!(_failures_nodes.t, integrator.t)
+                                push!(_failures_nodes.saveval, fgen_idx)
+                            end
+                            mutated_tuple = (1.0, P_adapted, vertex_p[fgen_idx][3], vertex_p[fgen_idx][4], vertex_p[fgen_idx][5])
+                            vertex_p[fgen_idx] = mutated_tuple
+                        end
                     end
 
                     # all_failed_warnings(integrator)
