@@ -209,10 +209,6 @@ Choice of ODE solver
   - NOTE With AutoTsit5(Rodas4P()) the CB `TerminateSelectiveSteadyState` does not
     fire. This is probably as `dt` gets too large with higher order stiff solvers (see
     https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Stiff-Problems)
-
-Choice of solverargs
-the order and number of failures doesnt change with increased precision, 
-i.e. reltol=1e-4 instead of default value reltol=1e-3
 """
 function simulate(network;
     verbose=true,
@@ -227,7 +223,7 @@ function simulate(network;
     freq_bound = 1.0,
     terminate_steady_state=true,
     solver = Rodas4P(),
-    solverargs=(;),
+    solverargs = (;reltol=1e-8, abstol=1e-6),
     warn=true
     )
 
@@ -308,7 +304,7 @@ function simulate(exp_name_date, task_id, initial_fail; kwargs...)
 
         # adjust filepaths 
         df_config[!, :filepath_graph] = replace.(df_config[!, :filepath_graph],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
-        df_config[!, :filepath_steady_state] = replace.(df_config[!, :filepath_steady_state],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
+        # df_config[!, :filepath_steady_state] = replace.(df_config[!, :filepath_steady_state],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
 
         #= #HACK `import_system_wrapper` generates `networks`, which is a MetaGraph using `watts_strogatz`.
         `watts_strogatz` generates different graphs for different versions of its package (for the same seeds).
@@ -318,7 +314,7 @@ function simulate(exp_name_date, task_id, initial_fail; kwargs...)
         # load graph
         graph = loadgraph(df_config[task_id,:filepath_graph])
 
-        # # load steady state
+        # # load steady state # NOTE Be cautious: States are ordered differently in old/new ND.
         # steady_state_dict  = CSV.File(df_config[task_id,:filepath_steady_state])
         # x_static = steady_state_dict[:SteadyState]
 
