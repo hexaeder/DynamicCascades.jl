@@ -8,6 +8,8 @@ include(abspath(@__DIR__, "..", "scripts/helpers_jarray.jl"))
 
 using Serialization
 using CairoMakie
+CairoMakie.activate!()
+using Dates
 
 
 ###################################################################################
@@ -66,11 +68,6 @@ Below few short tests for RTS simulations against a reference solution.
 NOTE The referece solution from 20250604 is tested in `test_new_ND/WS_test_against_old_ND.jl` 
 against the legacy version in branch `mwe_old_ND_maybe_plots` /scripts/archive_nb/porting_to_new_ND/tests_old_ND.jl 
 """
-
-using Serialization
-using Dates
-using CairoMakie
-
 
 datetime = "20250604" # date of reference solution 
 create_reference_solution = false # `false`: the recent code is compared to previously created reference solution
