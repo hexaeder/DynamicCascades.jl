@@ -158,10 +158,10 @@ function SwingDynLoadModel_change_Pmech_only(; vidx=nothing, kwargs...)
     end
     affect = ComponentAffect([:ω], [:node_swing_stat,:Pmech]) do u, p, ctx
         if p[:node_swing_stat] != 3
-        println("Vertex $(ctx.vidx): Pmech=$(p[:Pmech]) set to Pmech=0 at t=$(ctx.integrator.t)")
-        p[:node_swing_stat] = 3
-        p[:Pmech] = 0
-    end
+            println("Vertex $(ctx.vidx): Pmech=$(p[:Pmech]) set to Pmech=0 at t=$(ctx.integrator.t)")
+            p[:node_swing_stat] = 3
+            p[:Pmech] = 0
+        end
     end
     cb = ContinousComponentCallback(cond, affect)
     #= #TODO Stop triggering CB at downcrossing (at the moment not implemented in NetworkDynamics.jl)
