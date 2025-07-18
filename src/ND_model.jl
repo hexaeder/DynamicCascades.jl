@@ -221,6 +221,7 @@ function simulate(network;
     trip_lines = :dynamic,
     trip_nodes = :dynamic,
     freq_bound = 1.0,
+    t_stop_CBs = Float64[], # allows to switch off line and node failure CBs at `t_stop_CBs`
     terminate_steady_state=true,
     solver = Rodas4P(),
     solverargs = (;reltol=1e-8, abstol=1e-6),
@@ -274,7 +275,25 @@ function simulate(network;
     ### solve ODE problem
     ###
     min_t = isempty(initial_fail) ? nothing : failtime+eps(failtime)
-    prob = ODEProblem(nw, uflat(s0), tspan, pflat(s0), callback=CallbackSet(get_callbacks(nw), TerminateSelectiveSteadyState(nw;min_t)));
+    cbs = CallbackSet(get_callbacks(nw), TerminateSelectiveSteadyState(nw;min_t))
+
+    ## Allow switching off CBs at time `t_stop_CBs`
+    if !isempty(t_stop_CBs)
+        # `affect!` function 
+        function set_rating_and_ωmax_to_Inf!(integrator)
+            println("Switching off line and node failure CBs by setting `rating = ωmax = Inf` at t=$(integrator.t)")
+            p = NWParameter(integrator) # get indexable parameter object
+            p.v[:, :ωmax] .= Inf
+            p.e[:, :rating] .= Inf
+            auto_dt_reset!(integrator)
+            save_parameters!(integrator)
+            nothing
+        end
+        stop_cb = PresetTimeCallback(t_stop_CBs, integrator->set_rating_and_ωmax_to_Inf!(integrator));
+        cbs = CallbackSet(stop_cb, cbs)
+    end
+
+    prob = ODEProblem(nw, uflat(s0), tspan, pflat(s0), callback=cbs);
     sol = solve(prob, solver; solverargs...);
 
     if terminate_steady_state
