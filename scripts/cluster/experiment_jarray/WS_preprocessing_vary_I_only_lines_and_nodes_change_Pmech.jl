@@ -19,8 +19,8 @@ N_new_freq_bounds = length([2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
 ################################################################################
 
 # Experiment name
-name = "WS_k=4_exp12_vary_I_only_lines_and_nodes_change_Pmech_complement_f_b"
-long_name = "Only variation of inertia I. As in MA but using the same states for all number_of_task_ids_between_graphs. Line and node failure model. Change Pmech." # for providing more details
+name = "WS_k=4_exp12_vary_I_only_lines_and_nodes_change_Pmech_complement_f_b_"
+long_name = "Updated version: Without CB triggering multiple times, see commit 8234f4b30fb09993b638392d8320eaf934f35c8c. Only variation of inertia I. As in MA but using the same states for all number_of_task_ids_between_graphs. Line and node failure model. Change Pmech." # for providing more details
 save_graph_and_filepath = true
 solver_name = "Rodas4P()"
 steadystate_choice = :rootfind # :relaxation

@@ -84,7 +84,6 @@ for i in 1:ne(network)
                    monitored_power_flow = monitored_power_flow,
                    f_min = -freq_bound,
                    f_max = freq_bound,
-                   solverargs = (;dtmax=0.01),
                    verbose = true);
     push!(number_failures_lines, length(sol.failures.saveval)-1) # `-1` as we don't want to count the initial failure
     push!(number_failures_nodes, length(sol.failures_nodes.saveval))

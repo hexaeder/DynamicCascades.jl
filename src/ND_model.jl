@@ -246,7 +246,7 @@ function simulate(network;
                   f_max = 1.5,
                   filename=nothing,
                   terminate_steady_state=true,
-                  solverargs=(;),
+                  solverargs = (;reltol=1e-8, abstol=1e-6),
                   warn=true)
     (nd, p, overload_cb) = nd_model(network);
     prob = ODEProblem(nd, copy(x_static), tspan, p); # TODO Why copy() here?
