@@ -62,4 +62,8 @@ a branch for testing the new ND.jl using a MWE) and are listed below.
     - tbd: mention snapshot plot 
 
 
+## Note
+ - Don't use steady states from old ND.jl for version with new ND (different order of internal states)
+ - Different number of BLAS threads may lead to different results, see scripts/helpers_jarray.jl
+
 <!-- Some examples using deprecated code can be found in [here](https://wuerfel.io/DynamicCascades.jl/dev/). -->
