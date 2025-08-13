@@ -12,6 +12,7 @@ function plot_simulation(sol)
     node_colors_failing = distinguishable_colors(length(all_failing_nodes_idxs))
     line_colors_failing = distinguishable_colors(length(all_failing_lines_idxs))
 
+    # calculate indices of all lines and nodes
     all_nodes_idxs = [i for i in idxs_init_swing]
     all_lines_idxs = [i for i in 1:ne(nw)]
     node_colors = distinguishable_colors(length(all_nodes_idxs))
@@ -111,7 +112,7 @@ using DataFrames
 using CSV
 
 export write_failures_f_b_to_df, write_network_measures_to_df
-export get_braessness, get_network_measures
+export get_braessness, get_network_measures, get_log_count
 export plot_braessness_vs_rho_scatter_and_histograms, plot_braessness_vs_dist_histograms, plot_braessness_power_vs_inertia_vs_full_2D
 export plot_braessness_vs_braessness_2D_count, plot_braessness_power_vs_inertia_vs_full_3D
 
@@ -587,26 +588,42 @@ end
 function plot_braessness_vs_braessness_2D_count(xs, ys, zs, failures, f_b_narrow, f_b_wide, I;
     fontsize = 25,
     titlesize = (fontsize-5),
-    markersize = 12
+    markersize = 12,
+    plot_coordinates = false
     )
 
     fig = Figure(size=(1000,1500),fontsize=fontsize)
-    fig[1,1] = ax11 = Axis(fig; xlabel="inertia failure",ylabel="full failure", title="Braessness $failures failures: f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I", titlealign = :left, titlesize = titlesize)
+    fig[1,1] = ax11 = Axis(fig; xlabel="inertia failure",ylabel="full failure", 
+        title = plot_coordinates ? "Braessness $failures failures: f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I; (x-axis, y-axis, z-axis)" : "Braessness $failures failures: f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I", 
+        titlealign = :left, titlesize = titlesize)
     logc = get_log_count(ys, zs)
     sc11 = scatter!(ax11, ys, zs; markersize=markersize, color=logc, colormap=:viridis, colorrange=(minimum(logc), maximum(logc)))
+    plot_coordinates ? add_coordinates(ax11, ys,zs,xs) : nothing
     Colorbar(fig[1,2], sc11; label = "log₁₀(counts)", width = 30)
 
     fig[2,1] = ax21 = Axis(fig; xlabel="power failure",ylabel="full failure",)
     logc = get_log_count(xs, zs)
     sc21 = scatter!(ax21, xs, zs; markersize=markersize, color=logc, colormap=:viridis, colorrange=(minimum(logc), maximum(logc)))
+    plot_coordinates ? add_coordinates(ax21, xs,zs,ys) : nothing
     Colorbar(fig[2,2], sc21; label = "log₁₀(counts)", width = 30)
 
     fig[3,1] = ax31 = Axis(fig; xlabel="power failure",ylabel="inertia failure",)
     logc = get_log_count(xs, ys)
     sc31 = scatter!(ax31, xs, ys; markersize=markersize, color=logc, colormap=:viridis, colorrange=(minimum(logc), maximum(logc)))
+    plot_coordinates ? add_coordinates(ax31, xs,ys,zs) : nothing
     Colorbar(fig[3,2], sc31; label = "log₁₀(counts)", width = 30)
     
     return fig
+end
+
+"""
+adds coordinates to fig
+ - as,bs: determine position on plot
+"""
+function add_coordinates(ax, as, bs, cs)
+    for (a,b,c) in zip(as, bs, cs)
+        text!(ax, a, b+1.5, text="($a,$b,$c)";  align = (:center, :top), fontsize=5)
+    end
 end
 
 function plot_braessness_power_vs_inertia_vs_full_3D(xs, ys, zs, f_b_narrow, f_b_wide, I;
@@ -623,3 +640,154 @@ function plot_braessness_power_vs_inertia_vs_full_3D(xs, ys, zs, f_b_narrow, f_b
     
     return fig
 end
+
+export get_task_ids_and_failed_line_from_coordinates
+function get_task_ids_and_failed_line_from_coordinates(exp_name_date_x, exp_name_date_y, exp_name_date_z, braessness_x, braessness_y, f_b_narrow, f_b_wide, I;
+    run_save_simulation = false,
+    generate_plot = false
+    )
+
+    braessness_lines_x, braessness_nodes_x = get_braessness(exp_name_date_x, f_b_narrow, f_b_wide, I)
+    braessness_lines_y, braessness_nodes_y = get_braessness(exp_name_date_y, f_b_narrow, f_b_wide, I)
+    xs = braessness_lines_x .+ braessness_nodes_x
+    ys = braessness_lines_y .+ braessness_nodes_y
+
+    idx = only([i for i in eachindex(ys) if xs[i] == braessness_x && ys[i] == braessness_y])
+    
+    exp_data_dir_x = joinpath(RESULTS_DIR, exp_name_date_x)
+    exp_data_dir_y = joinpath(RESULTS_DIR, exp_name_date_y)
+    exp_data_dir_z = joinpath(RESULTS_DIR, exp_name_date_z)
+
+    df_narrow_x = DataFrame(CSV.File(joinpath(exp_data_dir_x,"braessness_lines", "braessness_data", "I=$I,f_b=$f_b_narrow.csv")))
+    df_wide_x = DataFrame(CSV.File(joinpath(exp_data_dir_x,"braessness_lines", "braessness_data", "I=$I,f_b=$f_b_wide.csv")))
+    df_narrow_y = DataFrame(CSV.File(joinpath(exp_data_dir_y,"braessness_lines", "braessness_data", "I=$I,f_b=$f_b_narrow.csv")))
+    df_wide_y = DataFrame(CSV.File(joinpath(exp_data_dir_y,"braessness_lines", "braessness_data", "I=$I,f_b=$f_b_wide.csv")))
+    df_narrow_z = DataFrame(CSV.File(joinpath(exp_data_dir_z,"braessness_lines", "braessness_data", "I=$I,f_b=$f_b_narrow.csv")))
+    df_wide_z = DataFrame(CSV.File(joinpath(exp_data_dir_z,"braessness_lines", "braessness_data", "I=$I,f_b=$f_b_wide.csv")))
+
+    # check
+    braessness_line_idx_x = df_wide_x[idx, :].number_failures_lines .- df_narrow_x[idx, :].number_failures_lines
+    braessness_node_idx_x = df_wide_x[idx, :].number_failures_nodes .- df_narrow_x[idx, :].number_failures_nodes
+    @assert braessness_line_idx_x + braessness_node_idx_x == braessness_x
+    braessness_line_idx_y = df_wide_y[idx, :].number_failures_lines .- df_narrow_y[idx, :].number_failures_lines
+    braessness_node_idx_y = df_wide_y[idx, :].number_failures_nodes .- df_narrow_y[idx, :].number_failures_nodes
+    @assert braessness_line_idx_y + braessness_node_idx_y == braessness_y
+    braessness_line_idx_z = df_wide_z[idx, :].number_failures_lines .- df_narrow_z[idx, :].number_failures_lines
+    braessness_node_idx_z = df_wide_z[idx, :].number_failures_nodes .- df_narrow_z[idx, :].number_failures_nodes
+
+    exp_name_date_arr = []
+    task_ids = []
+    initial_fail = []
+
+    push!(exp_name_date_arr, exp_name_date_x)
+    push!(task_ids, df_wide_x[idx, :].ArrayTaskID)
+    push!(initial_fail, df_wide_x[idx, :].initially_failed_line)
+    push!(exp_name_date_arr, exp_name_date_x)
+    push!(task_ids, df_narrow_x[idx, :].ArrayTaskID)
+    push!(initial_fail, df_narrow_x[idx, :].initially_failed_line)
+
+    push!(exp_name_date_arr, exp_name_date_y)
+    push!(task_ids, df_wide_y[idx, :].ArrayTaskID)
+    push!(initial_fail, df_wide_y[idx, :].initially_failed_line)
+    push!(exp_name_date_arr, exp_name_date_y)
+    push!(task_ids, df_narrow_y[idx, :].ArrayTaskID)
+    push!(initial_fail, df_narrow_y[idx, :].initially_failed_line)
+
+    push!(exp_name_date_arr, exp_name_date_z)
+    push!(task_ids, df_wide_z[idx, :].ArrayTaskID)
+    push!(initial_fail, df_wide_z[idx, :].initially_failed_line)
+    push!(exp_name_date_arr, exp_name_date_z)
+    push!(task_ids, df_narrow_z[idx, :].ArrayTaskID)
+    push!(initial_fail, df_narrow_z[idx, :].initially_failed_line)
+
+    println("x-Axis: narrow:  ArrayTaskID=$(df_narrow_x[idx, :].ArrayTaskID), initially_failed_line=$(df_narrow_x[idx, :].initially_failed_line)
+         wide:   ArrayTaskID=$(df_wide_x[idx, :].ArrayTaskID), initially_failed_line=$(df_wide_x[idx, :].initially_failed_line)")
+    println("y-Axis: narrow:  ArrayTaskID=$(df_narrow_y[idx, :].ArrayTaskID), initially_failed_line=$(df_narrow_y[idx, :].initially_failed_line)
+         wide:   ArrayTaskID=$(df_wide_y[idx, :].ArrayTaskID), initially_failed_line=$(df_wide_y[idx, :].initially_failed_line)")
+    println("z-Axis: narrow:  ArrayTaskID=$(df_narrow_z[idx, :].ArrayTaskID), initially_failed_line=$(df_narrow_z[idx, :].initially_failed_line)
+         wide:   ArrayTaskID=$(df_wide_z[idx, :].ArrayTaskID), initially_failed_line=$(df_wide_z[idx, :].initially_failed_line), Braessness=$(braessness_line_idx_z + braessness_node_idx_z)")
+
+    if run_save_simulation == true
+        for (exp_name_date, task_id, initial_fail) in zip(exp_name_date_arr, task_ids, initial_fail)
+            println("dir=$exp_name_date,task_id=$task_id, initial_fail=$initial_fail")
+
+            #= Assign node failure model
+            TODO For future simulations remove this block. (In WS simulations I did not assign `:gen_model`,
+            where initially only one node failure model was simulated).=#
+            if exp_name_date[11:12] == "04"
+                gen_model = SwingDynLoadModel
+            elseif exp_name_date[11:12] == "11"
+                gen_model = SwingDynLoadModel_change_to_BH_only
+            elseif exp_name_date[11:12] == "12"
+                gen_model = SwingDynLoadModel_change_Pmech_only
+            end
+            # TODO For new WS simulations replace by `gen_model = Serialization.deserialize(joinpath(RESULTS_DIR, exp_name_date, "exp.params"))[:gen_model]`
+            gen_model = exp_name_date[1:7] == "RTS_exp" ? Serialization.deserialize(joinpath(RESULTS_DIR, exp_name_date, "exp.params"))[:gen_model] : gen_model
+
+            sol = simulate(exp_name_date, task_id, initial_fail;
+                gen_model = gen_model,
+                initial_fail = initial_fail,
+                verbose = true);
+            
+            exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
+            ispath(joinpath(exp_data_dir, "example_trajectories", "sims")) || mkpath(joinpath(exp_data_dir, "example_trajectories", "sims"))
+            ispath(joinpath(exp_data_dir, "example_trajectories", "plots")) || mkpath(joinpath(exp_data_dir, "example_trajectories", "plots"))
+            Serialization.serialize(joinpath(exp_data_dir, "example_trajectories", "sims", "gen_model=$gen_model,task_id=$task_id,initial_fail=$initial_fail.sol"), sol)
+            if generate_plot == true
+                CairoMakie.activate!()
+                save(joinpath(exp_data_dir, "example_trajectories", "plots", "gen_model=$gen_model,task_id=$task_id,initial_fail=$initial_fail.pdf"), plot_simulation(sol))
+            end
+
+            # generate_plot ? save(joinpath(exp_data_dir, "example_trajectories", "plots", "gen_model=$gen_model,task_id=$task_id,initial_fail=$initial_fail.pdf"), plot_simulation(sol)) : nothing
+        end
+    end
+
+end
+
+
+###
+### wrappers for `inspect()`
+###
+using NetworkDynamicsInspector
+export inspect_wrapper
+
+"""
+`which_trajectories`: `:all`, `:failing`
+"""
+function inspect_wrapper(sol;
+    which_trajectories = :failing,
+    tmax = Float64[]
+    )
+
+    nw = NetworkDynamics.extract_nw(sol)
+
+    idxs_init_swing = map(idx -> idx.compidx, vidxs(nw, :, "ω")) # indices that are initially swing nodes
+    if which_trajectories == :failing
+        vindices = [i for i in idxs_init_swing if sol(sol.t[end], idxs=vidxs(i, :node_swing_stat))[1] != 1]
+        eindices = [i for i in 1:ne(nw) if sol(sol.t[end], idxs=eidxs(i, :line_stat))[1] == 0]
+        # set marker for failed vertices
+        for i in vindices
+            set_marker!(nw[VIndex(i)], :xcross)
+        end
+    elseif which_trajectories == :all
+        vindices = [i for i in idxs_init_swing]
+        eindices = [i for i in 1:ne(nw)]
+    end
+
+    inspect(sol; restart=true, reset=true)
+    set_graphplot!(; nstate=[:ω], estate=[:S], nstate_rel=false, estate_rel=false)
+    if !isempty(tmax)
+        set_state!(; t=0.0, tmin=0.0, tmax=tmax)
+    end
+    define_timeseries!([
+        (; selcomp=[VIndex(i) for i in vindices], states=[:ω, :ωmax], rel=false),
+        (; selcomp=[EIndex(i) for i in eindices], states=[:S, :rating], rel=false),
+    ])
+end
+
+function inspect_wrapper(dir, task_id, initial_fail; kwargs...)
+    sol = Serialization.deserialize(joinpath(dir, "task_id=$task_id,initial_fail=$initial_fail.sol"));
+    inspect_wrapper(sol; kwargs...)
+end
+
+

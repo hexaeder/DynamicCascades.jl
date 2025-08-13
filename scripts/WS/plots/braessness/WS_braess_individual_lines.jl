@@ -23,7 +23,6 @@ using Serialization
 ###### WS
 ######
 # exp_name_date = "WS_k=4_exp10_vary_I_only_lines_and_nodes_N=20_PIK_HPC_K_=3,N_G=16_20250410_185732.694"
-exp_name_date = "WS_k=4_exp12_vary_I_only_lines_and_nodes_change_Pmech_complement_f_bPIK_HPC_K_=3,N_G=32_20250420_142151.671"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 
 # choose inertia
@@ -79,11 +78,11 @@ x_ρ_BH, x_dist_BH = get_network_measures(exp_name_date);
 exp_nr_BH = exp_name_date[11:12]
 
 ## power failure
-exp_name_date = "WS_k=4_exp12_vary_I_only_lines_and_nodes_change_Pmech_complement_f_bPIK_HPC_K_=3,N_G=32_20250420_142151.671"
-# write_failures_f_b_to_df(exp_name_date, freq_bounds, I)
+exp_name_date = "WS_k=4_exp12_vary_I_only_lines_and_nodes_change_Pmech_complement_f_b_PIK_HPC_K_=3,N_G=32_20250718_160303.054"
+write_failures_f_b_to_df(exp_name_date, freq_bounds, I)
 # write_network_measures_to_df(exp_name_date)
 braessness_lines_Pmech, braessness_nodes_Pmech = get_braessness(exp_name_date, f_b_narrow, f_b_wide, I);
-x_ρ_Pmech, x_dist_Pmech = get_network_measures(exp_name_date);
+# x_ρ_Pmech, x_dist_Pmech = get_network_measures(exp_name_date);
 exp_nr_Pmech = exp_name_date[11:12]
 
 prefix = exp_name_date[1:10]
@@ -110,6 +109,9 @@ failures = "line+node"
 # failures = "nodes"
 
 fig = plot_braessness_power_vs_inertia_vs_full_2D(xs, ys, zs, failures, f_b_narrow, f_b_wide, I)
+dimensions = 2
+fancy_colors = true
+plot_center_only = false
 # CairoMakie.save(joinpath(MA_DIR, "braessness", "exp=$exp_nrs,braessness_vs_braessness_failures=$failures,logcount_colorscale,,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I,dim=$dimensions,fancy=$fancy_colors,center=$plot_center_only.pdf"),fig)
 # CairoMakie.save(joinpath(MA_DIR, "braessness", "exp=$exp_nrs,braessness_vs_braessness_failures=$failures,logcount_colorscale,,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I,dim=$dimensions,fancy=$fancy_colors,center=$plot_center_only.png"),fig)
 
@@ -161,8 +163,9 @@ logc = get_log_count(xs, ys)
 sc11 = scatter!(ax11, xs, ys; markersize=markersize, color=logc, colormap=:viridis, colorrange=(minimum(logc), maximum(logc)))
 Colorbar(fig[1,2], sc11; label = "log₁₀(counts)", width = 30)
 fig
-CairoMakie.save(joinpath(MA_DIR, "braessness", "exp=$exp_nrs,braessness_inertia_f_+_power_f_vs_full_f_lines_and_nodes_logcount_colorscale,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.pdf"),fig)
-CairoMakie.save(joinpath(MA_DIR, "braessness", "exp=$exp_nrs,braessness_inertia_f_+_power_f_vs_full_f_lines_and_nodes_logcount_colorscale,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.png"),fig)
+# CairoMakie.save(joinpath(MA_DIR, "braessness", "exp=$exp_nrs,braessness_inertia_f_+_power_f_vs_full_f_lines_and_nodes_logcount_colorscale,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.pdf"),fig)
+# CairoMakie.save(joinpath(MA_DIR, "braessness", "exp=$exp_nrs,braessness_inertia_f_+_power_f_vs_full_f_lines_and_nodes_logcount_colorscale,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.png"),fig)
+
 
 
 ###
