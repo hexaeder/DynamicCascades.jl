@@ -109,7 +109,7 @@ using Dates
 export preprocess_WS, postprocess_jarray_data
 
 #= TODO 
- - This is much slower with new ND. Not thoroughly tested why this is the case. Set `res_tol=1e-6` for small performance increase.
+ - This is slower with new ND. Not thoroughly tested why this is the case. Set `res_tol=1e-6` for small performance increase.
  - use kwargs!!!
 =# 
 function preprocess_WS(complement_to_existing_exp, existing_exp_name, name, exp_name, long_name,
@@ -363,7 +363,7 @@ end
 Calculates mean and standard error.
 
 """
-# CHECK normalized sum of lines and nodes again.
+# CHECK normalized sum of lines and nodes (not used in paper) again.
 function postprocess_jarray_data(exp_name_date)
     exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 

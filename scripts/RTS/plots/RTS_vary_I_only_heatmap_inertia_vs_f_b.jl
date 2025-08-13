@@ -6,12 +6,13 @@ Heatmap: x: frequency bound f_b, y: Inertia I, z: log(sum of line + node failres
 using GraphMakie
 using Colors
 using CairoMakie
+CairoMakie.activate!()
 
 
 """
 Minimal/Maximal inertia of RTS-GMLC 
 """
-# BUG update 
+# BUG update to new ND
 # network = RTS_import_system_wrapper(df_config, 1)
 # nd, = nd_model(network)
 # ω_state_idxs = idx_containing(nd, "ω")

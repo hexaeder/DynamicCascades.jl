@@ -1,6 +1,6 @@
 include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
 
-# CHECK whole script before simulating
+# CHECK whole script before simulating (experiments were performed with old ND)
 
 # PARAMETERS ###################################################################
 exp_name_date = ARGS[2]
