@@ -9,7 +9,7 @@ The main entrypoint is `simulate` in src/ND_model.jl.
 See `scripts/examples.jl` for how to
  - simulate a cascade in an example network
  - resimulate a cascade that has been simulated in an experiment using the job array framework (see below) 
- - use the interactive plotting utility [NetworkDynamicsInspector](https://github.com/JuliaDynamics/NetworkDynamics.jl/tree/main/NetworkDynamicsInspector) 
+ - use the interactive plotting utility [NetworkDynamicsInspector.jl](https://github.com/JuliaDynamics/NetworkDynamics.jl/tree/main/NetworkDynamicsInspector) 
 
 ##  Job array framework for HPCs
 The framework is the same for WS and RTS.
