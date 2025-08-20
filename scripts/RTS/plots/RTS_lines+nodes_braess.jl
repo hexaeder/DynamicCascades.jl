@@ -1,10 +1,9 @@
 """
-RTS-GMLC-Testcase: Using job array framework. Transition that appears when varying the frequency bounds.
-Line and node failures summed. Narrow and intermediate bound.
+Model: line and node failures.
+Inertia vs. line and node failures summed for 2 different frequency bounds (narrow and intermediate bound).
 """
 
-include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
-
+include(abspath(@__DIR__, "..", "..", "helpers_jarray.jl"))
 
 using GraphMakie
 using Colors, ColorSchemes
@@ -126,6 +125,6 @@ ylims!(ax_lines_and_nodes,0,5)
 # Save plots
 filtered_freq_bounds_str = string(filtered_freq_bounds)
 # filtered_freq_bounds_str = "all_frequencies"
-CairoMakie.save(joinpath(exp_data_dir, "braess_plots", "RTS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
-CairoMakie.save(joinpath(exp_data_dir, "braess_plots", "RTS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
+# CairoMakie.save(joinpath(exp_data_dir, "braess_plots", "RTS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
+# CairoMakie.save(joinpath(exp_data_dir, "braess_plots", "RTS_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
 fig_lines_and_nodes

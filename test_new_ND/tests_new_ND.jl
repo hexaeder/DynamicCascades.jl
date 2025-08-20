@@ -1,4 +1,8 @@
 """
+Script for testing the code against examples. These examples are tested
+against the legacy version. The test compaires the line and node failure times and the overall number
+of failures of the recent code.
+
 See scripts/archive_nb/porting_to_new_ND/tests_old_ND.jl
 """
 

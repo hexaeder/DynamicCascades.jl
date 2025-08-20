@@ -1,3 +1,7 @@
+"""
+Definition of NetworkDynamics.jl models for dynamic line and node failures using callbacks.
+"""
+
 using NetworkDynamics
 using Unitful: @u_str
 using ModelingToolkit
@@ -336,7 +340,7 @@ function simulate(exp_name_date, task_id, initial_fail; kwargs...)
         `watts_strogatz` generates different graphs for different versions of its package (for the same seeds).
         We need `network` as the power injections are saved in the MetaGraph object.
         Thus, in order to use the same mathematical graph across different package versions for the `watts_strogatz`
-        function, we do not use `network.graph` for the graph but load the graph from the file .=#
+        function, we do not use `network.graph` for the graph but load the graph from the file.=#
         # load graph
         graph = loadgraph(df_config[task_id,:filepath_graph])
 

@@ -1,4 +1,6 @@
 """
+Model: Node failures only.
+
 RTS-GMLC-Testcase: Not using job array framework. Plotting nodes only.
 """
 
@@ -82,6 +84,6 @@ end
 axislegend(position = :rt)
 xlims!(0, 12)
 
-CairoMakie.save(string(MA_DIR,"/rtsgmlc_inertia_vs_number_node_failures_show_title=$show_title.pdf"),fig)
-CairoMakie.save(string(MA_DIR,"/rtsgmlc_inertia_vs_number_node_failures_show_title=$show_title.png"),fig)
+# CairoMakie.save(string(MA_DIR,"/rtsgmlc_inertia_vs_number_node_failures_show_title=$show_title.pdf"),fig)
+# CairoMakie.save(string(MA_DIR,"/rtsgmlc_inertia_vs_number_node_failures_show_title=$show_title.png"),fig)
 fig

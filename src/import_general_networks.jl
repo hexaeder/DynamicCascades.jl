@@ -1,3 +1,7 @@
+"""
+Import general networks (Watts-Strogatz and Erdős–Rényi).
+"""
+
 using Random
 using Distributions
 using NetworkLayout
@@ -67,6 +71,8 @@ function set_params_general_neworks!(g, distr_seed, N, M, γ, τ, K, α, μ, σ)
     set_prop!(g, edges(g), :X, 1/K)
     set_prop!(g, edges(g), :rating, α*K)
 
+    #= Power injections are drawn from normal distribution.
+    For defintion of `Pmech` and `Pload` see node model definitionies in `src/ND_model.jl`=#
     set_prop!(g, :distr_seed, distr_seed)
     set_prop!(g, :μ, μ)
     set_prop!(g, :σ, σ)
@@ -81,6 +87,7 @@ function set_params_general_neworks!(g, distr_seed, N, M, γ, τ, K, α, μ, σ)
     set_prop!(g, 1:nv(g), :Pmech, Pmech)
     set_prop!(g, 1:nv(g), :Pload, Pload)
 
+    # random power injections are adapted to get balanced power injections
     balance_power!(g)
     # set_prop!(g, 1:nv(g), :pos, spring(g; C=5.0))
     angles = range(0, stop=2π, length=nv(g)+1)[1:end-1]

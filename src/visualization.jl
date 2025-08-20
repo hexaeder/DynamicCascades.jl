@@ -1,3 +1,7 @@
+"""
+Plotting functions and helpers for NetworkDynamicsInspector.jl
+"""
+
 using Colors
 
 export plot_simulation

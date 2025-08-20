@@ -1,6 +1,6 @@
 """
-RTS-GMLC-Testcase: Using job array framework. Transition that appears when varying the frequency bounds.
-Line and node failures summed. Wide bound.
+Model: line and node failures.
+Inertia vs. line and node failures summed for 1 frequency bound (wide bound).
 """
 
 

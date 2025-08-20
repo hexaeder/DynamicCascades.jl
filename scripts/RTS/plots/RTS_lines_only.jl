@@ -1,5 +1,5 @@
 """
-RTS-GMLC-Testcase: Using job array framework. Plotting lines only.
+Model: line failures only. Plotting inertia vs. line failures.
 """
 
 include(abspath(@__DIR__, "..", "helpers_jarray.jl"))

@@ -111,7 +111,12 @@ export preprocess_WS, postprocess_jarray_data
 #= TODO 
  - This is slower with new ND. Not thoroughly tested why this is the case. Set `res_tol=1e-6` for small performance increase.
  - use kwargs!!!
-=# 
+=#
+"""
+Preprocesses the WS job array experiment.
+Writes the parameters to a file and generates the hyperparameter ensemble.
+It also generates the networks and steady states for each hyperparameter ensemble element.
+"""
 function preprocess_WS(complement_to_existing_exp, existing_exp_name, name, exp_name, long_name,
     save_network_data, solver_name, steadystate_choice, N_ensemble_size, k_vals, β_vals, N_nodes, 
     inertia_values, K_vals, γ_vals, relate_inertia_and_damping, γ_eq_sq_I, γ_eq_I, τ_vals, σ_vals, μ_vals,

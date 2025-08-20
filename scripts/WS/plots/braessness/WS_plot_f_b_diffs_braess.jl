@@ -1,3 +1,8 @@
+"""
+Find examples with large Breassness and inspect them in NetworkDynamicsInspector.
+"""
+
+
 include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
 
 

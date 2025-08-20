@@ -91,6 +91,11 @@ function import_system(::Val{:rtsgmlc}; losses=false, scale_inertia=1.0, kwargs.
 end
 
 export balance_power!, lossless!
+"""
+Balances the power injections in the network.
+The function adapts the `Pmech` of generators such that the sum of all power injections 
+equals the sum of all loads.
+"""
 function balance_power!(network) # s. Schmierzettel S. 7, 7a
     nodes = describe_nodes(network)
     imbalance = sum(nodes.Pmech) - sum(nodes.Pload)

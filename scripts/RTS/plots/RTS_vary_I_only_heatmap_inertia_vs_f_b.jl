@@ -1,5 +1,4 @@
 """
-RTS: Using job array framework.
 Heatmap: x: frequency bound f_b, y: Inertia I, z: log(sum of line + node failres + 1)
 """
 

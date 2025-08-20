@@ -1,6 +1,8 @@
 """
+frequency bounds vs failures (normalized node failures and normalized line failures or sum of line and node failures).
+One figure for each inertia value.
 """
-#  NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE Check normalized sum of lines and nodes again.
+# CHECK normalized sum of lines and nodes.
 
 
 using GraphMakie
