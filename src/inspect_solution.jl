@@ -464,7 +464,7 @@ function gparguments(c::SolutionContainer, t::Observable;
             edge_width,
             elabels=repr.(1:ne(network)),
             elabels_color=[:black for i in 1:ne(network)],
-            elabels_textsize=10, # TODO change to `fontsize` when updating GraphMakie
+            elabels_textsize=18, # TODO change to `fontsize` when updating GraphMakie
             elabels_align=(:center, :center), kwargs...)
 end
 

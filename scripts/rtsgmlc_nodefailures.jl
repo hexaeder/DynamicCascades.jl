@@ -58,7 +58,7 @@ CairoMakie.activate!()
 set_theme!(theme_minimal(), fontsize = 20)
 fig = Figure(resolution=(1500,1500))
 
-fig[2,1] = nwax = plotnetwork(fig, sol, times[1]; line=11, offset=(-4,-.5), text="(3)")
+fig[2,1] = nwax = plotnetwork(fig, sol, times[2]; line=11, offset=(-4,-.5), text="(3)")
 fig[2,1] = Label(fig, "(a) t = $(round(times[1],digits=2)) s", tellwidth=false, tellheight=false, halign=:left, valign=:top)
 
 fig[2,2] = plotnetwork(fig, sol, times[2]; line=27, offset=(0.75,2.5), text="(1)")
@@ -85,5 +85,5 @@ fig[0,:] = Colorbar(fig, height=25, vertical=false,
 
 fig[1,:] = Colorbar(fig, height=25, vertical=false,
                      colormap=ColorSchemes.diverging_bkr_55_10_c35_n256, label="node frequency deviation [Hz]")
-
-save(joinpath(PLOT_DIR, "rts_cascade_nodes3.pdf"), fig)
+fig
+# save(joinpath(PLOT_DIR, "rts_cascade_nodes3.pdf"), fig)

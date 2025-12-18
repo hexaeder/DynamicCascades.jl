@@ -20,7 +20,7 @@ using DataFrames
 using CSV
 using LinearAlgebra
 using CairoMakie
-CairoMakie.activate!()
+CairoMakie.activate!(px_per_unit=3) 
 
 using Serialization
 using ColorSchemes
@@ -33,7 +33,7 @@ function simulate_wrapper(exp_name_date, task_id, initial_fail;
 
     exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
     df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
-    # adjust filepaths 
+    # adjust filepaths
     df_config[!, :filepath_graph] = replace.(df_config[!, :filepath_graph],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
     df_config[!, :filepath_steady_state] = replace.(df_config[!, :filepath_steady_state],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
     exp_params_dict = Serialization.deserialize(joinpath(exp_data_dir, "exp.params"))
@@ -69,7 +69,7 @@ function simulate_wrapper(exp_name_date, task_id, initial_fail;
         set_prop!(network, v_restore_id, :P_load, P_load_v_restore_new)
         set_prop!(network, v_restore_id, :P, P_inj_v_restore_new - P_load_v_restore_new)
 
-        x_static = steadystate(network; tol=1e-7, zeroidx=1) # CHECK 
+        x_static = steadystate(network; tol=1e-7, zeroidx=1) # CHECK
     end
 
     # network is balanced
@@ -129,6 +129,10 @@ sol4 = Serialization.deserialize(joinpath(RESULTS_DIR, exp_name_date_full, "traj
 ### global plotting parameters
 ###
 x_max = 14.1
+fontsize = 10
+lw_vline = 0.5
+linewidth_flow_trajectories = 4
+starsize = 2
 
 cols = distinguishable_colors(length(selected_lines) + 3)
 line_colors = cols[[8, 3, 4, 5, 7]]   # chosen directly, no deleteat!
@@ -149,56 +153,92 @@ line_colors = cols[[8, 3, 4, 5, 7]]   # chosen directly, no deleteat!
 
 
 
+###
+### fig size
+###
+
+# DIN A4 size in mm: 210mm x 297mm
+# Natur Comms: 210mm x 276 mm
+mm_to_inch(mm) = mm / 25.4
+inch_to_px(in) = in * 96 # SVG / CSS standard
+
 
 
 ###
 ### Trajectories phase angles
 ###
-selected_nodes = [4, 5, 6, 82]
-
-# -------------------- GLOBAL (shared) axis style --------------------
-const AXSTYLE = (;
-    xlabel        = "Time (s)",
-    ylabel        = "Phase θ (rad)",
-    xticklabelsize = 45,
-    yticklabelsize = 45,
-    xlabelsize     = 45,
-    ylabelsize     = 45,
-    titlesize      = 25,
-)
-
 
 # -------------------- One figure per node --------------------
 function node_theta_figure(sol_narrow::SolutionContainer, sol_wide::SolutionContainer, nodeid::Int;
-        resolution = (900, 600),
-        # individually adjustable:
+        # resolution = (900, 600),
         xlim = (-0.1, 20.0),
         ylim = (-1.0, 2.0),
-        yticks = ylim[1]:0.2:ylim[2], 
-        vlines_narrow = sol_narrow.failures_nodes.t[1],
-        vlines_wide   = sol_wide.failures_nodes.t,
-        show_vlines_narrow = true,
-        show_vlines_wide   = false,
-        lw_curve = 3,
-        lw_vline = 2,
-        save_fig = true,
-    )
+        lw_curve = 1,
+        save_fig = true)
 
-    fig = Figure(resolution = resolution, figure_padding = 30)
-    ax  = Axis(fig[1,1]; AXSTYLE...)
-    # Box(fig[1,1]; color=:transparent, strokecolor=:black, strokewidth=4)
-
-    # place title inside plot area
+    # map node ids to labels 1-4
     node_label_map = Dict(82 => 1, 5 => 2, 4 => 3, 6 => 4)
     node_label_id = node_label_map[nodeid]
-    title = "Node $node_label_id"
-    text!(ax, title;
-    position = (0.04, 0.97),      # ← vertical position inside box
-    align = (:left, :top),
-    space = :relative,
-    textsize = 40,
-    color = :black)
 
+    # figure size and background color
+    fig_width_mm  = 62.5
+    fig_height_mm = 41.5
+    width_px  = inch_to_px(mm_to_inch(fig_width_mm))
+    height_px = inch_to_px(mm_to_inch(fig_height_mm))
+    backgroundcolor = RGBf(242/255, 245/255, 250/255) # figure background #F2F5FA 
+
+    fig = Figure(resolution = (width_px, height_px), fontsize=fontsize, figure_padding = 8, backgroundcolor = backgroundcolor)  
+
+    # background color for axis
+    ax  = Axis(fig[1,1]; xlabel="Time (s)", ylabel="Phase θ (rad)", backgroundcolor = backgroundcolor)
+
+    # hide grid
+    ax.xgridvisible = true   # or false
+    ax.ygridvisible = true   # or false
+
+    # show only x- and y-axis (left & bottom)
+    hidespines!(ax, :t, :r)
+
+    xlims!(ax, xlim...)
+    ylims!(ax, ylim...)
+
+
+    ## adjust ticks and their labels
+
+    # move tick labels inside
+    ax.xticklabelpad = -27 # digits x-ticks
+    ax.ylabelpadding = -15  # move y-label a bit further right
+    ax.xlabelvisible = false
+    if node_label_id == 2
+        text!(ax, "Time (s)"; position = (0.57, 0.11), align = (:left, :top), space = :relative, textsize = fontsize, color = :black)
+    end
+
+    # ticks point into the axis
+    ax.xtickalign = 1
+    ax.ytickalign = 1
+
+    # x-ticks: show only first and last ticklabel
+    ax.xticks = ([2.5, 5.0, 7.5, 10.0, 12.5], ["", "", "", "", "12.5"])
+
+
+    # y-ticks: show only first and last ticklabel
+    ys = collect(ylim[1]:0.2:ylim[2])
+    labels = fill("", length(ys))
+    labels[1] = string(round(ys[1], digits=2))
+    labels[end] = string(round(ys[end], digits=2))
+    ax.yticks = (ys, labels)
+
+
+    # hide decorations for nodes 2/3/4
+    if node_label_id != 2
+        ax.xlabelvisible = false
+        ax.ylabelvisible = false
+        ax.xticklabelsvisible = false
+    end
+
+
+    # place title inside plot area
+    text!(ax, "Node $node_label_id"; position = (0.13, 1.00), align = (:left, :top), space = :relative, textsize = fontsize, color = :black)
 
     (nd, _,_) = nd_model(sol_narrow.network)
     state_idx = idx_containing(nd, "θ")
@@ -219,34 +259,28 @@ function node_theta_figure(sol_narrow::SolutionContainer, sol_wide::SolutionCont
     if (nodeid == 4 || nodeid == 6) # line 13 connects node 4 and 6
         t_fail_e13 = sol_wide.failures.t[3]
         θidx_node_adjacent_to_e13 = state_idx[findfirst(x -> x == nodeid, node_idx_all)]
-        scatter!(ax, (t_fail_e13, sol_wide.sol(t_fail_e13)[θidx_node_adjacent_to_e13]); color=line_colors[3], marker=:star5, markersize=35)
+        scatter!(ax, (t_fail_e13, sol_wide.sol(t_fail_e13)[θidx_node_adjacent_to_e13]); color=line_colors[3], marker=:star5, markersize=starsize)
     end
     if nodeid == 5 # line 13 connects node 4 and 6
         t_fail_e9 = sol_narrow.failures.t[2]
         θidx_node_adjacent_to_e9 = state_idx[findfirst(x -> x == nodeid, node_idx_all)]
-        scatter!(ax, (t_fail_e9, sol_wide.sol(t_fail_e9)[θidx_node_adjacent_to_e9]); color=line_colors[1], marker=:star5, markersize=35)
+        scatter!(ax, (t_fail_e9, sol_wide.sol(t_fail_e9)[θidx_node_adjacent_to_e9]); color=line_colors[1], marker=:star5, markersize=starsize)
     end
-
 
     # vertical lines for node failures
-    show_vlines_narrow && vlines!(ax, vlines_narrow; color=:black, linewidth=lw_vline, linestyle=:dash)
-    show_vlines_wide   && vlines!(ax, vlines_wide;   color=:black, linewidth=lw_vline, linestyle=:dash)
+    vlines!(ax, sol_narrow.failures_nodes.t[1]; color=:black, linewidth=lw_vline, linestyle=:dash)
     if nodeid == 5
-        text!(ax, sol1.failures_nodes.t[1]+0.3, 0.6; text="← node $nodeid fails \n     narrow bounds", textsize=35)
+        text!(ax, sol1.failures_nodes.t[1]+0.3, 0.77; text="← node $node_label_id fails for\n     narrow bounds", textsize=fontsize)
+        text!(ax, 8.0, 1.28; text="wide ↓", textsize=fontsize)
+        text!(ax, 9.7, 1.07; text="↑ narrow", textsize=fontsize)
     end
 
-
-    xlims!(ax, xlim...)
-    ylims!(ax, ylim...)
-    # ax.xticks = xticks
-    ax.yticks = yticks
-
-    if save_fig == true 
+    if save_fig == true
         save(joinpath(MA_DIR, string("WS/illustrative_plot/node_$nodeid.svg")), fig)
         save(joinpath(MA_DIR, string("WS/illustrative_plot/node_$nodeid.pdf")), fig)
         save(joinpath(MA_DIR, string("WS/illustrative_plot/node_$nodeid.png")), fig)
     end
-    
+
     return fig
 end
 
@@ -256,7 +290,6 @@ fig4  = node_theta_figure(sol1, sol4, 4;  xlim=(0.1,x_max), ylim=(x_lowlim4, x_l
 fig5  = node_theta_figure(sol1, sol4, 5;  xlim=(0.1,x_max), ylim=(x_lowlim5, x_lowlim5 + y_axis_length))
 fig6  = node_theta_figure(sol1, sol4, 6;  xlim=(0.1,x_max), ylim=(x_lowlim6, x_lowlim6 + y_axis_length))
 fig82 = node_theta_figure(sol1, sol4, 82; xlim=(0.1,x_max), ylim=(x_lowlim82, x_lowlim82 + y_axis_length))
-
 
 
 ###
@@ -270,41 +303,41 @@ ax = Axis(fig[1,1];
     ylabel = "Apparent power flow (p.u.)",
     title = "Full failure model: narrow frequency bounds (solid) wide frequency bounds (dashed)",
     titlealign = :left,
-    xticklabelsize = 45,
-    yticklabelsize = 45,
-    xlabelsize = 45,
-    ylabelsize = 45,
-    titlesize = 25,
+    # xticklabelsize = 45,
+    # yticklabelsize = 45,
+    # xlabelsize = 45,
+    # ylabelsize = 45,
+    # titlesize = 25,
 )
 
 # full failures narrow
 for (i, l) in pairs(selected_lines)
     t, s = seriesforidx(sol1.load_S, l)
-    lines!(ax, t, s; label="line $l",color=line_colors[i], linewidth=5)
+    lines!(ax, t, s; label="line $l",color=line_colors[i], linewidth=linewidth_flow_trajectories)
 end
 for (i, l) in pairs(selected_lines)
     t, s = seriesforidx(sol1.load_S, l)
-    scatter!(ax, (t[end], s[end]); marker=:star5,color=line_colors[i],  markersize=35)
+    scatter!(ax, (t[end], s[end]); marker=:star5,color=line_colors[i],  markersize=starsize)
 end
 
 # full failure wide
 for (i, l) in pairs(selected_lines)
     t, s = seriesforidx(sol4.load_S, l)
-    lines!(ax, t, s; linestyle=:dash, color=line_colors[i], linewidth=5)
+    lines!(ax, t, s; linestyle=:dash, color=line_colors[i], linewidth=linewidth_flow_trajectories)
 end
 for (i, l) in pairs(selected_lines)
     t, s = seriesforidx(sol4.load_S, l)
-    scatter!(ax, (t[end], s[end]); marker=:star5,color=line_colors[i], markersize=35)
+    scatter!(ax, (t[end], s[end]); marker=:star5,color=line_colors[i], markersize=starsize)
 end
 
 rating = get_prop(sol1.network, Graphs.edges(sol1.network), :rating)[1]
-hlines!(ax, rating; color=:black, linestyle=:dot, linewidth=5, label="line rating")
-# vlines!(ax, times; color=:black, linestyle=:dot, linewidth=1)
+hlines!(ax, rating; color=:black, linestyle=:dot, linewidth=linewidth_flow_trajectories, label="line rating")
+vlines!(ax, sol1.failures_nodes.t[1]; color=:black, linewidth=lw_vline, linestyle=:dash)
+text!(ax, 9.4, 0.68; text="wide ↓", textsize=fontsize)
+text!(ax, 10.1, 0.25; text="↑ narrow", textsize=fontsize)
 
-# ax.xticks = xticks_ax_gc21
 ax.xticksvisible = true
 
-# xlims!(ax, -0.1, x_max)
 xlims!(ax, 0.1, x_max)
 # Legend(fig[1,2], ax, labelsize=35) # plots show the same lines in all plots
 
@@ -316,7 +349,7 @@ save(joinpath(MA_DIR, string("WS/illustrative_plot/apparent_power_flow.png")), f
 
 
 ###
-### Plot legend separtely
+### Plot legend separately
 ###
 fig = Figure(resolution=(275, 270), figure_padding=30)
 
@@ -334,7 +367,7 @@ end
 lines!(ax, [0, 1], [0, 0]; color=:black, linewidth=5, linestyle=:dot, label="line rating")
 
 # legend as the ONLY visible thing
-Legend(fig[1,1], ax; labelsize=35, framevisible=false)
+Legend(fig[1,1], ax; labelsize=fontsize, framevisible=false)
 
 save(joinpath(MA_DIR, string("WS/illustrative_plot/legend.svg")), fig)
 save(joinpath(MA_DIR, string("WS/illustrative_plot/legend.pdf")), fig)
@@ -348,3 +381,7 @@ datetime = Dates.format(now(), "_yyyymmdd_HHMMSS.s")
 # save different versions of script
 script_dest = joinpath(MA_DIR, string("WS/illustrative_plot/old_versions/WS_phase_angles_flow_trajectories_for_inkscape", datetime, ".jl"))
 cp(@__FILE__, script_dest; force=true);
+
+
+fig5
+
