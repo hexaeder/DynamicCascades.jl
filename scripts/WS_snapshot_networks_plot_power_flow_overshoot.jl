@@ -1,5 +1,6 @@
 """
 Snapshots of illustrative example network comparing a model with no failures and full BH-model where node failures prevent further failures.
+Clear flow overshoot scenario.
 """
 
 using Revise
@@ -390,6 +391,6 @@ script_dest = joinpath(MA_DIR, string("WS/trajectories/WS_snapshot_network_diffe
 cp(@__FILE__, script_dest; force=true)
 
 
-save(joinpath(MA_DIR, string("WS/trajectories/WS_snapshots_network+trajectories_different_models_narrow,full_failure_wide_tweak_power_injections=$tweak_power_injections,", string_plot_params, datetime, ".pdf")), fig)
-save(joinpath(MA_DIR, string("WS/trajectories/WS_snapshots_network+trajectories_different_models_narrow,full_failure_wide_tweak_power_injections=$tweak_power_injections,", string_plot_params, datetime, ".png")), fig)
+# save(joinpath(MA_DIR, string("WS/trajectories/WS_snapshots_network+trajectories_different_models_narrow,full_failure_wide_tweak_power_injections=$tweak_power_injections,", string_plot_params, datetime, ".pdf")), fig)
+# save(joinpath(MA_DIR, string("WS/trajectories/WS_snapshots_network+trajectories_different_models_narrow,full_failure_wide_tweak_power_injections=$tweak_power_injections,", string_plot_params, datetime, ".png")), fig)
 fig

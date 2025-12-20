@@ -1,5 +1,5 @@
 """
-Sketchy GPT plot. Switched to Inkscape.
+Sketchy GPT plot. Switched to Inkscape, see WS_phase_angles_flow_trajectories_for_inkscape.jl
 """
 
 using Revise

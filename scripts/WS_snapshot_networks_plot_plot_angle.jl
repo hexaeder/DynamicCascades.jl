@@ -1,5 +1,5 @@
 """
-Snapshots of illustrative example network. Phase angles as disks on nodes.
+Snapshots of illustrative example network. Phase angles as disks on nodes. Full failure narrow vs. wide
 """
 
 using Revise
@@ -97,6 +97,66 @@ function simulate_wrapper(exp_name_date, task_id, initial_fail;
     return sol
 end
 
+# small phase-angle disks on top of a network plot
+function plot_angle_disks!(ax, c::SolutionContainer, t;
+                           disk_size = 40, # 46   # in px
+                           line_len  = 0.08)   # in data coords
+    
+    pos = spring(c.network) # pos = read_pos_or_spring(c.network)
+    (nd,) = nd_model(c.network)
+    θ_idx = idx_containing(nd, "θ")
+    node_idx = map(s -> parse(Int, String(s)[4:end]), nd.syms[θ_idx])
+
+    u = c.sol(t)
+    # u0 = c.sol[1] # for phase angle relative to the initial steady state
+    θ = fill(0.0, nv(c.network))
+    for (si, ni) in zip(θ_idx, node_idx)
+        θ[ni] = u[si]
+        # θ[ni] = u[si] - u0[si] # for phase angle relative to the initial steady state
+    end
+
+    xs = [p[1] for p in pos]
+    ys = [p[2] for p in pos]
+
+    # draw disks
+    scatter!(ax, xs, ys;
+             marker = :circle,
+             markersize = disk_size,
+             color = :white,
+             strokecolor = :black,
+             strokewidth = 2)
+
+    # draw centred line + small arrow head at the forward end
+    for (x, y, φ) in zip(xs, ys, θ)
+        dx = line_len * cos(φ)
+        dy = line_len * sin(φ)
+
+        # 1) full line through the disk centre (symmetric)
+        x1, y1 = x - dx, y - dy
+        x2, y2 = x + dx, y + dy
+        lines!(ax, [x1, x2], [y1, y2];
+            color = :black, linewidth = 1.5)
+
+        # 2) short arrow segment near the forward end of the line
+        frac_start = 0.6      # where the arrow segment starts (60% along the line)
+        frac_len   = 0.4      # arrow segment length (40% of the line)
+
+        sx = x + frac_start * dx
+        sy = y + frac_start * dy
+        vx = frac_len * dx
+        vy = frac_len * dy
+
+        arrows!(ax,
+            [sx], [sy],        # start position of arrow segment
+            [vx], [vy],        # direction vector of arrow segment
+            arrowsize = 12,    # head size in px
+            linewidth = 1.5,
+            color = :black,
+        )
+    end
+
+    return nothing
+end
 
 function plotnetwork(fig, sol, t; line=nothing, offset=nothing, text=nothing, apos=.5, Δω=Observable(Δωmax), ecolortype=:relrating,
                      ecolorscaling=Observable(1.0), offlinecolor=colorant"lightgray", node_size=40, edge_width=5, 
@@ -283,7 +343,7 @@ deleteat!(line_colors, 2) # delete yellow
 # color = line_colors[findfirst(x -> x == i, all_failing_lines_idxs)]
 
 ## trajectories
-# rating = get_prop(sol1.network, Graphs.edges(sol1.network), :rating)[1]
+rating = get_prop(sol1.network, Graphs.edges(sol1.network), :rating)[1]
 # gc[1,1] = ax_gc11 = Axis(fig; xlabel="time t in s", title="full failures (solid lines), inertia failures (dashed lines) and power failures (dotted lines) narrow", titlealign=:left)
 
 
@@ -291,7 +351,7 @@ deleteat!(line_colors, 2) # delete yellow
 
 
 # # inertia failures
-# # vlines!(ax_gc11, sol2.failures_nodes.t; color=:black, linestyle=:dash, linewidth=1) # BUG add Legend/explanation in plot
+# # vlines!(ax_gc11, sol2.failures_nodes.t; color=:black, linestyle=:dash, linewidth=1)
 # for (i, l) in pairs(selected_lines)
 #     t, s = seriesforidx(sol2.load_S, l)
 #     lines!(ax_gc11, t, s; linestyle=:dash,color=line_colors[i],  linewidth=5)
@@ -377,11 +437,6 @@ Legend(gc[1,2], ax_gc11)# plots show the same lines in all plots
 
 vlines!(ax_gc11, xticks_ax_gc21; color=:black, linestyle=:dot, linewidth=1, label="node failure \n (vertical lines)")
 
-datetime = Dates.format(now(), "_yyyymmdd_HHMMSS.s")
-# save different versions of script
-script_dest = joinpath(MA_DIR, string("WS/trajectories/WS_snapshot_network_different_node_models_script", datetime, ".jl"))
-cp(@__FILE__, script_dest; force=true)
-
-save(joinpath(MA_DIR, string("WS/trajectories/WS_snapshots_network+trajectories_different_models_narrow,full_failure_wide_tweak_power_injections=$tweak_power_injections,", string_plot_params, datetime, ".pdf")), fig)
-save(joinpath(MA_DIR, string("WS/trajectories/WS_snapshots_network+trajectories_different_models_narrow,full_failure_wide_tweak_power_injections=$tweak_power_injections,", string_plot_params, datetime, ".png")), fig)
+# save(joinpath(MA_DIR, string("WS/trajectories/WS_snapshots_network+trajectories_different_models_narrow,full_failure_wide_tweak_power_injections=$tweak_power_injections,", string_plot_params, datetime, ".pdf")), fig)
+# save(joinpath(MA_DIR, string("WS/trajectories/WS_snapshots_network+trajectories_different_models_narrow,full_failure_wide_tweak_power_injections=$tweak_power_injections,", string_plot_params, datetime, ".png")), fig)
 fig

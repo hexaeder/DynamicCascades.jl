@@ -1,6 +1,6 @@
 """
-Snapshots of illustrative example network with different node failure models and correspodning power flow trajectories on lines.
-3 different plots in this script.
+Snapshots (initial and final states) of illustrative example network with different node failure models and corresponding power flow trajectories on lines.
+Also narrow vs. wide bounds besides different node failure models.
 """
 
 using Revise

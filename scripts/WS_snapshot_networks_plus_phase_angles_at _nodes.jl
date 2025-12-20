@@ -1,5 +1,6 @@
 """
 Snapshots of illustrative example network with narrow and wide frequency bounds. Simplified version.
+All phase angles in one plot.
 """
 
 using Revise
@@ -483,6 +484,6 @@ datetime = Dates.format(now(), "_yyyymmdd_HHMMSS.s")
 script_dest = joinpath(MA_DIR, string("WS/trajectories/WS_snapshot_network_different_node_models_script", datetime, ".jl"))
 cp(@__FILE__, script_dest; force=true)
 
-save(joinpath(MA_DIR, string("WS/trajectories/WS_snapshots_network+trajectories_different_models_narrow,full_failure_wide_tweak_power_injections=$tweak_power_injections,", string_plot_params, datetime, ".pdf")), fig)
-save(joinpath(MA_DIR, string("WS/trajectories/WS_snapshots_network+trajectories_different_models_narrow,full_failure_wide_tweak_power_injections=$tweak_power_injections,", string_plot_params, datetime, ".png")), fig)
+# save(joinpath(MA_DIR, string("WS/trajectories/WS_snapshots_network+trajectories_different_models_narrow,full_failure_wide_tweak_power_injections=$tweak_power_injections,", string_plot_params, datetime, ".pdf")), fig)
+# save(joinpath(MA_DIR, string("WS/trajectories/WS_snapshots_network+trajectories_different_models_narrow,full_failure_wide_tweak_power_injections=$tweak_power_injections,", string_plot_params, datetime, ".png")), fig)
 fig
