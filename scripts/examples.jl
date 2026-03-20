@@ -16,7 +16,7 @@ sol = simulate(network;
     initial_fail=[27],
     freq_bound = 0.42);
 
-# ineractive visualization
+# interactive visualization
 using NetworkDynamicsInspector
 using WGLMakie  
 

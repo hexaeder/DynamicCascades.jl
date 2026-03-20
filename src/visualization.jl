@@ -329,12 +329,19 @@ end
 """
 loads dataframes with respective frequencies and calculates braessness
 """
-function get_braessness(exp_name_date, f_b_narrow, f_b_wide, I)
+function get_braessness(exp_name_date, f_b_narrow, f_b_wide, I; exclude_non_triggering=false)
     exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
     df_narrow = DataFrame(CSV.File(joinpath(exp_data_dir,"braessness_lines", "braessness_data", "I=$I,f_b=$f_b_narrow.csv")))
     df_wide = DataFrame(CSV.File(joinpath(exp_data_dir,"braessness_lines", "braessness_data", "I=$I,f_b=$f_b_wide.csv")))
     braessness_lines = df_wide.number_failures_lines .- df_narrow.number_failures_lines
     braessness_nodes = df_wide.number_failures_nodes .- df_narrow.number_failures_nodes
+
+    # exclude lines that do not trigger cascade
+    if exclude_non_triggering == true
+        sum_narrow_plus_wide = df_wide.number_failures_lines .+ df_wide.number_failures_nodes .+ df_narrow.number_failures_lines .+ df_narrow.number_failures_nodes
+        braessness_lines = braessness_lines[sum_narrow_plus_wide .> 0]
+        braessness_nodes = braessness_nodes[sum_narrow_plus_wide .> 0]
+    end
 
     return braessness_lines, braessness_nodes
 end
