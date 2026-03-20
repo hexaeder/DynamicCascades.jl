@@ -5,18 +5,20 @@ when varying the frequency bounds. Line and node failures summed.
 #  NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE Check NORMALIZED sum of lines and nodes again.
 
 
-include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
+include(abspath(@__DIR__, "..", "..", "..", "helpers_jarray.jl"))
 
 using GraphMakie
 using Colors, ColorSchemes
 using CairoMakie
+CairoMakie.activate!()
 
 
 # plotting parameters
-create_posprocessing_data = true # set to `false` for fast plotting
+create_posprocessing_data = false # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
-line_colors = [Makie.wong_colors()[3], Makie.wong_colors()[5], Makie.wong_colors()[6]]
+# line_colors = [Makie.wong_colors()[3], Makie.wong_colors()[5], Makie.wong_colors()[6]]
+line_colors = ["#5C3D99FF", "#56B4E9FF", "#D55E00FF"] # [deep indigo, Hellblau, Orange]
 colormap_frequencies = true
 opacity = 0.15
 fontsize = labelsize = 26
@@ -24,7 +26,8 @@ fontsize = labelsize = 26
 markersize = 15
 markers_labels = [(:circle, ":circle")]
 
-exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250126_012357.344"
+# exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250126_012357.344"
+exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250321_171511.976"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 left_out_frequencies = [0.005, 0.015, 0.02, 0.025, 0.035, 0.04, 0.045,
     0.05, 0.055, 0.060, 0.065, 0.07, 0.075, 0.08, 0.085, 0.09, 0.095, 0.1,
@@ -37,6 +40,10 @@ left_out_β_values = []
 ###################### Calculate mean and standard error #######################
 ################################################################################
 if create_posprocessing_data == true
+    #= # NOTE `postprocess_jarray_data` leads to error for "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250321_171511.976"
+    `preprocess_WS` was changed in order to save power injections. However the data in
+    "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250321_171511.976" were generated before that change.
+    =#
     postprocess_jarray_data(exp_name_date)
 end
 df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))

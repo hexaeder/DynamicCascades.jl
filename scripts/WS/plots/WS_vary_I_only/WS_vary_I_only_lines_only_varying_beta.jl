@@ -3,7 +3,7 @@ Watts-Strogatz-Network-Ensemble: Using job array framework. Only varying rewirin
 probability β and only considering line failures.
 """
 
-include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
+include(abspath(@__DIR__, "..", "..", "..", "helpers_jarray.jl"))
 
 using GraphMakie
 using Colors, ColorSchemes
@@ -11,15 +11,18 @@ using CairoMakie
 
 # plotting parameters
 show_title = true
-create_posprocessing_data = true # set to `false` for fast plotting
+create_posprocessing_data = false # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
-line_colors = [Makie.wong_colors()[1], Makie.wong_colors()[2], Makie.wong_colors()[4], Makie.wong_colors()[3]]  # https://docs.makie.org/stable/explanations/colors/
+# line_colors = [Makie.wong_colors()[1], Makie.wong_colors()[2], Makie.wong_colors()[4], Makie.wong_colors()[3]]  # https://docs.makie.org/stable/explanations/colors/
+line_colors = [Makie.wong_colors()[1], Makie.wong_colors()[2], "#000000FF", Makie.wong_colors()[3]]  # https://docs.makie.org/stable/explanations/colors/
+
 colormap_frequencies = false
-opacity = 0.3
-fontsize = labelsize = 26
+opacity = 0.2
+fontsize = labelsize = 40
 # markers
 markersize = 15
+linewidth = 4
 markers_labels = [
     (:utriangle, ":utriangle"),
     (:rect, ":rect"),
@@ -27,12 +30,13 @@ markers_labels = [
     (:circle, ":circle"),
 ]
 
-exp_name_date = "WS_k=4_exp03_1_vary_I_only_lines_PIK_HPC_K_=3,N_G=32_20250124_123225.691"
+# exp_name_date = "WS_k=4_exp03_1_vary_I_only_lines_PIK_HPC_K_=3,N_G=32_20250124_123225.691"
+exp_name_date = "WS_k=4_exp03_1_vary_I_only_lines_PIK_HPC_K_=3,N_G=32_20250326_231646.227"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 
 left_out_frequencies = []
 left_out_inertia_values = []
-left_out_β_values = []
+left_out_β_values = [0.1, 0.25]
 
 ################################################################################
 ###################### Calculate mean and standard error #######################
@@ -56,10 +60,10 @@ filtered_β_values = filter!(x->x ∉ left_out_β_values, deepcopy(exp_params_di
 
 fig_lines_only = Figure(size=(800,600),fontsize = fontsize)
 ax_lines_only = Axis(fig_lines_only[1, 1],
-    # title = "Line failures",
-    title = "",
+    title = "Line failure model (WS)",
+    titlefont = :regular,
     xlabel = L"Inertia I [$s^2$]",
-    ylabel = normalize ? "normalized average of line failures" : L"Averaged line failures $N_{fail}^L$",
+    ylabel = normalize ? "normalized average of line failures" : L"# Line failures $\left< l \hspace\right>$",
 )
 
 # Create figures depending on the modes (loop).
@@ -128,15 +132,17 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
 
         if (trip_lines == :dynamic &&  trip_nodes == :none)
             if freq_bound == filtered_freq_bounds[1]
-                scatterlines!(ax_lines_only, filtered_inertia_values, y_lines, marker = marker, markersize = markersize, label = "k=$k,β=$β", color = line_colors[color_index])
+                scatterlines!(ax_lines_only, filtered_inertia_values, y_lines, marker = marker, markersize = markersize, linewidth=linewidth, label = "k=$k,β=$β", color = line_colors[color_index])
                 band!(ax_lines_only, filtered_inertia_values, y_lines + err_lines, y_lines - err_lines, transparency=true, color = (line_colors[color_index], opacity))
             end
         end
     end
 end
 N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, 1)
-lines!(ax_lines_only, [NaN], [NaN]; label="Damping D=1 [s]", color=:white)
-axislegend(ax_lines_only, position = :lt, labelsize=labelsize)
+# lines!(ax_lines_only, [NaN], [NaN]; label="Damping D=1 [s]", color=:white)
+# axislegend(ax_lines_only, position = :lt, labelsize=labelsize)
+
+Label(fig_lines_only[1, 1, TopLeft()], "c", fontsize = 44, font = :bold, padding = (-25, 15, 5, 5))
 
 k_str = string(exp_params_dict[:k])
 filtered_freq_bounds_str = string(filtered_freq_bounds)

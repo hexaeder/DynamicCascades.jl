@@ -23,6 +23,7 @@ using Serialization
 ###### WS
 ######
 # exp_name_date = "WS_k=4_exp10_vary_I_only_lines_and_nodes_N=20_PIK_HPC_K_=3,N_G=16_20250410_185732.694"
+exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250321_171511.976"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 
 # choose inertia
@@ -68,6 +69,57 @@ exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20
 braessness_lines, braessness_nodes = get_braessness(exp_name_date, f_b_narrow, f_b_wide, I);
 x_ρ, x_dist = get_network_measures(exp_name_date);
 exp_nr_full = exp_name_date[11:12]
+
+### Find out number of lines that cause cascade
+## Live coding in meeting
+exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250321_171511.976"
+exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
+df_narrow = DataFrame(CSV.File(joinpath(exp_data_dir,"braessness_lines", "braessness_data", "I=$I,f_b=$f_b_narrow.csv")))
+df_wide = DataFrame(CSV.File(joinpath(exp_data_dir,"braessness_lines", "braessness_data", "I=$I,f_b=$f_b_wide.csv")))
+braessness_lines = df_wide.number_failures_lines .- df_narrow.number_failures_lines
+braessness_nodes = df_wide.number_failures_nodes .- df_narrow.number_failures_nodes
+
+(df_narrow.number_failures_lines .== 0) |> sum
+((df_narrow.number_failures_lines .+ df_narrow.number_failures_nodes) .== 0) |> sum
+((df_wide.number_failures_lines .+ df_wide.number_failures_nodes) .== 0) |> sum
+
+test = df_wide.number_failures_lines .+ df_narrow.number_failures_lines .+ df_wide.number_failures_nodes .+ df_narrow.number_failures_nodes
+(test.== 0) |> sum # 
+
+braessness_nodes = df_wide.number_failures_nodes .- df_narrow.number_failures_nodes
+
+test .> 0
+braessness_lines[test .> 0] # 700 elemente, bei denen cascade passiert
+
+## Bearbeitung nach live coding
+# narrow bounds: number of trigger lines that lead to zero line failures
+sum(df_narrow.number_failures_lines .== 0) 
+
+#  narrow bounds: number of trigger lines that lead to zero line and node failures
+sum((df_narrow.number_failures_lines .+ df_narrow.number_failures_nodes) .== 0)
+
+# wide bounds: number of trigger lines that lead to zero line and node failures
+sum((df_wide.number_failures_lines .+ df_wide.number_failures_nodes) .== 0)
+
+# number of trigger lines with no failures
+test = df_wide.number_failures_lines .+ df_wide.number_failures_nodes .+ df_narrow.number_failures_lines .+ df_narrow.number_failures_nodes
+sum(test.== 0) 
+
+braessness_nodes = df_wide.number_failures_nodes .- df_narrow.number_failures_nodes
+
+test .> 0
+braessness_lines[test .> 0] # 700 lines, bei denen cascade passiert
+braessness_nodes[test .> 0]
+
+## Fraction of lines (out of the lines that trigger a cascade) that have B>0
+braessness_lines, braessness_nodes = get_braessness(exp_name_date, f_b_narrow, f_b_wide, I; exclude_non_triggering=true);
+braessness = (braessness_lines .+ braessness_nodes)
+length(braessness[braessness .> 0]) # 361 elements
+length(braessness[braessness .< 0]) # 246 elements
+length(braessness[braessness .== 0]) # 93
+
+###
+
 
 ## inertia failure
 exp_name_date = "WS_k=4_exp11_vary_I_only_lines_and_nodes_change_to_BH_complement_f_bPIK_HPC_K_=3,N_G=32_20250420_145304.04"

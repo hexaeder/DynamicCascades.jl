@@ -3,7 +3,7 @@ Watts-Strogatz-Network-Ensemble: Using job array framework. Only varying rewirin
 probability β and only considering node failures.
 """
 
-include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
+include(abspath(@__DIR__, "..", "..", "..", "helpers_jarray.jl"))
 
 using GraphMakie
 using Colors
@@ -11,15 +11,17 @@ using CairoMakie
 
 
 # plotting parameters
-create_posprocessing_data = true # set to `false` for fast plotting
+create_posprocessing_data = false # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
-line_colors = [Makie.wong_colors()[1], Makie.wong_colors()[2], Makie.wong_colors()[4], Makie.wong_colors()[3]]  # https://docs.makie.org/stable/explanations/colors/
+# line_colors = [Makie.wong_colors()[1], Makie.wong_colors()[2], Makie.wong_colors()[4], Makie.wong_colors()[3]]  # https://docs.makie.org/stable/explanations/colors/
+line_colors = [Makie.wong_colors()[1], Makie.wong_colors()[2], "#000000FF", Makie.wong_colors()[3]]  # https://docs.makie.org/stable/explanations/colors/
 colormap_frequencies = false
-opacity = 0.3
-fontsize = labelsize = 26
+opacity = 0.2
+fontsize = labelsize = 40
 # markers
 markersize = 15
+linewidth = 4
 markers_labels = [
     (:utriangle, ":utriangle"),
     (:rect, ":rect"),
@@ -27,13 +29,14 @@ markers_labels = [
     (:circle, ":circle"),
 ]
 
-exp_name_date = "WS_k=4_exp03_2_vary_I_only_nodes_PIK_HPC_K_=3,N_G=32_20250124_123411.73"
+# exp_name_date = "WS_k=4_exp03_2_vary_I_only_nodes_PIK_HPC_K_=3,N_G=32_20250124_123411.73"
+exp_name_date = "WS_k=4_exp03_2_vary_I_only_nodes_PIK_HPC_K_=3,N_G=32_20250326_231746.273"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 left_out_frequencies = [0.005, 0.010, 0.015, 0.02, 0.025, 0.035, 0.04,
     0.045, 0.050, 0.055, 0.060, 0.065, 0.070, 0.075, 0.080, 0.085, 0.090, 0.095, 0.100,
     0.110, 0.120, 0.130, 0.140, 0.150, 0.160, 0.170, 0.180, 0.190, 0.200,
     0.210, 0.220, 0.230, 0.240, 0.250, 0.260, 0.270, 0.280, 0.290, 0.300, 0.800]
-left_out_β_values = [0.9]
+left_out_β_values = [0.1, 0.25, 0.9]
 # left_out_inertia_values = []
 left_out_inertia_values = [7.5, 10, 20, 30]
 
@@ -59,9 +62,10 @@ filtered_β_values = filter!(x->x ∉ left_out_β_values, deepcopy(exp_params_di
 
 fig_nodes_only = Figure(size=(800,600),fontsize = fontsize)
 ax_nodes_only = Axis(fig_nodes_only[1, 1],
-    title = "",
+    title = "Node failure model (WS)",
+    titlefont = :regular,
     xlabel = L"Inertia I [$s^2$]",
-    ylabel = normalize ? "normalized average of node failures" : L"Averaged node failures $N_{fail}^N$",
+    ylabel = normalize ? "normalized average of node failures" : L"# Node failures $\left< n \hspace\right>$",
 )
 
 # Create figures depending on the modes (loop).
@@ -128,7 +132,7 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
         color_index = colormap_frequencies ? findfirst(x -> x == freq_bound, filtered_freq_bounds) : marker_index
 
         if (trip_lines == :none &&  trip_nodes == :dynamic)
-            scatterlines!(ax_nodes_only, filtered_inertia_values, y_nodes, marker = marker,  markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
+            scatterlines!(ax_nodes_only, filtered_inertia_values, y_nodes, marker = marker,  markersize = markersize, linewidth=linewidth, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
             band!(ax_nodes_only, filtered_inertia_values, y_nodes + err_nodes, y_nodes - err_nodes, transparency=true, color = (line_colors[color_index], opacity))
         end
     end
@@ -138,8 +142,10 @@ N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes
 if sum_lines_nodes == false
     lines!(ax_lines_and_nodes, [NaN], [NaN]; label="node failures: ___ (solid) \nline failures:   ----- (dashed)", color=:white, linewidth=3)
 end
-lines!(ax_nodes_only, [NaN], [NaN]; label="Damping D=1 [s]", color=:white)
-axislegend(ax_nodes_only, position = :rt, labelsize=labelsize)
+# lines!(ax_nodes_only, [NaN], [NaN]; label="Damping D=1 [s]", color=:white)
+# axislegend(ax_nodes_only, position = :rt, labelsize=labelsize)
+
+Label(fig_nodes_only[1, 1, TopLeft()], "d", fontsize = 44, font = :bold, padding = (-25, 15, 5, 5))
 
 k_str = string(exp_params_dict[:k])
 filtered_freq_bounds_str = string(filtered_freq_bounds)

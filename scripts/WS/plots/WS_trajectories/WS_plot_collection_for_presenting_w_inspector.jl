@@ -407,6 +407,21 @@ inspect_wrapper(sol; which_trajectories = :failing);
 describe_failures(sol)
 # set_sol!(sol)
 
+
+# SwingDynLoadModel
+# SwingDynLoadModel_change_to_BH_only
+gen_model = SwingDynLoadModel_change_Pmech_only;
+exp_name_date = exp_name_date_power;
+
+sol = simulate(exp_name_date, task_id, initial_fail;
+    gen_model = gen_model,
+    initial_fail = initial_fail,
+    verbose = true);
+
+inspect_wrapper(sol; which_trajectories = :all); # describe_failures(sol)
+
+
+
 """
 full
  - wide: some islands with ∑P_i < 0
@@ -528,11 +543,26 @@ function adapt_inspector01()
         (; selcomp=[EIndex(9), EIndex(12), EIndex(13), EIndex(14), EIndex(15), EIndex(16)], states=[:S, :rating], rel=false)])
 end
 
-""" power: 53 """
-# x-Axis: narrow:  ArrayTaskID=2229, initially_failed_line=15
-#          wide:   ArrayTaskID=2256, initially_failed_line=15
-sol = WS_inspect_wrapper(exp_name_date_power, 2229, 15; which_trajectories=:failing); adapt_inspector01(); describe_failures(sol) # narrow
-sol = WS_inspect_wrapper(exp_name_date_power, 2256, 15; which_trajectories=:failing, tmax=40); describe_failures(sol) # wide
+""" full 48 """
+# z-Axis: narrow:  ArrayTaskID=7584, initially_failed_line=15
+#          wide:   ArrayTaskID=7755, initially_failed_line=15, Braessness=48
+sol = WS_inspect_wrapper(exp_name_date_full, 7584, 15; which_trajectories=:failing); adapt_inspector01(); describe_failures(sol)  # narrow
+sol = WS_inspect_wrapper(exp_name_date_full, 7755, 15; which_trajectories=:failing, tmax=40); describe_failures(sol) # wide
+
+## variation of inertia parameter (narrow bounds)
+initial_fail = 15
+task_id = 7581 # I= 1.0 no line failures
+task_id = 7583 # I= 5.0: only e13, no further lines fail
+task_id = 7584 # I= 7.5: paper example
+task_id = 7585 # I= 10.0 one further node failure compared to paper example
+gen_model = SwingDynLoadModel;
+exp_name_date = exp_name_date_full;
+
+sol = simulate(exp_name_date, task_id, initial_fail;
+    gen_model = gen_model,
+    initial_fail = initial_fail,
+    verbose = true);
+inspect_wrapper(sol; which_trajectories = :failing); adapt_inspector01(); # describe_failures(sol)
 
 """ inertia 54 """
 # y-Axis: narrow:  ArrayTaskID=2229, initially_failed_line=15
@@ -540,20 +570,21 @@ sol = WS_inspect_wrapper(exp_name_date_power, 2256, 15; which_trajectories=:fail
 sol = WS_inspect_wrapper(exp_name_date_inertia, 2229, 15; which_trajectories=:failing); adapt_inspector01(); describe_failures(sol) # narrow
 sol = WS_inspect_wrapper(exp_name_date_inertia, 2256, 15; which_trajectories=:failing, tmax=40); describe_failures(sol)  # wide
 
-""" full 48 """
-# z-Axis: narrow:  ArrayTaskID=7584, initially_failed_line=15
-#          wide:   ArrayTaskID=7755, initially_failed_line=15, Braessness=48
-sol = WS_inspect_wrapper(exp_name_date_full, 7584, 15; which_trajectories=:failing); adapt_inspector01(); describe_failures(sol)  # narrow
-sol = WS_inspect_wrapper(exp_name_date_full, 7755, 15; which_trajectories=:failing, tmax=40); describe_failures(sol) # wide
+""" power: 53 """
+# x-Axis: narrow:  ArrayTaskID=2229, initially_failed_line=15
+#          wide:   ArrayTaskID=2256, initially_failed_line=15
+sol = WS_inspect_wrapper(exp_name_date_power, 2229, 15; which_trajectories=:failing); adapt_inspector01(); describe_failures(sol) # narrow
+sol = WS_inspect_wrapper(exp_name_date_power, 2256, 15; which_trajectories=:failing, tmax=40); describe_failures(sol) # wide
 
 
 """
 Tweaked power injections
 """
+exp_name_date_full = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250321_171511.976"
 initial_fail = 15
 exp_name_date = exp_name_date_full
-# task_id = 7584 # narrow
-task_id = 7755 # wide 
+task_id = 7584 # narrow
+# task_id = 7755 # wide 
 
 # exp_name_date = exp_name_date_inertia
 # task_id = 2229 # narrow
@@ -625,8 +656,18 @@ for i in 1:nv(nw)
 end
 inspect_wrapper(sol; which_trajectories = :failing); # adapt_inspector01()
 
+set_sol!(sol) # optional if after inspect(sol)
+set_state!(; t=0.15478708448597922, tmin=0.0, tmax=12.847328012336275)
+set_graphplot!(; nstate=[:ω], estate=[:S], nstate_rel=false, estate_rel=false, ncolorrange=(-0.9424778f0, 0.9424778f0), ecolorrange=(0.0f0, 2.0990243f0))
+define_timeseries!([
+    (; selcomp=[EIndex(9), EIndex(13), EIndex(14), EIndex(15), EIndex(16)], states=[:S, :rating], rel=false),
+    (; selcomp=[VIndex(82), VIndex(5), VIndex(6), VIndex(4)], states=[:θ], rel=false),
+])
 
-""" --- 02 --- full > power, inertia (31,18,41) """
+
+
+
+
 # get_task_ids_and_failed_line_from_coordinates(exp_name_date_power, exp_name_date_inertia, exp_name_date_full, 31, 18, f_b_narrow, f_b_wide, I; run_save_simulation = false, generate_plot = false)
 function adapt_inspector02()
     set_state!(; t=0.0, tmin=0.0, tmax=30)
@@ -665,30 +706,38 @@ sol = WS_inspect_wrapper(exp_name_date_full, 501, 2; which_trajectories=:failing
 
 
 """
+Outlier
 """
 b_inertia_failure = -39
 b_full_failure = 17
 """ inertia -39
- - narrow:
- - wide:
 """
 # x-Axis: wide:    ArrayTaskID=474, initially_failed_line=79 
 #         narrow:  ArrayTaskID=447, initially_failed_line=79
 WS_inspect_wrapper(exp_name_date_inertia, 447, 79; which_trajectories=:failing); # narrow
 WS_inspect_wrapper(exp_name_date_inertia, 474, 79; which_trajectories=:all); # wide
 
+
+initial_fail = 79
+task_id = 447 # narrow
+task_id = 474 # wide
+gen_model = SwingDynLoadModel_change_to_BH_only;
+exp_name_date = exp_name_date_inertia;
+
+sol = simulate(exp_name_date, task_id, initial_fail;
+    gen_model = gen_model,
+    initial_fail = initial_fail,
+    verbose = true);
+inspect_wrapper(sol; which_trajectories = :failing); describe_failures(sol)
+
 """ full 17
- - narrow:
- - wide: 
 """
 # y-Axis: wide:    ArrayTaskID=1617, initially_failed_line=79 
 #         narrow:  ArrayTaskID=1446, initially_failed_line=79
 WS_inspect_wrapper(exp_name_date_full, 1446, 79; which_trajectories=:failing); # narrow
 WS_inspect_wrapper(exp_name_date_full, 1617, 79; which_trajectories=:all);  # wide
 
-""" power: 19
- - narrow: 
- - wide: 
+""" power: 19(18?)
 """
 # z-Axis: wide:    ArrayTaskID=474, initially_failed_line=79, Braessness=19 
 #         narrow:  ArrayTaskID=447, initially_failed_line=79
@@ -697,10 +746,31 @@ WS_inspect_wrapper(exp_name_date_power, 474, 79; which_trajectories=:all); # wid
 
 
 
+
+###
+### WS N=10
+### 
+
+initial_fail = 13
+task_id = 570 # f_b = 0.01
+# task_id = 606 # f_b = 0.03
+
+# SwingDynLoadModel_change_Pmech_only
+# SwingDynLoadModel_change_to_BH_only
+gen_model = SwingDynLoadModel;
+exp_name_date = "WS_k=4_exp09_vary_I_only_lines_and_nodes_N=10_PIK_HPC_K_=3,N_G=16_20250410_121325.12"
+
+sol = simulate(exp_name_date, task_id, initial_fail;
+    gen_model = gen_model,
+    initial_fail = initial_fail,
+    verbose = true);
+
+describe_failures(sol)    
+inspect_wrapper(sol; which_trajectories = :all); 
+
 ###
 ### For comparing with `scripts/WS_snapshot_networks_plot.jl`
 ###
-
 initial_fail = 15
 task_id = 7584
 exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250321_171511.976"
