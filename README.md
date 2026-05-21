@@ -3,37 +3,7 @@
 # DynamicCascades.jl
 Exploring dynamic cascades in power systems featuring dynamic line and node failures.
 
-## Basic functionality
-The main entrypoint is `simulate` in src/ND_model.jl.
-
-See `scripts/examples.jl` for how to
- - simulate a cascade in an example network
- - resimulate a cascade that has been simulated in an experiment using the job array framework (see below) 
- - use the interactive plotting utility [NetworkDynamicsInspector.jl](https://github.com/JuliaDynamics/NetworkDynamics.jl/tree/main/NetworkDynamicsInspector) 
-
-##  Job array framework for HPCs
-The framework is the same for WS and RTS.
-
-<!--
- - For reproduction use Julia 1.8.4 (for WS) and Julia v1.11.0 (for RTS) on HPC 
-   - Example for Julia 1.8.2 
-     - `cd /home/brandner/tmpjulia/`
-     - wget https://julialang-s3.julialang.org/bin/linux/x64/1.8/julia-1.8.2-linux-x86_64.tar.gz
-     - tar -xvzf julia-1.8.2-linux-x86_64.tar.gz
-     - in submit.sh do `/home/brandner/tmpjulia/julia-1.8.2/bin/julia script.jl   
-     - Do `] instantiate` manually on cluster. Doing this through the script, it didn't work. 
--->
-
- - `WS_preprocessing.jl` creates config file and initially stable networks (for WS).
-    Adapt the parameters in this script for each new experiment. No separate script for each 
-    experiment needed as the script that was used for the simulations is saved with the 
-    simulation data when executing `WS_master_experiment.sh` and `RTS_master_experiment.sh`.
- - `WS_master_experiment.sh` (execute as `./WS_master_experiment.sh`, without `sbatch`)
-    creates separate job array for each inertia value to reduce cluster queue time. Slurm parameters need
-    to be adapted for each inertia value.
- - `WS_job_array_HPC_for_master.sh` invoced by `WS_master_experiment.sh`, runs `WS_job.jl`
- - `WS_job.jl` script that is executed for every job.
- - `sacct_postprocessing.sh` creates .txt with slurm informations on the finished jobs (COMPLETED/FAILED, CPUTime, etc.)
+For instructions how to use the code and reproduce the results of this [paper](TODO) see [README_submission.md](https://github.com/hexaeder/DynamicCascades.jl/blob/submission/README_submission.md) in the branch [submission](https://github.com/hexaeder/DynamicCascades.jl/tree/submission).
 
 ## Legacy branch
 This repository is based on [NetworkDynamics.jl](https://github.com/JuliaDynamics/NetworkDynamics.jl) (ND.jl). NetworkDynamics.jl 
