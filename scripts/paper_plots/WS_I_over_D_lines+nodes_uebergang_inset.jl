@@ -1,42 +1,38 @@
 """
-Watts-Strogatz-Network-Ensemble: Using job array framework. Only varying rewiring
-probability β and only considering line failures.
+Watts-Strogatz-Network-Ensemble: Using job array framework. Transition that appears
+when varying the frequency bounds. Line and node failures summed.
 """
+#  NOTE Check NORMALIZED sum of lines and nodes again (not relevant for figures for paper submission).
 
-include(abspath(@__DIR__, "..", "..", "..", "helpers_jarray.jl"))
+
+
+include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
 
 using GraphMakie
 using Colors, ColorSchemes
 using CairoMakie
+CairoMakie.activate!()
 
+include(abspath(@__DIR__, "paper_plots_helpers_and_parameters.jl"))
 # plotting parameters
-show_title = true
 create_posprocessing_data = false # set to `false` for fast plotting
 sum_lines_nodes = true
 normalize = false
-# line_colors = [Makie.wong_colors()[1], Makie.wong_colors()[2], Makie.wong_colors()[4], Makie.wong_colors()[3]]  # https://docs.makie.org/stable/explanations/colors/
-line_colors = [Makie.wong_colors()[1], Makie.wong_colors()[2], "#000000FF", Makie.wong_colors()[3]]  # https://docs.makie.org/stable/explanations/colors/
-
-colormap_frequencies = false
-opacity = 0.2
-fontsize = labelsize = 40
+colormap_frequencies = true
+opacity = 0.15
+fontsize = labelsize = 28
 # markers
 markersize = 15
-linewidth = 4
-markers_labels = [
-    (:utriangle, ":utriangle"),
-    (:rect, ":rect"),
-    # (:star5, "star5"),
-    (:circle, ":circle"),
-]
+markers_labels = [(:circle, ":circle")]
 
-# exp_name_date = "WS_k=4_exp03_1_vary_I_only_lines_PIK_HPC_K_=3,N_G=32_20250124_123225.691"
-exp_name_date = "WS_k=4_exp03_1_vary_I_only_lines_PIK_HPC_K_=3,N_G=32_20250326_231646.227"
+# exp_name_date = "WS_k=4_exp06_3_I_over_D_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250125_134157.625"
+exp_name_date = "WS_k=4_exp06_3_I_over_D_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250326_230522.458"
+
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
-
-left_out_frequencies = []
+# left_out_frequencies = [0.005, 0.01, 0.015, 0.025, 0.03, 0.035, 0.14, 0.15, 0.16, 0.3, 0.5, 0.8]
+left_out_frequencies = [0.005, 0.015, 0.025, 0.035, 0.14, 0.16, 0.3, 0.5, 0.8]
 left_out_inertia_values = []
-left_out_β_values = [0.1, 0.25]
+left_out_β_values = []
 
 ################################################################################
 ###################### Calculate mean and standard error #######################
@@ -58,13 +54,38 @@ filtered_freq_bounds = filter!(x->x ∉ left_out_frequencies, deepcopy(freq_boun
 filtered_inertia_values = filter!(x->x ∉ left_out_inertia_values, deepcopy(inertia_values))
 filtered_β_values = filter!(x->x ∉ left_out_β_values, deepcopy(exp_params_dict[:β]))
 
-fig_lines_only = Figure(size=(800,600),fontsize = fontsize)
-ax_lines_only = Axis(fig_lines_only[1, 1],
-    title = "Line failure model (WS)",
+fig_lines_and_nodes = Figure(size=(800,600),fontsize = fontsize)
+ax_lines_and_nodes = Axis(fig_lines_and_nodes[1, 1],
+    # title = sum_lines_nodes ? "Summed line and node failures" : "Line and node failures",
+    title = sum_lines_nodes ? L"Damping $D=I$ [$s$]" : "Line and node failures",
+    # title = sum_lines_nodes ? L"Damping $D = I^{\frac{1}{2}}$ [$s$]"  : "Line and node failures",
     titlefont = :regular,
-    xlabel = L"Inertia I [$s^2$]",
-    ylabel = normalize ? "normalized average of line failures" : L"# Line failures $\left< l \hspace\right>$",
+    # xlabel = L"Inertia $I$ [$s^2$]",
+    ylabel = normalize ? "Fractions failing elements" : L"# Failures $\left< F \right>$",
+    xgridvisible = false,
+    ygridvisible = false,
 )
+# hidedecorations!(ax_lines_and_nodes, grid=false)
+
+# Create inset
+# The inset axis
+inset_ax = Axis(fig_lines_and_nodes[1, 1],
+    # xlabel = L"Inertia I [$s^2$]",
+    # ylabel = normalize ? "normalized average of failures" : L"Averaged failures $N_{fail}$",
+    width=Relative(0.5),
+    height=Relative(0.5),
+    halign=0.93,
+    valign=0.91,
+    backgroundcolor=(:grey, 0.05),
+    # xgridvisible = false,
+    # ygridvisible = false,
+    )
+
+
+# hidedecorations!(inset_ax)
+xlims!(inset_ax, 0, 31)
+ylims!(inset_ax, 0, 1)
+
 
 # Create figures depending on the modes (loop).
 failure_modes = exp_params_dict[:failure_modes]
@@ -72,7 +93,6 @@ failure_modes = exp_params_dict[:failure_modes]
 
 df_avg_error = DataFrame(CSV.File(joinpath(RESULTS_DIR, exp_name_date, "avg_error.csv")))
 inertia_values = exp_params_dict[:inertia_values]
-
 
 #= Different inertia values for: Ensemble average over normalized average of
 failures (the latter for a single network) =#
@@ -124,30 +144,38 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
         # frequency argument first for a nice order in the legend
         N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
 
-        marker_index = findfirst(x -> x == β, β_vals)# CairoMakie.save(joinpath(MA_DIR, "WS", "lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,M_left_out=$left_out_inertia_values.png"),fig_lines_only)
-# CairoMakie.save(joinpath(MA_DIR, "WS", "lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,M_left_out=$left_out_inertia_values.pdf"),fig_lines_only)
+        marker_index = findfirst(x -> x == β, β_vals)
         marker = markers_labels[marker_index][1]
         marker_label = markers_labels[marker_index][2]
         color_index = colormap_frequencies ? findfirst(x -> x == freq_bound, filtered_freq_bounds) : marker_index
 
-        if (trip_lines == :dynamic &&  trip_nodes == :none)
-            if freq_bound == filtered_freq_bounds[1]
-                scatterlines!(ax_lines_only, filtered_inertia_values, y_lines, marker = marker, markersize = markersize, linewidth=linewidth, label = "k=$k,β=$β", color = line_colors[color_index])
-                band!(ax_lines_only, filtered_inertia_values, y_lines + err_lines, y_lines - err_lines, transparency=true, color = (line_colors[color_index], opacity))
+        if (trip_lines == :dynamic &&  trip_nodes == :dynamic)
+            if sum_lines_nodes == true # NOTE For the normalized version this might be wrong s. Schmierzettel S. 23.
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes, linewidth=linewidth, marker = marker, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
+                band!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes + err_nodes_plus_lines, y_lines + y_nodes - err_nodes_plus_lines, transparency=true, color = (line_colors[color_index], opacity))
+                # inset plot
+                scatterlines!(inset_ax, filtered_inertia_values, y_lines + y_nodes, linewidth=linewidth, marker = marker, markersize = markersize, color = line_colors[color_index])
+                band!(inset_ax, filtered_inertia_values, y_lines + y_nodes + err_nodes_plus_lines, y_lines + y_nodes - err_nodes_plus_lines, transparency=true, color = (line_colors[color_index], opacity))
+            else
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines, linewidth=linewidth, linestyle=:dash, marker = marker, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
+                band!(ax_lines_and_nodes, filtered_inertia_values, y_lines + err_lines, y_lines - err_lines, transparency=true, color = (line_colors[color_index], opacity))
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_nodes, linewidth=linewidth, marker = marker, markersize = markersize, color = line_colors[color_index])
+                band!(ax_lines_and_nodes, filtered_inertia_values, y_nodes + err_nodes, y_nodes - err_nodes, transparency=true, color = (line_colors[color_index], opacity))
             end
         end
     end
 end
 N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, 1)
-# lines!(ax_lines_only, [NaN], [NaN]; label="Damping D=1 [s]", color=:white)
-# axislegend(ax_lines_only, position = :lt, labelsize=labelsize)
+# lines!(ax_lines_and_nodes, [NaN], [NaN]; label=L"Damping $D=I$ [$s$]", color=:white)
+# axislegend(ax_lines_and_nodes, position = (0.07,0.99), labelsize=labelsize-5)
+Label(fig_lines_and_nodes[1, 1, TopLeft()], fontsize=fontsize+labellettersize, "b", font = :bold, padding = (-55, 0, 5, 0))
 
-Label(fig_lines_only[1, 1, TopLeft()], "c", fontsize = 44, font = :bold, padding = (-25, 15, 5, 5))
+
 
 k_str = string(exp_params_dict[:k])
 filtered_freq_bounds_str = string(filtered_freq_bounds)
 K_str = string(exp_params_dict[:K])
 
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_I_only_lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,M_left_out=$left_out_inertia_values.png"),fig_lines_only)
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_I_only_lines_only_K=$K_str,k=$k_str,β=$filtered_β_values,M_left_out=$left_out_inertia_values.pdf"),fig_lines_only)
-fig_lines_only
+CairoMakie.save(joinpath(MA_DIR, "WS_I_over_D_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
+# CairoMakie.save(joinpath(MA_DIR, "WS_I_over_D_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
+fig_lines_and_nodes

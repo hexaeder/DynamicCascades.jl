@@ -332,9 +332,9 @@ function simulate(exp_name_date, task_id, initial_fail; kwargs...)
         network = import_system_wrapper(df_config, task_id)
 
         # adjust filepaths 
-        df_config[!, :filepath_graph] = replace.(df_config[!, :filepath_graph],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
-        # df_config[!, :filepath_steady_state] = replace.(df_config[!, :filepath_steady_state],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
-        # df_config[!, :filepath_power_injections] = replace.(df_config[!, :filepath_power_injections],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
+        df_config[!, :filepath_graph] = replace.(df_config[!, :filepath_graph],"/home/brandner/MA_data/results_NB" => abspath(@__DIR__, "..", "simulation_results"))
+        # df_config[!, :filepath_steady_state] = replace.(df_config[!, :filepath_steady_state],"/home/brandner/MA_data/results_NB" => abspath(@__DIR__, "..", "simulation_results"))
+        # df_config[!, :filepath_power_injections] = replace.(df_config[!, :filepath_power_injections],"/home/brandner/MA_data/results_NB" => abspath(@__DIR__, "..", "simulation_results"))
 
         #= #HACK `import_system_wrapper` generates `networks`, which is a MetaGraph using `watts_strogatz`.
         `watts_strogatz` generates different graphs for different versions of its package (for the same seeds).
@@ -360,6 +360,7 @@ function simulate(exp_name_date, task_id, initial_fail; kwargs...)
         _,_,_,freq_bound,trip_lines,trip_nodes,_,_ = RTS_get_network_args_stripped(df_config, task_id)
         network = RTS_import_system_wrapper(df_config, task_id)
         graph = network.graph
+        simulations_executed_with_new_ND = false # HACK RTS is implemented in new ND.
     end
 
     sol = simulate(network;

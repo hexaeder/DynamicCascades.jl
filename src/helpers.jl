@@ -410,7 +410,11 @@ function postprocess_jarray_data(exp_name_date)
     (Straighforward to implement but not necessarily needed).
     =#
     if exp_name_date[1:2] == "WS"
-        select!(df_avg_error, Not([:graph_seed, :distr_seed, :filepath_steady_state, :filepath_graph, :filepath_power_injections, :ensemble_element]))
+        try # NOTE This is for older simulations that do not have `:filepath_power_injections`
+            select!(df_avg_error, Not([:graph_seed, :distr_seed, :filepath_steady_state, :filepath_graph, :filepath_power_injections, :ensemble_element]))
+        catch
+            select!(df_avg_error, Not([:graph_seed, :distr_seed, :filepath_steady_state, :filepath_graph, :ensemble_element]))
+        end
         network = import_system_wrapper(df_config, 1)
     elseif exp_name_date[1:3] == "RTS"
         select!(df_avg_error, Not([:ensemble_element]))

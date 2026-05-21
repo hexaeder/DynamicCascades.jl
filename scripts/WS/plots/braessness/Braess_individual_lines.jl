@@ -3,7 +3,7 @@ Plotting scripts: Braessness of individual lines.
 """
 
 using DynamicCascades
-using DynamicCascades: PLOT_DIR
+ 
 
 using CairoMakie
 using Statistics
@@ -58,20 +58,9 @@ fig = plot_braessness_vs_dist_histograms(exp_name_date, f_b_narrow, f_b_wide, I)
 # CairoMakie.save(joinpath(exp_data_dir, "braessness_lines", "braessness_dist_braessness_histogram_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I.png"),fig)
 
 
-### 
-### Braessness vs Braessness
 ###
-
-## full failure
-exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250321_171511.976"
-# write_failures_f_b_to_df(exp_name_date, freq_bounds, I)
-# write_network_measures_to_df(exp_name_date)
-braessness_lines, braessness_nodes = get_braessness(exp_name_date, f_b_narrow, f_b_wide, I);
-x_ρ, x_dist = get_network_measures(exp_name_date);
-exp_nr_full = exp_name_date[11:12]
-
-### Find out number of lines that cause cascade
-## Live coding in meeting
+### Find out number of lines that cause cascade (Live coding in meeting)
+###
 exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250321_171511.976"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
 df_narrow = DataFrame(CSV.File(joinpath(exp_data_dir,"braessness_lines", "braessness_data", "I=$I,f_b=$f_b_narrow.csv")))
@@ -117,9 +106,20 @@ braessness = (braessness_lines .+ braessness_nodes)
 length(braessness[braessness .> 0]) # 361 elements
 length(braessness[braessness .< 0]) # 246 elements
 length(braessness[braessness .== 0]) # 93
-
 ###
 
+
+### 
+### Braessness vs Braessness
+###
+
+## full failure
+exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250321_171511.976"
+# write_failures_f_b_to_df(exp_name_date, freq_bounds, I)
+# write_network_measures_to_df(exp_name_date)
+braessness_lines, braessness_nodes = get_braessness(exp_name_date, f_b_narrow, f_b_wide, I);
+x_ρ, x_dist = get_network_measures(exp_name_date);
+exp_nr_full = exp_name_date[11:12]
 
 ## inertia failure
 exp_name_date = "WS_k=4_exp11_vary_I_only_lines_and_nodes_change_to_BH_complement_f_bPIK_HPC_K_=3,N_G=32_20250420_145304.04"
@@ -131,7 +131,7 @@ exp_nr_BH = exp_name_date[11:12]
 
 ## power failure
 exp_name_date = "WS_k=4_exp12_vary_I_only_lines_and_nodes_change_Pmech_complement_f_b_PIK_HPC_K_=3,N_G=32_20250718_160303.054"
-write_failures_f_b_to_df(exp_name_date, freq_bounds, I)
+# write_failures_f_b_to_df(exp_name_date, freq_bounds, I)
 # write_network_measures_to_df(exp_name_date)
 braessness_lines_Pmech, braessness_nodes_Pmech = get_braessness(exp_name_date, f_b_narrow, f_b_wide, I);
 # x_ρ_Pmech, x_dist_Pmech = get_network_measures(exp_name_date);

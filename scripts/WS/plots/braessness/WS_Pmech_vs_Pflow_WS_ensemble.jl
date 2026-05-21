@@ -2,7 +2,7 @@
 Plotting Pmech vs Pflow of ensemble
 """
 
-include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
+include(abspath(@__DIR__, "..", "..", "..", "helpers_jarray.jl"))
 
 
 using DynamicCascades
@@ -12,7 +12,6 @@ using Unitful
 using Statistics
 using GraphMakie
 using Colors
-using DynamicCascades: PLOT_DIR
 
 using CairoMakie
 CairoMakie.activate!()
@@ -42,8 +41,9 @@ for exp_name_date in exp_name_date_dirs
     df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
 
     # adjust filepaths 
-    df_config[!, :filepath_graph] = replace.(df_config[!, :filepath_graph],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
-    df_config[!, :filepath_steady_state] = replace.(df_config[!, :filepath_steady_state],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
+    # NOTE Filepaths adjusted but not tested, should be working though 
+    df_config[!, :filepath_graph] = replace.(df_config[!, :filepath_graph],"/home/brandner/MA_data/results_NB" => abspath(@__DIR__, "..", "..", "..", "..", "simulation_results"))
+    df_config[!, :filepath_steady_state] = replace.(df_config[!, :filepath_steady_state],"/home/brandner/MA_data/results_NB" => abspath(@__DIR__, "..", "..", "..", "..", "simulation_results"))
 
     exp_params_dict = Serialization.deserialize(joinpath(exp_data_dir, "exp.params"))
 
@@ -85,8 +85,8 @@ for exp_name_date in exp_name_date_dirs
 
             # # old way of retrieving graph
             # df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
-            # df_config[!, :filepath_graph] = replace.(df_config[!, :filepath_graph],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
-            # df_config[!, :filepath_steady_state] = replace.(df_config[!, :filepath_steady_state],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
+            # df_config[!, :filepath_graph] = replace.(df_config[!, :filepath_graph],"/home/brandner/MA_data/results_NB" => abspath(@__DIR__, "..", "..", "..", "..", "simulation_results"))
+            # df_config[!, :filepath_steady_state] = replace.(df_config[!, :filepath_steady_state],"/home/brandner/MA_data/results_NB" => abspath(@__DIR__, "..", "..", "..", "..", "simulation_results"))
             # graph = loadgraph(df_config[task_id,:filepath_graph])
 
             for e_index in 1:ne(graph)

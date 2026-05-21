@@ -391,7 +391,7 @@ function get_log_count(xs::AbstractVector{Int}, ys::AbstractVector{Int}, zs::Abs
     return log10.(counts)
 end
 
-
+export colorswitcher
 function colorswitcher(z; fancy_colors=true)
     lo, hi = minimum(z), maximum(z) # compute bounds
     colorrange = (lo, hi)
@@ -752,9 +752,134 @@ function get_task_ids_and_failed_line_from_coordinates(exp_name_date_x, exp_name
             # generate_plot ? save(joinpath(exp_data_dir, "example_trajectories", "plots", "gen_model=$gen_model,task_id=$task_id,initial_fail=$initial_fail.pdf"), plot_simulation(sol)) : nothing
         end
     end
-
 end
 
+export WS_f_b_vs_failures!
+function WS_f_b_vs_failures!(exp_name_date, left_out_frequencies, left_out_β_values,  ax, i, sum_lines_nodes, normalize; opacity=0.3,linewidth=5, markersize=15)
+    exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
+    exp_params_dict = Serialization.deserialize(joinpath(exp_data_dir, "exp.params"))
+    df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
+    
+    inertia_values = exp_params_dict[:inertia_values]
+    freq_bounds = exp_params_dict[:freq_bounds]
+
+    filtered_freq_bounds = filter!(x->x ∉ left_out_frequencies, deepcopy(freq_bounds))
+    left_out_inertia_values = filter(x -> x != i, deepcopy(inertia_values))
+
+    df_avg_error = DataFrame(CSV.File(joinpath(RESULTS_DIR, exp_name_date, "avg_error.csv")))
+    inertia_values = exp_params_dict[:inertia_values]
+
+    #= Different inertia values for: Ensemble average over normalized average of
+    failures (the latter for a single network) =#
+    y_lines = Float64[]; y_nodes = Float64[]
+    #= Different inertia values for: Ensemble standard error over normalized average
+    of failures (the latter for a single network) =#
+    err_lines = Float64[]; err_nodes = Float64[]; err_nodes_plus_lines = Float64[]
+    for task_id in df_avg_error.ArrayTaskID
+        # Leave certain jobs out:
+        N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, task_id)
+        # frequency bounds
+        if freq_bound ∈ left_out_frequencies
+            continue
+        end
+        # inertia values
+        if M ∈ left_out_inertia_values
+            continue
+        end
+        # β values
+        if β ∈ left_out_β_values
+            continue
+        end
+
+        # Read out ensemble_avg and ensemble_standard_error
+        if normalize == true
+            push!(y_lines, df_avg_error[task_id, :ensemble_avg_norm_avg_line_failures])
+            push!(y_nodes, df_avg_error[task_id, :ensemble_avg_norm_avg_node_failures])
+            push!(err_lines, df_avg_error[task_id, :ensemble_SE_norm_avg_line_failures])
+            push!(err_nodes, df_avg_error[task_id, :ensemble_SE_norm_avg_node_failures])
+            push!(err_nodes_plus_lines, df_avg_error[task_id,:ensemble_SE_norm_avg_node_plus_line_failures])
+        else
+            push!(y_lines, df_avg_error[task_id, :ensemble_avg_line_failures])
+            push!(y_nodes, df_avg_error[task_id, :ensemble_avg_node_failures])
+            push!(err_lines, df_avg_error[task_id, :ensemble_SE_line_failures])
+            push!(err_nodes, df_avg_error[task_id, :ensemble_SE_node_failures])
+            push!(err_nodes_plus_lines, df_avg_error[task_id,:ensemble_SE_avg_node_plus_line_failures])
+        end
+    end
+
+    if sum_lines_nodes == true
+        band!(ax, filtered_freq_bounds, y_lines + y_nodes + err_nodes_plus_lines, y_lines + y_nodes - err_nodes_plus_lines, color=(:black, opacity), transparency=true)
+        scatterlines!(ax, filtered_freq_bounds, (y_lines + y_nodes), linewidth = linewidth, markersize = markersize, color=:black)
+    else
+        band!(ax, filtered_freq_bounds, y_lines + err_lines, y_lines - err_lines, color=(:black, opacity), transparency=true)
+        lines!(ax, [NaN], [NaN]; color=:white, linewidth=3)
+        scatterlines!(ax, filtered_freq_bounds, y_lines, linewidth = linewidth, linestyle=:dash, markersize = markersize, color=:black, label = "Lines (dashed)")
+
+        band!(ax, filtered_freq_bounds, y_nodes + err_nodes, y_nodes - err_nodes, color=(:pink, opacity+0.2), transparency=true)
+        scatterlines!(ax, filtered_freq_bounds, y_nodes, linewidth = linewidth, markersize = markersize, color=:purple, label = "Nodes (solid)")
+    end
+end
+
+export RTS_f_b_vs_failures!
+function RTS_f_b_vs_failures!(exp_name_date, left_out_frequencies,  ax, i, sum_lines_nodes, normalize; opacity=0.3,linewidth=5, markersize=15)
+    exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
+    exp_params_dict = Serialization.deserialize(joinpath(exp_data_dir, "exp.params"))
+    df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
+
+    inertia_values = exp_params_dict[:inertia_values]
+    freq_bounds = exp_params_dict[:freq_bounds]
+
+    filtered_freq_bounds = filter!(x->x ∉ left_out_frequencies, deepcopy(freq_bounds))
+    left_out_inertia_values = filter(x -> x != i, deepcopy(inertia_values))
+
+    df_avg_error = DataFrame(CSV.File(joinpath(RESULTS_DIR, exp_name_date, "avg_error.csv")))
+    inertia_values = exp_params_dict[:inertia_values]
+
+    #= Different inertia values for: Ensemble average over normalized average of
+    failures (the latter for a single network) =#
+    y_lines = Float64[]; y_nodes = Float64[]
+    #= Different inertia values for: Ensemble standard error over normalized average
+    of failures (the latter for a single network) =#
+    err_lines = Float64[]; err_nodes = Float64[]; err_nodes_plus_lines = Float64[]
+    for task_id in df_avg_error.ArrayTaskID
+        # Leave certain jobs out:
+        M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = RTS_get_network_args_stripped(df_config, task_id)
+        # frequency bounds
+        if freq_bound ∈ left_out_frequencies
+            continue
+        end
+        # inertia values
+        if M ∈ left_out_inertia_values
+            continue
+        end
+
+        # Read out ensemble_avg and ensemble_standard_error
+        if normalize == true
+            push!(y_lines, df_avg_error[task_id, :ensemble_avg_norm_avg_line_failures])
+            push!(y_nodes, df_avg_error[task_id, :ensemble_avg_norm_avg_node_failures])
+            push!(err_lines, df_avg_error[task_id, :ensemble_SE_norm_avg_line_failures])
+            push!(err_nodes, df_avg_error[task_id, :ensemble_SE_norm_avg_node_failures])
+            push!(err_nodes_plus_lines, df_avg_error[task_id,:ensemble_SE_norm_avg_node_plus_line_failures])
+        else
+            push!(y_lines, df_avg_error[task_id, :ensemble_avg_line_failures])
+            push!(y_nodes, df_avg_error[task_id, :ensemble_avg_node_failures])
+            push!(err_lines, df_avg_error[task_id, :ensemble_SE_line_failures])
+            push!(err_nodes, df_avg_error[task_id, :ensemble_SE_node_failures])
+            push!(err_nodes_plus_lines, df_avg_error[task_id,:ensemble_SE_avg_node_plus_line_failures])
+        end
+    end
+
+    if sum_lines_nodes == true
+        scatterlines!(ax, filtered_freq_bounds, (y_lines + y_nodes), linewidth = linewidth, markersize = markersize, color=:black, label = "I=$i")
+        band!(ax, filtered_freq_bounds, y_lines + y_nodes + err_nodes_plus_lines, y_lines + y_nodes - err_nodes_plus_lines, color=(:black, opacity), transparency=true)
+    else
+        scatterlines!(ax, filtered_freq_bounds, y_lines, linewidth = linewidth, linestyle=:dash, markersize = markersize, color=:black, label = "Lines (dashed)")
+        band!(ax, filtered_freq_bounds, y_lines + err_lines, y_lines - err_lines, color=(:black, opacity), transparency=true)
+
+        scatterlines!(ax, filtered_freq_bounds, y_nodes, linewidth = linewidth, markersize = markersize, color=:purple, label = "Nodes (solid)")
+        band!(ax, filtered_freq_bounds, y_nodes + err_nodes, y_nodes - err_nodes, color=(:pink, opacity+0.2), transparency=true)
+    end
+end
 
 ###
 ### wrappers for `inspect()`

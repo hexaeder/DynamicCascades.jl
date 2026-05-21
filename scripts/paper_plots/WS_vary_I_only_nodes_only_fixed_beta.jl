@@ -3,12 +3,14 @@ Watts-Strogatz-Network-Ensemble: Using job array framework. Only varying rewirin
 probability β and only considering node failures.
 """
 
-include(abspath(@__DIR__, "..", "..", "..", "helpers_jarray.jl"))
+include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
 
 using GraphMakie
 using Colors
 using CairoMakie
+CairoMakie.activate!()
 
+include(abspath(@__DIR__, "paper_plots_helpers_and_parameters.jl"))
 
 # plotting parameters
 create_posprocessing_data = false # set to `false` for fast plotting
@@ -18,7 +20,6 @@ normalize = false
 line_colors = [Makie.wong_colors()[1], Makie.wong_colors()[2], "#000000FF", Makie.wong_colors()[3]]  # https://docs.makie.org/stable/explanations/colors/
 colormap_frequencies = false
 opacity = 0.2
-fontsize = labelsize = 40
 # markers
 markersize = 15
 linewidth = 4
@@ -62,10 +63,10 @@ filtered_β_values = filter!(x->x ∉ left_out_β_values, deepcopy(exp_params_di
 
 fig_nodes_only = Figure(size=(800,600),fontsize = fontsize)
 ax_nodes_only = Axis(fig_nodes_only[1, 1],
-    title = "Node failure model (WS)",
+    title = "Node-failure-only model (WS)",
     titlefont = :regular,
-    xlabel = L"Inertia I [$s^2$]",
-    ylabel = normalize ? "normalized average of node failures" : L"# Node failures $\left< n \hspace\right>$",
+    xlabel = L"Inertia $I$ [$s^2$]",
+    ylabel = normalize ? "normalized average of node failures" : L"# Node failures $\left< n \right>$",
 )
 
 # Create figures depending on the modes (loop).
@@ -145,12 +146,13 @@ end
 # lines!(ax_nodes_only, [NaN], [NaN]; label="Damping D=1 [s]", color=:white)
 # axislegend(ax_nodes_only, position = :rt, labelsize=labelsize)
 
-Label(fig_nodes_only[1, 1, TopLeft()], "d", fontsize = 44, font = :bold, padding = (-25, 15, 5, 5))
+Label(fig_nodes_only[1, 1, TopLeft()], "d", fontsize = fontsize+labellettersize, font = :bold, padding = (-95, 0, 50, 0))
 
+xlims!(ax_nodes_only, 0, 5.2)
 k_str = string(exp_params_dict[:k])
 filtered_freq_bounds_str = string(filtered_freq_bounds)
 K_str = string(exp_params_dict[:K])
 
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_I_only_nodes_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_nodes_only)
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_vary_I_only_nodes_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_nodes_only)
+CairoMakie.save(joinpath(MA_DIR, "WS_vary_I_only_nodes_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_nodes_only)
+# CairoMakie.save(joinpath(MA_DIR, "WS_vary_I_only_nodes_only_K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_nodes_only)
 fig_nodes_only

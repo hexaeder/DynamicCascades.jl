@@ -13,7 +13,7 @@ using Unitful
 using Statistics
 using GraphMakie
 using Colors
-using DynamicCascades: PLOT_DIR
+ 
 
 using CairoMakie
 # using GLMakie
@@ -42,8 +42,8 @@ steadystate_choice = exp_params_dict[:steadystate_choice]
 #= Generate and save sol-Objects, the data for the plots. Only use this for recreating
 the solution objects =#
 network = import_system_wrapper(df_config, task_id)
-# NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE Achtung hardcoded
-steady_state_dict  = CSV.File("/home/brandner/nb_data/HU_Master/2122WS/MA/MA_data/results_NB/WS_k=4_exp05_1_I_over_Dsq_lines_PIK_HPC_K_=3,N_G=32_20250123_203156.161/k=4,β=0.25/steady_states_graphs/graph_seed=2,distr_seed=2,k=4,β=0.25,ensemble_element=1.csv")
+# NOTE Achtung hardcoded
+steady_state_dict  = CSV.File(abspath(@__DIR__, "..", "..", "..", "..", "simulation_results", "WS_k=4_exp05_1_I_over_Dsq_lines_PIK_HPC_K_=3,N_G=32_20250123_203156.161/k=4,β=0.25/steady_states_graphs/graph_seed=2,distr_seed=2,k=4,β=0.25,ensemble_element=1.csv"))
 x_static = steady_state_dict[:SteadyState]
 
 # sol = simulate(network;

@@ -26,8 +26,8 @@ inspect_wrapper(sol; which_trajectories = :failing, tmax=6)
 
 
 #= Example for rerunning simulations that were done with job array framework:
-# NOTE for this to work in `src/DynamicCascades.jl` change `RESULTS_DIR` to the 
-directory where the file with the experiment data in it.=#
+# NOTE for this to work in `src/DynamicCascades.jl` the constant `RESULTS_DIR`
+must be set to the directory with the simulation data.=#
 exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250321_171511.976"
 initial_fail = 15
 task_id = 229

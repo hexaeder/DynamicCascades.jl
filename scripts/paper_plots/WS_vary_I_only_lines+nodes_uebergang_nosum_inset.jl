@@ -2,31 +2,36 @@
 Watts-Strogatz-Network-Ensemble: Using job array framework. Transition that appears
 when varying the frequency bounds. Line and node failures summed.
 """
-#  NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE Check normalized sum of lines and nodes again.
+#  NOTE Check NORMALIZED sum of lines and nodes again (not relevant for figures for paper submission).
+
 
 include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
 
 using GraphMakie
 using Colors, ColorSchemes
 using CairoMakie
+CairoMakie.activate!()
 
+include(abspath(@__DIR__, "paper_plots_helpers_and_parameters.jl"))
 
 # plotting parameters
 create_posprocessing_data = false # set to `false` for fast plotting
 sum_lines_nodes = false
 normalize = true
-line_colors = [Makie.wong_colors()[3], Makie.wong_colors()[5], Makie.wong_colors()[6]]
 colormap_frequencies = true
 opacity = 0.15
-fontsize = labelsize = 26
+fontsize = labelsize = 28
 # markers
 markersize = 15
 markers_labels = [(:star5, "star5")]
 
-exp_name_date = "WS_k=4_exp05_3_I_over_Dsq_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250124_123933.775"
+# exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250126_012357.344"
+exp_name_date = "WS_k=4_exp04_vary_I_only_lines_and_nodes_PIK_HPC_K_=3,N_G=32_20250321_171511.976"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
-# left_out_frequencies = [0.005, 0.01, 0.015, 0.025, 0.03, 0.035, 0.14, 0.15, 0.16, 0.3, 0.5, 0.8]
-left_out_frequencies = [0.005, 0.01, 0.015, 0.14, 0.15, 0.16, 0.3, 0.5, 0.8]
+left_out_frequencies = [0.005, 0.015, 0.02, 0.025, 0.035, 0.04, 0.045,
+    0.05, 0.055, 0.060, 0.065, 0.07, 0.075, 0.08, 0.085, 0.09, 0.095, 0.1,
+    0.11, 0.12, 0.13, 0.14, 0.16, 0.17, 0.18, 0.19, 0.2,
+    0.21, 0.22, 0.23, 0.24, 0.25, 0.26, 0.27, 0.28, 0.29, 0.3, 0.8]
 left_out_inertia_values = []
 left_out_β_values = []
 
@@ -53,8 +58,10 @@ filtered_β_values = filter!(x->x ∉ left_out_β_values, deepcopy(exp_params_di
 fig_lines_and_nodes = Figure(size=(800,600),fontsize = fontsize)
 ax_lines_and_nodes = Axis(fig_lines_and_nodes[1, 1],
     # title = sum_lines_nodes ? "Summed line and node failures" : "Line and node failures",
-    xlabel = L"Inertia I [$s^2$]",
-    ylabel = normalize ? "Normalized average of failures" : L"Averaged failures $N_{fail}$",
+    xlabel = L"Inertia $I$ [$s^2$]",
+    ylabel = normalize ? "Fractions failing elements" : L"# Failures $\left< F \right>$",
+    xgridvisible = false,
+    ygridvisible = false,
 )
 # hidedecorations!(ax_lines_and_nodes, grid=false)
 
@@ -65,17 +72,18 @@ inset_ax = Axis(fig_lines_and_nodes[1, 1],
     # ylabel = normalize ? "normalized average of failures" : L"Averaged failures $N_{fail}$",
     width=Relative(0.5),
     height=Relative(0.5),
-    halign=0.95,
-    valign=0.3,
+    halign=0.93,
+    valign=0.91,
     backgroundcolor=(:grey, 0.05),
-    xgridvisible = false,
-    ygridvisible = false,
+    # xgridvisible = false,
+    # ygridvisible = false,
     )
 
 
 # hidedecorations!(inset_ax)
-xlims!(inset_ax, 0, 30)
-ylims!(inset_ax, 0, 0.003)
+xlims!(inset_ax, 0, 31)
+ylims!(inset_ax, 0, 0.016)
+inset_ax.yticks = [0.0, 0.004, 0.008, 0.012, 0.016]
 
 # Create figures depending on the modes (loop).
 failure_modes = exp_params_dict[:failure_modes]
@@ -138,23 +146,33 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
         marker = markers_labels[marker_index][1]
         marker_label = markers_labels[marker_index][2]
         color_index = colormap_frequencies ? findfirst(x -> x == freq_bound, filtered_freq_bounds) : marker_index
+        bound_label = ""
+        if freq_bound == 0.01
+            bound_label = "Narrow bounds"
+        elseif freq_bound == 0.03
+            bound_label = "Intermediate bounds"
+        elseif freq_bound == 0.15
+            bound_label = "Wide bounds"
+        end
 
         if (trip_lines == :dynamic &&  trip_nodes == :dynamic)
-            if sum_lines_nodes == true
-                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes, marker = marker, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
+
+            if sum_lines_nodes == true # NOTE For the normalized version this might be wrong s. Schmierzettel S. 23.
+                # scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes, marker = marker, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β", color = line_colors[color_index])
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes, marker = marker, markersize = markersize, linewidth=linewidth, label = "$bound_label", color = line_colors[color_index])
                 band!(ax_lines_and_nodes, filtered_inertia_values, y_lines + y_nodes + err_nodes_plus_lines, y_lines + y_nodes - err_nodes_plus_lines, transparency=true, color = (line_colors[color_index], opacity))
                 # inset plot
-                scatterlines!(inset_ax, filtered_inertia_values, y_lines + y_nodes, marker = marker, markersize = markersize, color = line_colors[color_index])
+                scatterlines!(inset_ax, filtered_inertia_values, y_lines + y_nodes, linewidth=linewidth, marker = marker, markersize = markersize, color = line_colors[color_index])
                 band!(inset_ax, filtered_inertia_values, y_lines + y_nodes + err_nodes_plus_lines, y_lines + y_nodes - err_nodes_plus_lines, transparency=true, color = (line_colors[color_index], opacity))
             else
-                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines, linestyle=:dash, marker = :dtriangle, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β Line failures (dashed)", color = line_colors[color_index])
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_lines, linewidth=linewidth, linestyle=:dash, marker = :dtriangle, markersize = markersize, color = line_colors[color_index])
                 band!(ax_lines_and_nodes, filtered_inertia_values, y_lines + err_lines, y_lines - err_lines, transparency=true, color = (line_colors[color_index], opacity))
-                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_nodes, marker = marker, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β Node failures (solid)", color = line_colors[color_index])
+                scatterlines!(ax_lines_and_nodes, filtered_inertia_values, y_nodes, linewidth=linewidth, marker = marker, markersize = markersize, color = line_colors[color_index])
                 band!(ax_lines_and_nodes, filtered_inertia_values, y_nodes + err_nodes, y_nodes - err_nodes, transparency=true, color = (line_colors[color_index], opacity))
                 # inset plot
-                scatterlines!(inset_ax, filtered_inertia_values, y_lines, linestyle=:dash, marker = :dtriangle, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β Line failures (dashed)", color = line_colors[color_index])
+                scatterlines!(inset_ax, filtered_inertia_values, y_lines, linewidth=linewidth, linestyle=:dash, marker = :dtriangle, markersize = markersize, color = line_colors[color_index])
                 band!(inset_ax, filtered_inertia_values, y_lines + err_lines, y_lines - err_lines, transparency=true, color = (line_colors[color_index], opacity))
-                scatterlines!(inset_ax, filtered_inertia_values, y_nodes, marker = marker, markersize = markersize, label = "f_b=$freq_bound,k=$k,β=$β Node failures (solid)", color = line_colors[color_index])
+                scatterlines!(inset_ax, filtered_inertia_values, y_nodes, linewidth=linewidth, marker = marker, markersize = markersize, color = line_colors[color_index])
                 band!(inset_ax, filtered_inertia_values, y_nodes + err_nodes, y_nodes - err_nodes, transparency=true, color = (line_colors[color_index], opacity))
             end
         end
@@ -162,13 +180,20 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
 end
 N,k,β,graph_seed,μ,σ,distr_seed,K,α,M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = get_network_args_stripped(df_config, 1)
 # axislegend(ax_lines_and_nodes, position = (0.08,0.99), labelsize=labelsize-5)
-lines!(ax_lines_and_nodes, [NaN], [NaN]; label=L"Damping $D=\sqrt{I}$ [$s$]", color=:white)
-axislegend(ax_lines_and_nodes, position = (1.2,1.0), labelsize=labelsize-12, nbanks = 2)
+# lines!(ax_lines_and_nodes, [NaN], [NaN]; label="Damping D=1 [s]", color=:white)
+# axislegend(ax_lines_and_nodes, position = (0.98,0.22), labelsize=labelsize, nbanks = 2)
+# lines!(ax_lines_and_nodes, [NaN], [NaN]; label="Damping D=1 [s]", color=:white)
+scatterlines!(ax_lines_and_nodes, [NaN], [NaN], linestyle=:dash, marker = :dtriangle, markersize = markersize, label = "Lines (dashed)", color = :black)
+scatterlines!(ax_lines_and_nodes, [NaN], [NaN], marker = :star5, markersize = markersize, label = "Nodes (solid)", color = :black)
+
+axislegend(ax_lines_and_nodes, position = (0.945,0.17), labelsize=labelsize, patchsize = (40, 30))
+# ax_lines_and_nodes.xticklabelsvisible = false
+Label(fig_lines_and_nodes[1, 1, TopLeft()], fontsize=fontsize+labellettersize, "b", font = :bold, padding = (-55, 0, 5, 0))
 
 k_str = string(exp_params_dict[:k])
 filtered_freq_bounds_str = string(filtered_freq_bounds)
 K_str = string(exp_params_dict[:K])
 
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_I_over_Dsq_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
-CairoMakie.save(joinpath(MA_DIR, "WS", "WS_I_over_Dsq_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
+CairoMakie.save(joinpath(MA_DIR, "WS_vary_I_only_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.pdf"),fig_lines_and_nodes)
+# CairoMakie.save(joinpath(MA_DIR, "WS_vary_I_only_uebergang_lines+nodes_sumlinesnodes=$sum_lines_nodes,K=$K_str,k=$k_str,β=$filtered_β_values,f_b=$filtered_freq_bounds_str,M_left_out=$left_out_inertia_values.png"),fig_lines_and_nodes)
 fig_lines_and_nodes

@@ -2,11 +2,15 @@
 Model: line failures only. Plotting inertia vs. line failures.
 """
 
+
 include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
 
 using GraphMakie
 using Colors, ColorSchemes
 using CairoMakie
+CairoMakie.activate!()
+
+include(abspath(@__DIR__, "paper_plots_helpers_and_parameters.jl"))
 
 # plotting parameters
 
@@ -22,6 +26,7 @@ markersize = 15
 
 exp_name_date = "RTS_exp03_PIK_HPC__20240307_224712.402"
 exp_data_dir = joinpath(RESULTS_DIR, exp_name_date)
+
 left_out_frequencies = []
 left_out_inertia_values = []
 
@@ -31,6 +36,8 @@ left_out_inertia_values = []
 if create_posprocessing_data == true
     postprocess_jarray_data(exp_name_date)
 end
+df_config = DataFrame(CSV.File(joinpath(exp_data_dir, "config.csv")))
+exp_params_dict = Serialization.deserialize(joinpath(exp_data_dir, "exp.params"))
 
 ################################################################################
 ################################ Plotting  #####################################
@@ -40,9 +47,10 @@ filtered_inertia_values = filter!(x->x ∉ left_out_inertia_values, deepcopy(ine
 
 fig_lines_only = Figure(size=(800,600),fontsize = fontsize)
 ax_lines_only = Axis(fig_lines_only[1, 1],
-    title = show_title ? "Line failures" : "",
+    title = "Line-failure-only model",
+    titlefont = :regular,
     xlabel = "Scaling factor of inertia I",
-    ylabel = L"Averaged line failures $N_{fail}^L$",
+    ylabel = normalize ? "normalized average of line failures" : "# Line failures <𝑙>",
 )
 
 
@@ -99,12 +107,13 @@ for task_id in df_avg_error.ArrayTaskID # TODO renane variables: this is not an 
         M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = RTS_get_network_args_stripped(df_config, task_id)
 
         if (trip_lines == :dynamic &&  trip_nodes == :none)
-            scatterlines!(ax_lines_only, filtered_inertia_values, y_lines, label = "", color = Makie.wong_colors()[1], linewidth = 3.5)
+            scatterlines!(ax_lines_only, filtered_inertia_values, y_lines, markersize=markersize, linewidth=linewidth, label = "", color = "#000000FF")
+
         end
     end
 end
 M,γ,τ,freq_bound,trip_lines,trip_nodes,init_pert,ensemble_element = RTS_get_network_args_stripped(df_config, 1)
 
+CairoMakie.save(joinpath(MA_DIR, "RTS_lines_only_M_left_out=$left_out_inertia_values.pdf"),fig_lines_only)
 # CairoMakie.save(joinpath(MA_DIR, "RTS_lines_only_M_left_out=$left_out_inertia_values.png"),fig_lines_only)
-# CairoMakie.save(joinpath(MA_DIR, "RTS_lines_only_M_left_out=$left_out_inertia_values.pdf"),fig_lines_only)
 fig_lines_only

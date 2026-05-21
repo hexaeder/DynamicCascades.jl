@@ -2,7 +2,7 @@
 Watts-Strogatz-Network-Ensemble: Using job array framework. Transition that appears
 when varying the frequency bounds. Line and node failures summed.
 """
-#  NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE Check normalized sum of lines and nodes again.
+#  NOTE Check NORMALIZED sum of lines and nodes again (not relevant for figures for paper submission).
 
 include(abspath(@__DIR__, "..", "helpers_jarray.jl"))
 

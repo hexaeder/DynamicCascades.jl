@@ -15,3 +15,7 @@
 /scripts/delete_soon
 .vscode/settings.json
 src/DynamicCascades.code-workspace
+test_new_ND/sol_objects_test/
+scripts/ML_clustering/data/run_251009_01
+/simulation_results
+/generated_figs

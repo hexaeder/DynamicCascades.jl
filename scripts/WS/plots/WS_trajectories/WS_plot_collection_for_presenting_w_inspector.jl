@@ -597,7 +597,7 @@ task_id = 7584 # narrow
 df_config = DataFrame(CSV.File(joinpath(RESULTS_DIR, exp_name_date, "config.csv")))
 _,_,_,_,_,_,_,_,_,_,_,_,freq_bound,trip_lines,trip_nodes,_,_ = get_network_args_stripped(df_config, task_id)
 network = import_system_wrapper(df_config, task_id)
-df_config[!, :filepath_graph] = replace.(df_config[!, :filepath_graph],"/home/brandner" => "/home/brandner/nb_data/HU_Master/2122WS/MA")
+df_config[!, :filepath_graph] = replace.(df_config[!, :filepath_graph],"/home/brandner/MA_data/results_NB" => abspath(@__DIR__, "..", "..", "..", "..", "simulation_results"))
 graph = loadgraph(df_config[task_id,:filepath_graph])
 
 # Adapt v5

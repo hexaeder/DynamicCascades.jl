@@ -2,8 +2,10 @@
 Plotting scripts: Braessness of individual lines.
 """
 
+
+
 using DynamicCascades
-using DynamicCascades: PLOT_DIR
+ 
 
 using CairoMakie
 using Statistics
@@ -14,6 +16,7 @@ using Serialization
 ################################################################################
 ############################## Plotting scripts ################################
 ################################################################################
+include(abspath(@__DIR__, "paper_plots_helpers_and_parameters.jl"))
 
 ###
 ### preprocess and load data
@@ -47,7 +50,7 @@ N_nodes = Serialization.deserialize(joinpath(RESULTS_DIR, exp_name_date, "exp.pa
 ### Braessness histogram
 ###
 
-fontsize = 28
+fontsize = 24
 titlesize = (fontsize-5)
 markersize = 8
 
@@ -56,9 +59,11 @@ braessness_lines, braessness_nodes = get_braessness(exp_name_date, f_b_narrow, f
 
 fig = Figure(size = (700,500), fontsize = fontsize)
 yscale = Makie.pseudolog10  # maps 0→0, then log10(count+1)
-fig[1, 1] = ax = Axis(fig; yscale=yscale, 
+fig[1, 1] = ax = Axis(fig; yscale=yscale,
+    title = "Watts-Strogatz networks",
+    titlefont = :regular,
     xlabel = L"Braessness $B_i$",
-    ylabel = L"Count")
+    ylabel = L"\textrm{Count}")
 # fig[1, 1] = ax = Axis(fig; yscale=yscale, xlabel = L"\mathsf{Frequency\ bound} Braessness $B_i$", ylabel = "Count")
 
 
@@ -68,16 +73,16 @@ max_braessness = maximum(all_breaessnesses)
 min_braessness = minimum(all_breaessnesses)
 bins= (min_braessness-0.5):1:(max_braessness+0.5)
 
-μ = round(mean(braessness_lines .+ braessness_nodes), digits=3)
+μ = round(mean(braessness_lines .+ braessness_nodes), digits=3) # 4.79
 # hist!(ax, braessness_lines .+ braessness_nodes; label=L"$\left< B \right> = 0.524$", color="#8C8C8CFF", bins=bins, strokewidth=0.2)
 # hist!(ax, braessness_lines .+ braessness_nodes; label=L"$\left< B \right> = 0.524$", color="#8C8C8CFF", bins=bins, strokewidth=0.2)
 # hist!(ax, braessness_lines .+ braessness_nodes; label="⟨B⟩ = 0.524", color="#8C8C8CFF", bins=bins, strokewidth=0.2)
-hist!(ax, braessness_lines .+ braessness_nodes; label=L"$\left< B \right> = 0.524$", color="#8C8C8CFF", bins=bins, strokewidth=0.2)
+hist!(ax, braessness_lines .+ braessness_nodes; label=L"$\left< B \right> = 4.79$", color="#8C8C8CFF", bins=bins, strokewidth=0.2)
 
 axislegend(ax; position = :rt, labelsize=fontsize)
 ax.yticks = [0, 1, 10, 100, 1000, 5000]
 
-CairoMakie.save(joinpath(MA_DIR, "braessness", "histograms_braessness_lines_and_nodes_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I,exclude_non_triggering=$exclude_non_triggering.pdf"),fig)
-CairoMakie.save(joinpath(MA_DIR, "braessness", "histograms_braessness_lines_and_nodes_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I,exclude_non_triggering=$exclude_non_triggering.png"),fig)
+CairoMakie.save(joinpath(MA_DIR, "histograms_braessness_lines_and_nodes_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I,exclude_non_triggering=$exclude_non_triggering.pdf"),fig)
+# CairoMakie.save(joinpath(MA_DIR, "histograms_braessness_lines_and_nodes_$model,N=$N_nodes,f_b_n=$f_b_narrow,f_b_w=$f_b_wide,I=$I,exclude_non_triggering=$exclude_non_triggering.png"),fig)
 fig
 
