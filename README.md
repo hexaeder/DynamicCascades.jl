@@ -3,7 +3,7 @@
 # DynamicCascades.jl
 Exploring dynamic cascades in power systems featuring dynamic line and node failures.
 
-For instructions how to use the code and reproduce the results of this [paper](TODO) see [README.md](https://github.com/hexaeder/DynamicCascades.jl/blob/submission/README.md) in the branch [submission](https://github.com/hexaeder/DynamicCascades.jl/tree/submission).
+For instructions on how to use the code and reproduce the results <!-- of this [paper](TODO arxiv-link) --> see [README.md](https://github.com/hexaeder/DynamicCascades.jl/blob/submission/README.md) in the branch [submission](https://github.com/hexaeder/DynamicCascades.jl/tree/submission).
 
 ## Legacy branch
 This repository is based on [NetworkDynamics.jl](https://github.com/JuliaDynamics/NetworkDynamics.jl) (ND.jl). NetworkDynamics.jl 
@@ -13,12 +13,12 @@ core functionality was ported. Features that have not been ported are still avai
 a branch for testing the new ND.jl using a MWE) and are listed below.
 
 
-### (available) Functionality that has not been portet from mwe_old_ND_maybe_plots
-  - assymmetric frequency boundaries
-  - different initial perturbations: power perturbation, node failure (?)
+### (available) Functionality that has not been ported from mwe_old_ND_maybe_plots
+  - asymmetric frequency boundaries
+  - different initial perturbation: power perturbation
   - dead band
   - static failures
-  - load node falures
+  - load node failures
   - check active vs apparent power flow in line CB
   - Further networks
     - import_isolator_toymodel.jl
@@ -35,5 +35,3 @@ a branch for testing the new ND.jl using a MWE) and are listed below.
 ## Note
  - Don't use steady states from old ND.jl for version with new ND (different order of internal states)
  - Different number of BLAS threads may lead to different results, see scripts/helpers_jarray.jl
-
-<!-- Some examples using deprecated code can be found in [here](https://wuerfel.io/DynamicCascades.jl/dev/). -->
