@@ -40,7 +40,7 @@ This uses a job array framework for High-performance computing (HPC). The framew
 ## Reproduction of the figures in the paper
  - create the directory `generated_figs` (see above)
  - use the scripts in `scripts/paper_plots/`
-<!-- - if you did not download this from Zenodo, download `simulation_results` from [here](TODO) and locate them according to the [Structure of the code](#structure-of-the-code) -->
+ - if you did not download this from Zenodo, download `simulation_results` from [here](https://doi.org/10.5281/zenodo.20341268) and locate them according to the [Structure of the code](#structure-of-the-code)
  - Figure 3 in the paper was created using the
    [legacy branch](https://github.com/hexaeder/DynamicCascades.jl/tree/mwe_old_ND_maybe_plots) that needs an older Julia version and using [Inkscape](https://inkscape.org/). Detailed instructions how to reproduce this figure will be made available upon request.
 
