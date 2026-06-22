@@ -14,12 +14,26 @@ submission/
  - simulation_results/ 
  - src/ core source code defining the dynamic cascading failure model
 
+Software dependencies are defined in /Manifest.toml and /Project.toml that can be used by Pkg (Julia's builtin package manager) for the installation of the software. The typical install time on a "normal" desktop computer is about 5 to 10 minutes. 
+The software has been tested on version `v1.0-submission`.
 
 ## Basic functionality
 The main entrypoint is `simulate` in src/ND_model.jl.
 
 See `scripts/examples.jl` for how to
- - simulate a cascade in an example network
+ - simulate a cascade in an example network. This takes less than 10 seconds on a "normal" desktop computer. Expected output (up to numerical errors):
+```
+[ Info: Import system Watts-Strogatz
+Find steady state...
+Shutdown line 27 at t=0.1
+Line 53 tripped at t=4.329652807288284
+Line 52 tripped at t=4.547521902036494
+Vertex 16 tripped at t=4.598866846813731
+Line 60 tripped at t=5.34374202441646
+Line 62 tripped at t=5.589868915515144
+Vertex 21 tripped at t=5.705406726542723
+Terminated on steady state at 65.54382770769196
+```
  - resimulate a cascade that has been simulated in an experiment using the job array framework (see [below](#reproduction-of-the-results-in-simulation_results)) 
  - use the interactive plotting utility [NetworkDynamicsInspector.jl](https://github.com/JuliaDynamics/NetworkDynamics.jl/tree/main/NetworkDynamicsInspector) 
 
