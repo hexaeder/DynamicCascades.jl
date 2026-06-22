@@ -3,7 +3,7 @@
 # DynamicCascades.jl
 Exploring dynamic cascades in power systems featuring dynamic line and node failures.
 
-For instructions on how to use the code and reproduce the results <!-- of this [paper](TODO arxiv-link) --> see [README.md](https://github.com/hexaeder/DynamicCascades.jl/blob/submission/README.md) in the branch [submission](https://github.com/hexaeder/DynamicCascades.jl/tree/submission).
+For instructions on how to use the code and reproduce the results of this [paper](https://arxiv.org/abs/2606.20060) see [README.md](https://github.com/hexaeder/DynamicCascades.jl/blob/submission/README.md) in the branch [submission](https://github.com/hexaeder/DynamicCascades.jl/tree/submission).
 
 ## Legacy branch
 This repository is based on [NetworkDynamics.jl](https://github.com/JuliaDynamics/NetworkDynamics.jl) (ND.jl). NetworkDynamics.jl 
